@@ -29,7 +29,8 @@ export default function Home() {
     fetchCatalog()
       .then(data => {
         setProducts(data.products);
-        setCategories(data.categories);
+        // फिक्स: बैकएंड 'grouped' भेज रहा है, 'categories' नहीं। इसलिए हम 'grouped' से नाम निकाल रहे हैं।
+        setCategories(Object.keys(data.grouped || {}) as Category[]);
       })
       .catch(() => setError(t('common.error')))
       .finally(() => setLoading(false));
@@ -42,7 +43,7 @@ export default function Home() {
       const matchCategory = activeCategory === 'all' || p.category === activeCategory;
       const matchSearch = !q ||
         p.name.toLowerCase().includes(q) ||
-        p.nameHi.includes(q) ||
+        (p.nameHi && p.nameHi.includes(q)) ||
         p.description.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q);
       return matchCategory && matchSearch;
