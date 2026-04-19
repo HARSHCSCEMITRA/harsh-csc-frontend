@@ -1,105 +1,181 @@
+// ─────────────────────────────────────────────────────────────
+//  Header.tsx  –  Sticky navbar with branding + cart icon
+//  KEY FIXES:
+//    • Column layout for Name + Tagline (professional look)
+//    • ShoppingCart icon with live badge from cart store
+//    • Cart state controlled via store (no prop-drilling)
+// ─────────────────────────────────────────────────────────────
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguageStore } from '../store/languageStore';
-import { createT } from '../utils/i18n';
+import { useCartStore }     from '../store/cartStore';   // adjust path if needed
 
-export const Header = () => {
-  const { lang, setLang } = useLanguageStore();
-  const t = createT(lang);
+// ── Inline SVG icons (zero extra dependencies) ────────────────
+const CartIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9"  cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </svg>
+);
+
+export const Header: React.FC = () => {
+  const { lang, setLang }          = useLanguageStore();
+  const { items, openCart }        = useCartStore();       // openCart toggles CartDrawer
+  const totalQty = items.reduce((sum: number, i: any) => sum + (i.quantity ?? 1), 0);
 
   return (
     <nav style={{
-      background: '#0f172a',
-      borderBottom: '1px solid rgba(255,255,255,0.1)',
-      padding: '10px 0',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+      background:    'var(--surface, #0f172a)',
+      borderBottom:  '1px solid rgba(255,255,255,0.08)',
+      padding:       '10px 0',
+      position:      'sticky',
+      top:           0,
+      zIndex:        1000,
+      boxShadow:     '0 4px 24px rgba(0,0,0,0.45)',
+      backdropFilter:'blur(10px)',
     }}>
       <div className="container" style={{
-        display: 'flex',
+        display:        'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: '15px'
+        alignItems:     'center',
+        gap:            '12px',
       }}>
-        
-        {/* ── Left Side: Logo + Brand Name + Tagline ── */}
-        <Link to="/" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '12px', 
+
+        {/* ── LEFT: Logo + Brand column ───────────────────────── */}
+        <Link to="/" style={{
+          display:        'flex',
+          alignItems:     'center',
+          gap:            '12px',
           textDecoration: 'none',
-          minWidth: 0 // Prevents overflow
+          minWidth:       0,
+          flexShrink:     1,
         }}>
-          <img 
-            src="/logo.png" 
-            alt="Harsh CSC" 
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '8px', 
-              objectFit: 'cover',
-              border: '1px solid rgba(255,255,255,0.1)'
+          {/* Logo – hidden gracefully if /logo.png is missing */}
+          <img
+            src="/logo.png"
+            alt="Harsh CSC e-Mitra Logo"
+            style={{
+              width:        '46px',
+              height:       '46px',
+              borderRadius: '10px',
+              objectFit:    'cover',
+              border:       '1px solid rgba(96,165,250,0.25)',
+              flexShrink:   0,
             }}
-            onError={(e) => (e.currentTarget.style.display = 'none')}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
+
+          {/* Brand column */}
           <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <span style={{ 
-              color: '#fff', 
-              fontSize: '18px', 
-              fontWeight: 800, 
-              letterSpacing: '0.5px',
-              lineHeight: '1.2',
-              whiteSpace: 'nowrap'
+            <span style={{
+              color:         '#ffffff',
+              fontSize:      'clamp(14px, 3.5vw, 18px)',
+              fontWeight:    800,
+              letterSpacing: '0.6px',
+              lineHeight:    1.2,
+              whiteSpace:    'nowrap',
             }}>
               HARSH CSC EMITRA
             </span>
-            <span style={{ 
-              color: '#60a5fa', 
-              fontSize: '10px', 
-              fontWeight: 500,
-              letterSpacing: '0.2px',
-              opacity: 0.9,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
+            <span style={{
+              color:         '#60a5fa',
+              fontSize:      'clamp(9px, 2vw, 11px)',
+              fontWeight:    500,
+              letterSpacing: '0.15px',
+              opacity:       0.88,
+              whiteSpace:    'nowrap',
+              overflow:      'hidden',
+              textOverflow:  'ellipsis',
             }}>
               Digital Documentation Services and Consultancy
             </span>
           </div>
         </Link>
 
-        {/* ── Right Side: Navigation & Language ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexShrink: 0 }}>
-          <Link to="/track" style={{ 
-            color: '#cbd5e1', 
-            fontSize: '13px', 
-            textDecoration: 'none', 
-            fontWeight: 600,
-            padding: '5px 10px'
-          }}>
+        {/* ── RIGHT: Nav links + Language + Cart ──────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+
+          {/* Track Order link */}
+          <Link to="/track" style={{
+            color:          '#cbd5e1',
+            fontSize:       '13px',
+            textDecoration: 'none',
+            fontWeight:     600,
+            padding:        '5px 8px',
+            borderRadius:   '6px',
+            transition:     'color 0.2s',
+          }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#60a5fa')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+          >
             {lang === 'hi' ? 'ट्रैक ऑर्डर' : 'Track Order'}
           </Link>
-          
-          <button 
+
+          {/* Language toggle */}
+          <button
             onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
             style={{
-              background: 'rgba(37,99,235,0.15)',
-              color: '#60a5fa',
-              border: '1px solid rgba(37,99,235,0.3)',
-              padding: '6px 12px',
+              background:   'rgba(37,99,235,0.12)',
+              color:        '#60a5fa',
+              border:       '1px solid rgba(37,99,235,0.3)',
+              padding:      '5px 11px',
               borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 700,
-              transition: 'all 0.2s'
+              cursor:       'pointer',
+              fontSize:     '12px',
+              fontWeight:   700,
+              transition:   'all 0.2s',
             }}
           >
-            {lang === 'hi' ? 'English' : 'हिंदी'}
+            {lang === 'hi' ? 'EN' : 'हिं'}
           </button>
-        </div>
 
+          {/* ── Cart button with badge ─────────────────────────── */}
+          <button
+            onClick={openCart}
+            aria-label="Open cart"
+            style={{
+              position:     'relative',
+              background:   'rgba(37,99,235,0.15)',
+              color:        '#60a5fa',
+              border:       '1px solid rgba(37,99,235,0.3)',
+              width:        '40px',
+              height:       '40px',
+              borderRadius: '8px',
+              cursor:       'pointer',
+              display:      'flex',
+              alignItems:   'center',
+              justifyContent: 'center',
+              transition:   'background 0.2s',
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.28)')}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.15)')}
+          >
+            <CartIcon />
+            {totalQty > 0 && (
+              <span style={{
+                position:      'absolute',
+                top:           '-6px',
+                right:         '-6px',
+                background:    'var(--blue, #2563eb)',
+                color:         '#fff',
+                borderRadius:  '50%',
+                width:         '18px',
+                height:        '18px',
+                fontSize:      '10px',
+                fontWeight:    800,
+                display:       'flex',
+                alignItems:    'center',
+                justifyContent:'center',
+                lineHeight:    1,
+                border:        '2px solid #0f172a',
+              }}>
+                {totalQty > 9 ? '9+' : totalQty}
+              </span>
+            )}
+          </button>
+
+        </div>
       </div>
     </nav>
   );
