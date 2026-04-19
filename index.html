@@ -793,16 +793,17 @@
     const emptyEl  = document.getElementById('cartEmpty');
     const footerEl = document.getElementById('cartFooter');
     const itemsEl  = document.getElementById('cartItems');
-    document.getElementById('cartCount').textContent = getTotalQty();
+    const countEl  = document.getElementById('cartCount');
+    if (countEl) countEl.textContent = getTotalQty();
+    if (!itemsEl) return;
 
     if (items.length === 0) {
       itemsEl.innerHTML = '';
-      itemsEl.appendChild(emptyEl);
-      emptyEl.style.display = 'block';
-      footerEl.style.display = 'none';
+      if (emptyEl) { itemsEl.appendChild(emptyEl); emptyEl.style.display = 'block'; }
+      if (footerEl) footerEl.style.display = 'none';
     } else {
-      emptyEl.style.display = 'none';
-      footerEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (footerEl) { footerEl.style.display = 'block'; }
       document.getElementById('cartTotal').textContent = '₹' + getTotal().toLocaleString('en-IN');
       itemsEl.innerHTML = items.map(item => `
         <div class="cart-item">
