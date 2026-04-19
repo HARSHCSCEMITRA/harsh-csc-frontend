@@ -891,7 +891,7 @@
     };
 
     try {
-      // 1. Try Supabase save
+      // 1. Supabase save
       if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
           method: 'POST',
@@ -899,11 +899,24 @@
             'Content-Type':  'application/json',
             'apikey':        SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer':        'return=representation'
+            'Prefer':        'return=minimal'
           },
-          body: JSON.stringify(orderData)
+          body: JSON.stringify({
+            order_ref:        orderData.order_ref,
+            customer_name:    orderData.customer_name,
+            customer_phone:   orderData.customer_phone,
+            customer_email:   orderData.customer_email,
+            delivery_address: orderData.delivery_address,
+            notes:            orderData.notes,
+            items:            orderData.items,
+            total_amount:     orderData.total_amount,
+            status:           'new'
+          })
         });
-        // fail silently, WhatsApp always sends anyway
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error('Supabase error:', res.status, errText);
+        }
       }
 
       // 2. WhatsApp message — always fires
