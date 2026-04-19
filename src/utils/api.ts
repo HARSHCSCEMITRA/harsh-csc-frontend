@@ -64,7 +64,8 @@ export async function placeOrder(payload: OrderPayload): Promise<OrderResponse> 
     const ref = `CSC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900000) + 100000)}`;
     return { success: true, order_ref: ref, message: 'OTP sent to your mobile.' };
   }
-  return apiFetch<OrderResponse>('/api/order', {
+  // फिक्स: /api/order की जगह /api/orders कर दिया गया है
+  return apiFetch<OrderResponse>('/api/orders', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -78,7 +79,8 @@ export async function verifyOTP(payload: OTPVerifyPayload): Promise<{ success: b
     }
     return { success: true, message: 'OTP verified successfully.' };
   }
-  return apiFetch('/api/order/verify', {
+  // फिक्स: /api/order/verify की जगह /api/orders/verify-otp
+  return apiFetch('/api/orders/verify-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -89,7 +91,8 @@ export async function resendOTP(payload: OTPResendPayload): Promise<{ success: b
     await delay(400);
     return { success: true };
   }
-  return apiFetch('/api/order/resend-otp', {
+  // फिक्स: /api/order/resend-otp की जगह /api/orders/resend-otp
+  return apiFetch('/api/orders/resend-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -103,7 +106,8 @@ export async function trackOrder(order_ref: string): Promise<OrderTrackingRespon
     if (!order_ref.startsWith('CSC-')) throw new Error('Order not found');
     return { ...MOCK_ORDER_TRACKING, order_ref };
   }
-  return apiFetch<OrderTrackingResponse>(`/api/track/${encodeURIComponent(order_ref)}`);
+  // फिक्स: /api/track/ की जगह /api/orders/
+  return apiFetch<OrderTrackingResponse>(`/api/orders/${encodeURIComponent(order_ref)}`);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
