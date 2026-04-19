@@ -58,16 +58,24 @@ export async function fetchProduct(id: string): Promise<ProductDetailResponse> {
 
 // ─── Order ───────────────────────────────────────────────────────────────────
 
-export async function placeOrder(payload: OrderPayload): Promise<OrderResponse> {
+export async function placeOrder(payload: any): Promise<OrderResponse> {
   if (USE_MOCK) {
     await delay(800);
     const ref = `CSC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900000) + 100000)}`;
     return { success: true, order_ref: ref, message: 'OTP sent to your mobile.' };
   }
-  // फिक्स: /api/order की जगह /api/orders कर दिया गया है
+  
+  // 🔥 ब्रह्मास्त्र: Frontend के डेटा को Backend के फॉर्मेट में ज़बरदस्ती बदलना 🔥
+  const fixedPayload = {
+    ...payload,
+    customer_name: payload.customer_name || payload.customerName || payload.fullName || payload.name || payload.full_name || 'Customer',
+    customer_email: payload.customer_email || payload.customerEmail || payload.email || payload.emailAddress || 'no-email@test.com',
+    customer_phone: payload.customer_phone || payload.customerPhone || payload.phone || payload.mobile || payload.mobileNumber || '0000000000',
+  };
+
   return apiFetch<OrderResponse>('/api/orders', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(fixedPayload),
   });
 }
 
@@ -79,7 +87,6 @@ export async function verifyOTP(payload: OTPVerifyPayload): Promise<{ success: b
     }
     return { success: true, message: 'OTP verified successfully.' };
   }
-  // फिक्स: /api/order/verify की जगह /api/orders/verify-otp
   return apiFetch('/api/orders/verify-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -91,7 +98,6 @@ export async function resendOTP(payload: OTPResendPayload): Promise<{ success: b
     await delay(400);
     return { success: true };
   }
-  // फिक्स: /api/order/resend-otp की जगह /api/orders/resend-otp
   return apiFetch('/api/orders/resend-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -106,7 +112,6 @@ export async function trackOrder(order_ref: string): Promise<OrderTrackingRespon
     if (!order_ref.startsWith('CSC-')) throw new Error('Order not found');
     return { ...MOCK_ORDER_TRACKING, order_ref };
   }
-  // फिक्स: /api/track/ की जगह /api/orders/
   return apiFetch<OrderTrackingResponse>(`/api/orders/${encodeURIComponent(order_ref)}`);
 }
 
