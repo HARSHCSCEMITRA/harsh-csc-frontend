@@ -127,4 +127,86 @@ export default function Home() {
                   className={`category-item ${activeCategory === cat ? 'active' : ''}`}
                   onClick={() => setActive(cat)}
                 >
-                  {CATEGORY_EMOJIS[cat] || '📁'} {cat
+                  {CATEGORY_EMOJIS[cat] || '📁'} {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Messages */}
+          {loading && (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>{t('common.loading')}</p>
+            </div>
+          )}
+
+          {error && <div className="error-state">{error}</div>}
+
+          {!loading && !error && filtered.length === 0 && (
+            <div className="empty-state card">
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+              <p style={{ fontWeight: 600, fontSize: '18px', color: '#fff' }}>
+                {t('catalog.noResults')}
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t('catalog.noResultsSub')}</p>
+            </div>
+          )}
+
+          {/* Grid */}
+          {!loading && !error && filtered.length > 0 && (
+            <div className="product-grid stagger">
+              {filtered.map((product, idx) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  lang={lang}
+                  animDelay={Math.min(idx * 50, 400)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Footer ─────────────────────────────────────────────────────── */}
+      {!loading && (
+        <footer style={{
+          borderTop: '1px solid var(--border)',
+          padding: '40px 0',
+          marginTop: '60px',
+          background: 'rgba(15,23,41,0.5)',
+          textAlign: 'center',
+        }}>
+          <div className="container">
+            <div style={{ marginBottom: '20px' }}>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                style={{ width: '40px', height: '40px', opacity: 0.8, marginBottom: '10px' }} 
+              />
+              <p style={{ 
+                fontSize: '14px', 
+                fontWeight: 700, 
+                color: '#fff', 
+                margin: 0,
+                letterSpacing: '1px'
+              }}>
+                🏛️ HARSH CSC EMITRA
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', marginTop: '5px' }}>
+                Piplantri, Rajsamand, Rajasthan
+              </p>
+            </div>
+            
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
+              {lang === 'hi'
+                ? 'सभी सेवाएं सरकारी दिशानिर्देशों के अनुसार प्रदान की जाती हैं। हर्ष सीएससी ई-मित्र राजसमंद का एक विश्वसनीय डिजिटल सेवा केंद्र है।'
+                : 'All services are provided as per government guidelines. Harsh CSC e-Mitra is a trusted digital service center in Rajsamand.'}
+            </p>
+          </div>
+        </footer>
+      )}
+    </div>
+  );
+}
