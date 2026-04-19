@@ -1,151 +1,63 @@
-/* ─── Reset & Base ─────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+// src/index.js - Updated Backend for HARSH CSC
+import { adminLogin, adminLogout } from './routes/auth.js';
+import { adminAuth } from './middleware/adminAuth.js';
 
-:root {
-  /* Colors - Harsh CSC Brand Blue & Dark Theme */
-  --bg-900: #050913;
-  --bg-800: #0a1128;
-  --bg-700: #0e1a3a;
-  --bg-600: #132248;
-  --surface: rgba(14, 26, 58, 0.7);
-  --surface-hover: rgba(19, 34, 72, 0.85);
-  --border: rgba(37, 99, 235, 0.15);
-  --border-hover: rgba(37, 99, 235, 0.45);
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://harsh-csc-frontend.vercel.app', // आपकी Vercel साइट
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
-  --blue: #2563EB;
-  --blue-light: #60a5fa;
-  --blue-glow: rgba(37, 99, 235, 0.35);
-  --blue-dim: rgba(37, 99, 235, 0.1);
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
 
-  --green: #34D399;
-  --amber: #FBBF24;
-  --red: #F87171;
+    // 1. CORS Handle करना (जरूरी)
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-  --text-primary: #F0F4FF;
-  --text-secondary: #8fa3cc;
-  --text-muted: #4a6190;
+    try {
+      // ─── PUBLIC ROUTES (Customer Portal) ───
+      
+      // Catalog/Services fetch करना
+      if (path === '/api/catalog' && request.method === 'GET') {
+        const { results } = await env.DB.prepare("SELECT * FROM products").all();
+        return new Response(JSON.stringify({ products: results }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
-  /* Typography */
-  --font-display: 'Sora', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+      // Admin Login
+      if (path === '/api/auth/admin/login' && request.method === 'POST') {
+        return await adminLogin(request, env);
+      }
 
-  /* Spacing */
-  --radius-md: 14px;
-  --radius-lg: 20px;
+      // ─── PRIVATE ROUTES (Admin Only) ───
+      
+      if (path.startsWith('/api/admin/')) {
+        // पहले चेक करना कि एडमिन लॉगिन है या नहीं
+        const authError = await adminAuth(request, env);
+        if (authError) return authError;
 
-  /* Shadows */
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(37, 99, 235, 0.1) inset;
-  --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.25);
+        // एडमिन के लिए ऑर्डर्स की लिस्ट
+        if (path === '/api/admin/orders' && request.method === 'GET') {
+          const { results } = await env.DB.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+          return new Response(JSON.stringify({ orders: results }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
 
-  /* Transitions */
-  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+      return new Response("Not Found", { status: 404, headers: corsHeaders });
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-}
-
-body {
-  background-color: var(--bg-900);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 50% -20%, rgba(37, 99, 235, 0.15) 0%, transparent 70%),
-    radial-gradient(circle at 0% 100%, rgba(52, 211, 153, 0.05) 0%, transparent 40%);
-  background-attachment: fixed;
-}
-
-/* ─── Modern Glass Card ────────────────────────────────────────────────────── */
-.glass-card {
-  background: var(--surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: all var(--transition);
-  overflow: hidden;
-}
-
-.glass-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  border-color: var(--blue-light);
-  box-shadow: var(--shadow-card), var(--shadow-glow);
-}
-
-/* ─── Loading Spinner (फिक्स किया हुआ) ───────────────────────────────────────── */
-.spinner {
-  width: 45px;
-  height: 45px;
-  border: 3px solid rgba(37, 99, 235, 0.1);
-  border-top: 3px solid var(--blue-light);
-  border-radius: 50%;
-  animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  padding: 80px 0;
-}
-
-/* ─── Admin Dashboard Cards ───────────────────────────────────────────────── */
-.dashboard-card {
-  background: var(--bg-800);
-  border: 1px solid var(--border);
-  padding: 24px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-}
-
-/* ─── Product Grid ──────────────────────────────────────────────────────────── */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-  padding: 20px 0;
-}
-
-/* ─── Animations ────────────────────────────────────────────────────────────── */
-.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── Buttons ───────────────────────────────────────────────────────────────── */
-.btn-primary {
-  background: var(--blue);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-}
-
-.btn-primary:hover {
-  background: var(--blue-light);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
-  transform: translateY(-2px);
-}
-
-/* ─── Custom Scrollbar ─────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-900); }
-::-webkit-scrollbar-thumb { background: var(--bg-600); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+    } catch (err) {
+      // अगर कोई भी गड़बड़ हो, तो एरर साफ़ दिखेगा
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
+};
