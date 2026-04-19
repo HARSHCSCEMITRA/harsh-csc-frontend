@@ -48,46 +48,45 @@ export async function placeOrder(payload: any): Promise<OrderResponse> {
 
   // +91 ya 91 prefix hatakar sirf 10 digit wala number nikalna
   const phoneMatch = payloadStr.match(/(?:\+91|91)?([6-9]\d{9})/);
-  const cleanPhone = phoneMatch ? phoneMatch[1] : '9999999999';
+  const cleanPhone = phoneMatch ? phoneMatch[1] : '';
 
   // Email dhundhna
   const emailMatch = payloadStr.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  const cleanEmail = emailMatch ? emailMatch[0] : 'no-email@test.com';
+  const cleanEmail = emailMatch ? emailMatch[0] : '';
 
-  // Naam dhundhna
+  // Naam dhundhna — customer object ke andar bhi dekhna
   const cleanName =
+    payload.customer?.name ||
     payload.customer_name ||
     payload.customerName ||
     payload.fullName ||
     payload.name ||
-    'Customer';
+    '';
 
-  const bulletproofPayload = {
-    ...payload,
-    customer_phone: cleanPhone,
-    customerPhone: cleanPhone,
-    phone: cleanPhone,
-    mobile: cleanPhone,
+  // Delivery type — backend 'digital_whatsapp' ya 'shop_visit' expect karta hai
+  const rawDelivery = payload.delivery_type || payload.deliveryType || 'digital';
+  const cleanDelivery = rawDelivery === 'digital' ? 'digital_whatsapp' : 'shop_visit';
 
+  // Items — backend { sku/product_id, quantity } expect karta hai
+  const rawItems = payload.items || [];
+  const cleanItems = rawItems.map((item: any) => ({
+    product_id: item.product_id || item.id,
+    quantity: item.quantity || 1,
+  }));
+
+  // Backend-ready payload
+  const backendPayload = {
+    customer_name:  cleanName,
     customer_email: cleanEmail,
-    customerEmail: cleanEmail,
-    email: cleanEmail,
-
-    customer_name: cleanName,
-    customerName: cleanName,
-    fullName: cleanName,
-    name: cleanName,
+    customer_phone: cleanPhone,
+    delivery_type:  cleanDelivery,
+    items:          cleanItems,
+    customer_notes: payload.customer?.notes || payload.notes || '',
   };
-
-  if (bulletproofPayload.customer) {
-    bulletproofPayload.customer.phone = cleanPhone;
-    bulletproofPayload.customer.mobile = cleanPhone;
-    bulletproofPayload.customer.email = cleanEmail;
-  }
 
   return apiFetch<OrderResponse>('/api/orders', {
     method: 'POST',
-    body: JSON.stringify(bulletproofPayload),
+    body: JSON.stringify(backendPayload),
   });
 }
 
