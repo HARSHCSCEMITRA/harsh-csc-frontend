@@ -16,6 +16,8 @@ interface Summary {
   summary_text?: string;
 }
 
+const BACKEND_URL = "https://emitra-worker.harshcscemitra.workers.dev";
+
 const STATUS_COLORS: Record<string, string> = {
   flagged:      'background: rgba(239,68,68,0.15); color: #ef4444;',
   verified:     'background: rgba(52,211,153,0.15); color: #34d399;',
@@ -46,7 +48,8 @@ const AdminDashboard = () => {
           return;
         }
 
-        const res = await fetch('/api/admin/orders', {
+        // 🔥 FIXED: Added Full Backend URL
+        const res = await fetch(`${BACKEND_URL}/api/admin/orders`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -61,7 +64,8 @@ const AdminDashboard = () => {
 
         // AI Summary
         try {
-          const summaryRes = await fetch('/api/admin/summary', {
+          // 🔥 FIXED: Added Full Backend URL
+          const summaryRes = await fetch(`${BACKEND_URL}/api/admin/summary`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (summaryRes.ok) {
@@ -69,7 +73,7 @@ const AdminDashboard = () => {
             setSummary(summaryData);
           }
         } catch {
-          // Summary optional hai — error ignore
+          // Summary optional hai
         }
       } catch (err) {
         setError('Network error. Backend se connection nahi ho paya.');
@@ -81,7 +85,7 @@ const AdminDashboard = () => {
     fetchAdminData();
   }, []);
 
-  // Filter + Search
+  // Filter + Search logic
   const filteredOrders = orders.filter(o => {
     const matchStatus = filter === 'all' || o.status === filter;
     const q = search.toLowerCase();
@@ -116,7 +120,6 @@ const AdminDashboard = () => {
     return type;
   };
 
-  // ── Styles ────────────────────────────────────────────────────────────────
   const s = {
     page:       { minHeight: '100vh', background: '#050913', color: '#e2e8f0', fontFamily: 'Inter, sans-serif', padding: '24px' },
     header:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', paddingBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)' },
@@ -145,7 +148,6 @@ const AdminDashboard = () => {
 
   return (
     <div style={s.page}>
-
       {/* Header */}
       <div style={s.header}>
         <div>
@@ -155,10 +157,9 @@ const AdminDashboard = () => {
         <div style={s.badge}>● Live</div>
       </div>
 
-      {/* Error */}
       {error && <div style={s.errorBox}>⚠️ {error}</div>}
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div style={s.grid3}>
         <div style={s.cardBlue}>
           <div style={s.label}>AI Business Insights</div>
@@ -184,14 +185,13 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Table Container */}
       <div style={{ ...s.card, padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontWeight: 700, fontSize: '15px' }}>📋 Service Requests</div>
           <div style={{ fontSize: '12px', color: '#64748b' }}>{filteredOrders.length} records</div>
         </div>
 
-        {/* Toolbar */}
         <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           <div style={s.toolbar}>
             <input
@@ -242,13 +242,10 @@ const AdminDashboard = () => {
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <td style={s.td}>
-                      <span style={s.mono}>{order.order_ref}</span>
-                    </td>
+                    <td style={s.td}><span style={s.mono}>{order.order_ref}</span></td>
                     <td style={s.td}>
                       <div style={s.name}>{order.customer_name}</div>
                       <div style={s.phone}>{order.customer_phone}</div>
-                      <div style={{ ...s.phone, color: '#475569' }}>{order.customer_email}</div>
                     </td>
                     <td style={s.td}>
                       <span style={{
@@ -264,22 +261,11 @@ const AdminDashboard = () => {
                         {order.status.toUpperCase().replace('_', ' ')}
                       </span>
                     </td>
-                    <td style={{ ...s.td, color: '#94a3b8' }}>
-                      {getDeliveryLabel(order.delivery_type)}
-                    </td>
-                    <td style={{ ...s.td, fontWeight: 600, color: '#e2e8f0' }}>
-                      {order.total_amount ? `₹${order.total_amount.toLocaleString('en-IN')}` : '—'}
-                    </td>
-                    <td style={{ ...s.td, color: '#64748b', fontSize: '12px' }}>
-                      {formatDate(order.created_at)}
-                    </td>
+                    <td style={{ ...s.td, color: '#94a3b8' }}>{getDeliveryLabel(order.delivery_type)}</td>
+                    <td style={{ ...s.td, fontWeight: 600 }}>{order.total_amount ? `₹${order.total_amount}` : '—'}</td>
+                    <td style={{ ...s.td, color: '#64748b', fontSize: '12px' }}>{formatDate(order.created_at)}</td>
                     <td style={s.td}>
-                      <button
-                        style={s.actionBtn}
-                        onClick={() => window.open(`/admin/orders/${order.order_ref}`, '_blank')}
-                      >
-                        View →
-                      </button>
+                      <button style={s.actionBtn}>View →</button>
                     </td>
                   </tr>
                 ))}
@@ -288,7 +274,6 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
-
     </div>
   );
 };
