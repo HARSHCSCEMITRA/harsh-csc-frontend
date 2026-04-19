@@ -21,7 +21,6 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const err = await res.text();
-    // एरर को साफ़ दिखाने के लिए
     try {
       const json = JSON.parse(err);
       throw new Error(json.error || err);
@@ -45,28 +44,31 @@ export async function fetchProduct(id: string): Promise<ProductDetailResponse> {
 export async function placeOrder(payload: any): Promise<OrderResponse> {
   if (USE_MOCK) return { success: true, order_ref: 'CSC-123456', message: 'Mock OTP sent' };
 
-  // 🔥 THE ULTIMATE FIX 🔥: पूरे डेटा को स्कैन करके असली जानकारी निकालना
   const payloadStr = JSON.stringify(payload);
-  
-  // 10 अंकों का फोन नंबर ढूँढना
-  const phoneMatch = payloadStr.match(/[6-9]\d{9}/);
-  const cleanPhone = phoneMatch ? phoneMatch[0] : '9999999999';
 
-  // ईमेल ढूँढना
+  // +91 ya 91 prefix hatakar sirf 10 digit wala number nikalna
+  const phoneMatch = payloadStr.match(/(?:\+91|91)?([6-9]\d{9})/);
+  const cleanPhone = phoneMatch ? phoneMatch[1] : '9999999999';
+
+  // Email dhundhna
   const emailMatch = payloadStr.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   const cleanEmail = emailMatch ? emailMatch[0] : 'no-email@test.com';
 
-  // नाम ढूँढना
-  const cleanName = payload.customer_name || payload.customerName || payload.fullName || payload.name || 'Harsh Customer';
+  // Naam dhundhna
+  const cleanName =
+    payload.customer_name ||
+    payload.customerName ||
+    payload.fullName ||
+    payload.name ||
+    'Customer';
 
-  // बैकएंड को उसी की भाषा में डेटा देना (सभी संभावित नामों से)
   const bulletproofPayload = {
     ...payload,
     customer_phone: cleanPhone,
     customerPhone: cleanPhone,
     phone: cleanPhone,
     mobile: cleanPhone,
-    
+
     customer_email: cleanEmail,
     customerEmail: cleanEmail,
     email: cleanEmail,
@@ -74,14 +76,13 @@ export async function placeOrder(payload: any): Promise<OrderResponse> {
     customer_name: cleanName,
     customerName: cleanName,
     fullName: cleanName,
-    name: cleanName
+    name: cleanName,
   };
 
-  // अगर डेटा 'customer' फोल्डर में है, तो उसे भी ठीक करना
   if (bulletproofPayload.customer) {
-      bulletproofPayload.customer.phone = cleanPhone;
-      bulletproofPayload.customer.mobile = cleanPhone;
-      bulletproofPayload.customer.email = cleanEmail;
+    bulletproofPayload.customer.phone = cleanPhone;
+    bulletproofPayload.customer.mobile = cleanPhone;
+    bulletproofPayload.customer.email = cleanEmail;
   }
 
   return apiFetch<OrderResponse>('/api/orders', {
