@@ -10,6 +10,18 @@ const Checkout        = lazy(() => import('./pages/Checkout'));
 const OTPVerification = lazy(() => import('./pages/OTPVerification'));
 const OrderTracking   = lazy(() => import('./pages/OrderTracking'));
 
+// ─── Admin Pages (alag lazy load) ────────────────────────────────────────────
+const AdminLogin      = lazy(() => import('./admin/Login'));
+const AdminDashboard  = lazy(() => import('./admin/Dashboard'));
+
+// ─── Admin Route Guard ───────────────────────────────────────────────────────
+// Agar token nahi hai toh login page pe bhej do
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('admin_token');
+  if (!token) return <Navigate to="/admin/login" replace />;
+  return <>{children}</>;
+}
+
 // ─── Loading Fallback ────────────────────────────────────────────────────────
 function PageLoader() {
   return (
@@ -29,25 +41,67 @@ function PageLoader() {
   );
 }
 
+// ─── Admin Layout (Header/CartDrawer nahi chahiye admin mein) ────────────────
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Header />
-      <CartDrawer />
+      <Routes>
 
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/"                 element={<Home />} />
-          <Route path="/product/:id"      element={<ProductDetail />} />
-          <Route path="/checkout"         element={<Checkout />} />
-          <Route path="/verify-otp"       element={<OTPVerification />} />
-          <Route path="/track"            element={<OrderTracking />} />
-          <Route path="/track/:ref"       element={<OrderTracking />} />
+        {/* ── Admin Routes (Header aur Cart nahi) ───────────────────────── */}
+        <Route
+          path="/admin/login"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <AdminLayout>
+                <AdminLogin />
+              </AdminLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <AdminLayout>
+                <AdminGuard>
+                  <AdminDashboard />
+                </AdminGuard>
+              </AdminLayout>
+            </Suspense>
+          }
+        />
+        {/* /admin → seedha login pe bhejo */}
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+        {/* ── Public Routes (Header + Cart ke saath) ────────────────────── */}
+        <Route
+          path="*"
+          element={
+            <>
+              <Header />
+              <CartDrawer />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/"            element={<Home />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/checkout"    element={<Checkout />} />
+                  <Route path="/verify-otp"  element={<OTPVerification />} />
+                  <Route path="/track"       element={<OrderTracking />} />
+                  <Route path="/track/:ref"  element={<OrderTracking />} />
+
+                  {/* Catch-all */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </>
+          }
+        />
+
+      </Routes>
     </BrowserRouter>
   );
 }
