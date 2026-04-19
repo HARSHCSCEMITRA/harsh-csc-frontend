@@ -22,10 +22,10 @@ export default function OrderTracking() {
   const { lang } = useLanguageStore();
   const t = createT(lang);
 
-  const [inputRef, setInputRef]         = useState(paramRef || sessionStorage.getItem('csc_order_ref') || '');
-  const [order, setOrder]               = useState<OrderTrackingResponse | null>(null);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState('');
+  const [inputRef, setInputRef]           = useState(paramRef || sessionStorage.getItem('csc_order_ref') || '');
+  const [order, setOrder]                 = useState<OrderTrackingResponse | null>(null);
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState('');
   const [confettiFired, setConfettiFired] = useState(false);
 
   const doTrack = useCallback(async (ref: string) => {
@@ -44,14 +44,12 @@ export default function OrderTracking() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-track if we have a ref from URL or session
   useEffect(() => {
     const ref = paramRef || sessionStorage.getItem('csc_order_ref');
     if (ref) { setInputRef(ref); doTrack(ref); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramRef]);
 
-  // Fire confetti on completed status
   useEffect(() => {
     if (order?.status === 'completed' && !confettiFired) {
       setConfettiFired(true);
@@ -68,6 +66,30 @@ export default function OrderTracking() {
     } catch { return iso; }
   };
 
+  // ✅ Delivery type ko readable text mein convert karna
+  const getDeliveryLabel = (deliveryType: string) => {
+    if (deliveryType === 'digital_whatsapp') {
+      return lang === 'hi' ? 'डिजिटल (WhatsApp/Email)' : 'Digital (WhatsApp/Email)';
+    }
+    if (deliveryType === 'shop_visit') {
+      return lang === 'hi' ? 'दुकान पर आएं' : 'Shop Visit';
+    }
+    return deliveryType;
+  };
+
+  // ✅ WhatsApp number — backend se aata hai, fallback .env se, last resort hardcoded
+  const waNumber = order?.support_whatsapp
+    || import.meta.env.VITE_STORE_WHATSAPP
+    || '917023029903';
+
+  // ✅ Service name — items array se pehla item ka naam
+  const serviceName = order?.items && order.items.length > 0
+    ? order.items.map(i => i.name).join(', ')
+    : '—';
+
+  // ✅ Total amount — backend 'total_amount' field
+  const totalAmount = order?.total_amount ?? 0;
+
   return (
     <div className="page-wrapper" style={{ paddingBottom: '80px' }}>
       <div className="container" style={{ paddingTop: '32px', maxWidth: '640px' }}>
@@ -82,7 +104,7 @@ export default function OrderTracking() {
           </h1>
         </div>
 
-        {/* ── Search Bar ──────────────────────────────────────────────────────── */}
+        {/* Search Bar */}
         <div className="glass-card animate-fadeUp" style={{ padding: '20px', marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
             {t('track.ref')}
@@ -93,7 +115,7 @@ export default function OrderTracking() {
               type="text"
               placeholder={t('track.refPlaceholder')}
               value={inputRef}
-              onChange={e => setInputRef(e.target.value)}
+              onChange={e => setInputRef(e.target.value.toUpperCase())}
               onKeyDown={e => e.key === 'Enter' && doTrack(inputRef)}
               style={{ flex: 1 }}
             />
@@ -124,7 +146,7 @@ export default function OrderTracking() {
           </div>
         )}
 
-        {/* ── Order Details ────────────────────────────────────────────────────── */}
+        {/* Order Details */}
         {order && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
@@ -165,11 +187,15 @@ export default function OrderTracking() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {[
-                  { label: t('track.customer'), value: order.customer_name, icon: '👤' },
-                  { label: t('track.service'), value: lang === 'hi' ? order.service_nameHi : order.service_name, icon: '📋' },
+                  // ✅ customer_name — backend se sahi aa raha hai
+                  { label: t('track.customer'), value: order.customer_name || '—', icon: '👤' },
+                  // ✅ items array se service naam
+                  { label: t('track.service'), value: serviceName, icon: '📋' },
                   { label: t('track.placed'), value: formatDate(order.created_at), icon: '📅' },
-                  { label: t('track.delivery'), value: order.delivery_type === 'digital' ? t('track.digitalDelivery') : t('track.shopVisit'), icon: order.delivery_type === 'digital' ? '📲' : '🏪' },
-                  { label: t('track.total'), value: order.total === 0 ? t('card.free') : `₹${order.total}`, icon: '💰' },
+                  // ✅ delivery_type ko readable text mein convert kiya
+                  { label: t('track.delivery'), value: getDeliveryLabel(order.delivery_type), icon: order.delivery_type === 'digital_whatsapp' ? '📲' : '🏪' },
+                  // ✅ total_amount — backend ka actual field
+                  { label: t('track.total'), value: totalAmount > 0 ? `₹${totalAmount.toLocaleString('en-IN')}` : t('card.free'), icon: '💰' },
                   { label: lang === 'hi' ? 'अंतिम अपडेट' : 'Last Updated', value: formatDate(order.updated_at), icon: '🕐' },
                 ].map(item => (
                   <div key={item.label} style={{
@@ -187,7 +213,7 @@ export default function OrderTracking() {
               </div>
             </div>
 
-            {/* ── Status Timeline ─────────────────────────────────────────────── */}
+            {/* Status Timeline */}
             <div className="glass-card animate-fadeUp" style={{ animationDelay: '80ms', padding: '24px' }}>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, marginBottom: '24px', color: 'var(--text-secondary)' }}>
                 📊 {lang === 'hi' ? 'ऑर्डर की स्थिति' : 'Order Status'}
@@ -195,8 +221,8 @@ export default function OrderTracking() {
               <StatusTimeline currentStatus={order.status} lang={lang} />
             </div>
 
-            {/* ── Payment CTA ─────────────────────────────────────────────────── */}
-            {order.status === 'processing' && order.payment_link && (
+            {/* Payment CTA */}
+            {order.status === 'accepted' && order.payment_link_url && (
               <div className="animate-scaleIn glass-card" style={{
                 padding: '20px',
                 background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(37,99,235,0.03) 100%)',
@@ -221,7 +247,7 @@ export default function OrderTracking() {
                         : 'Your documents are ready. Please complete the payment to proceed.'}
                     </p>
                     <a
-                      href={order.payment_link}
+                      href={order.payment_link_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary"
@@ -231,14 +257,14 @@ export default function OrderTracking() {
                         animation: 'pulse-blue 2s ease infinite',
                       }}
                     >
-                      💳 {t('track.payNow')} — ₹{order.total}
+                      💳 {t('track.payNow')} — ₹{totalAmount.toLocaleString('en-IN')}
                     </a>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── Completion Info ─────────────────────────────────────────────── */}
+            {/* Completion Info */}
             {order.status === 'completed' && (order.completion_info || order.completion_infoHi) && (
               <div className="glass-card animate-fadeUp" style={{
                 padding: '20px',
@@ -254,7 +280,7 @@ export default function OrderTracking() {
               </div>
             )}
 
-            {/* Share / Help Strip */}
+            {/* WhatsApp Support Strip */}
             <div style={{
               padding: '16px',
               background: 'rgba(5,9,19,0.4)',
@@ -268,8 +294,9 @@ export default function OrderTracking() {
                   ? 'कोई प्रश्न? हमसे WhatsApp पर संपर्क करें।'
                   : 'Have questions? Contact us on WhatsApp for support.'}
               </p>
+              {/* ✅ WhatsApp number backend se ya .env se — hardcoded nahi */}
               <a
-                href={`https://wa.me/${import.meta.env.VITE_STORE_WHATSAPP || '919999999999'}?text=Hi, my order ref is ${order.order_ref}. I need help.`}
+                href={`https://wa.me/${waNumber}?text=Hi%2C+my+order+ref+is+${order.order_ref}.+I+need+help.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -277,16 +304,16 @@ export default function OrderTracking() {
                   background: '#25D366', color: '#fff',
                   padding: '8px 14px', borderRadius: 'var(--radius-sm)',
                   fontSize: '12px', fontWeight: 700, textDecoration: 'none',
-                  transition: 'filter var(--transition)',
                 }}
               >
                 <span>💬</span> WhatsApp
               </a>
             </div>
+
           </div>
         )}
 
-        {/* ── Empty State (no search yet) ─────────────────────────────────────── */}
+        {/* Empty State */}
         {!order && !loading && !error && (
           <div className="glass-card animate-fadeUp" style={{ padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📦</div>
@@ -300,6 +327,7 @@ export default function OrderTracking() {
             </p>
           </div>
         )}
+
       </div>
     </div>
   );
