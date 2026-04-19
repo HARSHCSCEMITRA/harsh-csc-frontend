@@ -19,8 +19,8 @@ export interface Product {
   descriptionHi: string;
   documents: string[];
   documentsHi: string[];
-  badge?: string;          // e.g. "Popular", "Free", "New"
-  turnaround?: string;     // e.g. "2-3 days"
+  badge?: string;
+  turnaround?: string;
   turnaroundHi?: string;
 }
 
@@ -82,11 +82,15 @@ export interface OTPResendPayload {
 // ─── Order Tracking ──────────────────────────────────────────────────────────
 
 export type OrderStatusCode =
+  | 'pending'
   | 'verified'
-  | 'under_review'
-  | 'processing'
+  | 'flagged'
+  | 'docs_reviewed'
+  | 'accepted'
   | 'paid'
-  | 'completed';
+  | 'completed'
+  | 'rejected'
+  | 'cancelled';
 
 export interface TrackingStep {
   code: OrderStatusCode;
@@ -97,18 +101,25 @@ export interface TrackingStep {
   icon: string;
 }
 
+// ✅ Backend ke exact response fields se match karta hai
 export interface OrderTrackingResponse {
-  order_ref: string;
-  status: OrderStatusCode;
-  customer_name: string;
-  service_name: string;
-  service_nameHi: string;
-  total: number;
-  delivery_type: DeliveryType;
-  created_at: string;
-  updated_at: string;
-  payment_link?: string;
-  completion_info?: string;
+  order_ref:          string;
+  status:             OrderStatusCode;
+  status_message:     string;
+  customer_name:      string;
+  delivery_type:      string;           // 'digital_whatsapp' | 'shop_visit'
+  created_at:         string;
+  updated_at:         string;
+  total_amount:       number;           // ✅ backend 'total_amount' bhejta hai
+  items:              Array<{           // ✅ backend 'items' array bhejta hai
+    name: string;
+    qty:  number;
+    subtotal: number;
+  }>;
+  payment_link_url?:  string | null;    // ✅ backend field naam
+  payment_expires_at?: string | null;
+  support_whatsapp?:  string;           // ✅ backend se aata hai
+  completion_info?:   string;
   completion_infoHi?: string;
 }
 
