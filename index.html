@@ -1562,11 +1562,9 @@
 
 <script>
   // ── CONFIG ────────────────────────────────────────────────────
-  // Supabase se free database lo: supabase.com
-  // Wahan account banao, project banao, niche ki values fill karo
   const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
-  const WHATSAPP_NUM = '917023029903';            // ✅ Already set
+  const WHATSAPP_NUM = '917023029903';            
   const ADMIN_EMAIL  = 'harshcscemitra@gmail.com';
 
   // ── PRODUCTS ──────────────────────────────────────────────────
@@ -1576,7 +1574,6 @@
     pvc:     { id:'pvc',     name:'Smart Card & PVC Print',  price:99,   emoji:'🪪' }
   };
 
-  // Razorpay config — replace with your actual key_id from dashboard.razorpay.com
   const RAZORPAY_KEY = 'rzp_test_REPLACE_WITH_YOUR_KEY';
 
   // ── PVC ORDER STATE ────────────────────────────────────────────
@@ -1585,14 +1582,17 @@
   function openPVCModal() {
     pvcState = { step: 1, cardType: 'aadhaar', cardLabel: 'Aadhaar Card', pricePerCard: 99, qty: 1 };
     renderPVCStep(1);
-    document.getElementById('pvcModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('pvcModal');
+    if (modal) {
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
   }
-  // alias for card button
   function openPVCOrder() { openPVCModal(); }
 
   function closePVCModal() {
-    document.getElementById('pvcModal').classList.remove('open');
+    const modal = document.getElementById('pvcModal');
+    if (modal) modal.classList.remove('open');
     document.body.style.overflow = '';
   }
 
@@ -1607,33 +1607,40 @@
 
   function changeQty(delta) {
     pvcState.qty = Math.max(1, Math.min(50, pvcState.qty + delta));
-    document.getElementById('pvcQtyDisplay').textContent = pvcState.qty;
+    const qtyDisplay = document.getElementById('pvcQtyDisplay');
+    if (qtyDisplay) qtyDisplay.textContent = pvcState.qty;
     updatePVCSubtotal();
   }
 
   function updatePVCSubtotal() {
     let price = pvcState.pricePerCard * pvcState.qty;
-    if (pvcState.qty >= 5) price = Math.round(price * 0.9); // 10% bulk
-    document.getElementById('pvcSubtotal').textContent = '₹' + price.toLocaleString('en-IN');
+    if (pvcState.qty >= 5) price = Math.round(price * 0.9);
+    const subtotalEl = document.getElementById('pvcSubtotal');
+    if (subtotalEl) subtotalEl.textContent = '₹' + price.toLocaleString('en-IN');
     pvcState.totalPrice = price;
   }
 
   function renderPVCStep(step) {
     pvcState.step = step;
     ['1','2','3'].forEach(s => {
-      document.getElementById('pvcStep'+s).style.display       = (s == step) ? 'block' : 'none';
-      document.getElementById('pvcStep'+s+'Label').style.display = (s == step) ? 'block' : 'none';
+      const stepEl = document.getElementById('pvcStep'+s);
+      const labelEl = document.getElementById('pvcStep'+s+'Label');
+      if (stepEl) stepEl.style.display = (s == step) ? 'block' : 'none';
+      if (labelEl) labelEl.style.display = (s == step) ? 'block' : 'none';
     });
     const backBtn = document.getElementById('pvcBackBtn');
     const nextBtn = document.getElementById('pvcNextBtn');
-    backBtn.style.display = step > 1 ? 'inline-flex' : 'none';
-    if (step === 1) { nextBtn.textContent = 'Next: Shipping Details →'; nextBtn.onclick = pvcStepNext; }
-    if (step === 2) { nextBtn.textContent = 'Next: Send Document →';    nextBtn.onclick = pvcStepNext; }
-    if (step === 3) {
-      nextBtn.style.display = 'none'; // WA button drives step 3
-      document.getElementById('pvcCardTypeLabel').textContent = pvcState.cardLabel + ' image';
-    } else {
-      nextBtn.style.display = 'flex';
+    if (backBtn) backBtn.style.display = step > 1 ? 'inline-flex' : 'none';
+    if (nextBtn) {
+      if (step === 1) { nextBtn.textContent = 'Next: Shipping Details →'; nextBtn.onclick = pvcStepNext; }
+      if (step === 2) { nextBtn.textContent = 'Next: Send Document →';    nextBtn.onclick = pvcStepNext; }
+      if (step === 3) {
+        nextBtn.style.display = 'none'; 
+        const typeLabel = document.getElementById('pvcCardTypeLabel');
+        if (typeLabel) typeLabel.textContent = pvcState.cardLabel + ' image';
+      } else {
+        nextBtn.style.display = 'flex';
+      }
     }
     if (step === 1) updatePVCSubtotal();
   }
@@ -1645,13 +1652,13 @@
     if (pvcState.step === 1) {
       renderPVCStep(2);
     } else if (pvcState.step === 2) {
-      const name    = document.getElementById('pvc_name').value.trim();
-      const mobile  = document.getElementById('pvc_mobile').value.trim();
-      const address = document.getElementById('pvc_address').value.trim();
-      const pin     = document.getElementById('pvc_pin').value.trim();
-      if (!name)                          { showPVCError('Please enter your full name.'); return; }
+      const name    = document.getElementById('pvc_name')?.value.trim();
+      const mobile  = document.getElementById('pvc_mobile')?.value.trim();
+      const address = document.getElementById('pvc_address')?.value.trim();
+      const pin     = document.getElementById('pvc_pin')?.value.trim();
+      if (!name)                                  { showPVCError('Please enter your full name.'); return; }
       if (!/^[6-9]\d{9}$/.test(mobile))  { showPVCError('Please enter a valid 10-digit mobile number.'); return; }
-      if (!address)                       { showPVCError('Please enter your full delivery address.'); return; }
+      if (!address)                               { showPVCError('Please enter your full delivery address.'); return; }
       if (!/^\d{6}$/.test(pin))          { showPVCError('Please enter a valid 6-digit PIN code.'); return; }
       renderPVCStep(3);
     }
@@ -1688,9 +1695,9 @@
   function sendPVCOnWhatsApp() {
     const msg = buildPVCWhatsAppMsg();
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`, '_blank');
-    // Store pvcState for Supabase save after payment
     setTimeout(() => {
-      document.getElementById('pvcModal').classList.remove('open');
+      const modal = document.getElementById('pvcModal');
+      if (modal) modal.classList.remove('open');
       document.body.style.overflow = '';
       openPayConfirm();
     }, 800);
@@ -1698,25 +1705,29 @@
 
   // ── PAYMENT CONFIRMATION POPUP ─────────────────────────────────
   function openPayConfirm() {
-    document.getElementById('payConfirmPopup').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const popup = document.getElementById('payConfirmPopup');
+    if (popup) {
+      popup.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
   }
   function closePayConfirm() {
-    document.getElementById('payConfirmPopup').classList.remove('open');
+    const popup = document.getElementById('payConfirmPopup');
+    if (popup) popup.classList.remove('open');
     document.body.style.overflow = '';
-    // Re-open PVC modal at step 3 so user can resend
     openPVCModal();
     renderPVCStep(3);
   }
 
   async function proceedToPayment() {
-    document.getElementById('payConfirmPopup').classList.remove('open');
+    const popup = document.getElementById('payConfirmPopup');
+    if (popup) popup.classList.remove('open');
     document.body.style.overflow = '';
 
     const name   = document.getElementById('pvc_name')?.value.trim()   || 'Customer';
     const mobile = document.getElementById('pvc_mobile')?.value.trim() || '';
     const email  = '';
-    const amount = (pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty) * 100; // paise
+    const amount = (pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty) * 100;
 
     const options = {
       key:         RAZORPAY_KEY,
@@ -1733,13 +1744,11 @@
       },
       theme: { color: '#E8671A' },
       handler: async function(response) {
-        // Payment successful
         await savePVCOrder(response.razorpay_payment_id);
         showPVCSuccess(response.razorpay_payment_id);
       },
       modal: {
         ondismiss: function() {
-          // User closed Razorpay — show gentle message
           alert('Payment was not completed. Your order details are saved. You can pay again by clicking "Order Now".');
         }
       }
@@ -1787,15 +1796,19 @@
   }
 
   function showPVCSuccess(paymentId) {
-    // Reuse the existing success modal with custom content
-    document.getElementById('successRef').textContent = pvcState.orderRef || ('PVC-' + paymentId.slice(-6).toUpperCase());
-    document.getElementById('successModal').querySelector('h2').textContent = '🪪 Order Confirmed & Paid!';
-    document.getElementById('successModal').querySelector('p').textContent =
-      `Your PVC card order has been received and payment confirmed. We will print and dispatch via Speed Post within 2–3 working days. Tracking number will be updated in the "My Orders" section.`;
-    document.getElementById('successModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const successRef = document.getElementById('successRef');
+    if (successRef) successRef.textContent = pvcState.orderRef || ('PVC-' + paymentId.slice(-6).toUpperCase());
+    
+    const successModal = document.getElementById('successModal');
+    if (successModal) {
+      const h2 = successModal.querySelector('h2');
+      const p = successModal.querySelector('p');
+      if (h2) h2.textContent = '🪪 Order Confirmed & Paid!';
+      if (p) p.textContent = `Your PVC card order has been received and payment confirmed. We will print and dispatch via Speed Post within 2–3 working days. Tracking number will be updated in the "My Orders" section.`;
+      successModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
 
-    // Persist minimal order in localStorage for tracking UI
     try {
       const orders = JSON.parse(localStorage.getItem('hsc_pvc_orders') || '[]');
       orders.unshift({
@@ -1814,8 +1827,10 @@
 
   // ── MY ORDERS TRACKING ─────────────────────────────────────────
   async function trackOrders() {
-    const mobile = document.getElementById('trackMobile').value.trim();
+    const mobile = document.getElementById('trackMobile')?.value.trim() || '';
     const resultEl = document.getElementById('orderTrackResult');
+    if (!resultEl) return;
+
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       resultEl.style.display = 'block';
       resultEl.innerHTML = `<div class="track-empty">⚠️ Please enter a valid 10-digit Indian mobile number.</div>`;
@@ -1824,7 +1839,6 @@
     resultEl.style.display = 'block';
     resultEl.innerHTML = `<div class="track-empty">🔄 Looking up your orders…</div>`;
 
-    // 1. Try Supabase first (live orders)
     let supabaseOrders = [];
     if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
       try {
@@ -1836,14 +1850,12 @@
       } catch(e) {}
     }
 
-    // 2. Also check localStorage (offline / just placed)
     let localOrders = [];
     try {
       localOrders = JSON.parse(localStorage.getItem('hsc_pvc_orders') || '[]')
         .filter(o => o.mobile === mobile);
     } catch(e) {}
 
-    // Merge: prefer Supabase data, supplement with local
     const allRefs = new Set(supabaseOrders.map(o => o.order_ref));
     const merged = [
       ...supabaseOrders.map(o => ({
@@ -1930,7 +1942,8 @@
     } else {
       if (emptyEl) emptyEl.style.display = 'none';
       if (footerEl) { footerEl.style.display = 'block'; }
-      document.getElementById('cartTotal').textContent = '₹' + getTotal().toLocaleString('en-IN');
+      const totalEl = document.getElementById('cartTotal');
+      if (totalEl) totalEl.textContent = '₹' + getTotal().toLocaleString('en-IN');
       itemsEl.innerHTML = items.map(item => `
         <div class="cart-item">
           <div class="cart-item-icon">${item.emoji}</div>
@@ -1948,13 +1961,17 @@
 
   // ── CART PANEL ────────────────────────────────────────────────
   function openCartPanel() {
-    document.getElementById('cartOverlay').classList.add('open');
-    document.getElementById('cartSidebar').classList.add('open');
+    const overlay = document.getElementById('cartOverlay');
+    const sidebar = document.getElementById('cartSidebar');
+    if (overlay) overlay.classList.add('open');
+    if (sidebar) sidebar.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
   function closeCart() {
-    document.getElementById('cartOverlay').classList.remove('open');
-    document.getElementById('cartSidebar').classList.remove('open');
+    const overlay = document.getElementById('cartOverlay');
+    const sidebar = document.getElementById('cartSidebar');
+    if (overlay) overlay.classList.remove('open');
+    if (sidebar) sidebar.classList.remove('open');
     document.body.style.overflow = '';
   }
 
@@ -1963,19 +1980,25 @@
     if (getCartItems().length === 0) return;
     closeCart();
     const items = getCartItems();
-    document.getElementById('modalSummary').innerHTML = `
-      <h4>Order Summary</h4>
-      ${items.map(i => `<div class="order-mini-item"><span>${i.emoji} ${i.name} ×${i.qty}</span><span>₹${(i.price*i.qty).toLocaleString('en-IN')}</span></div>`).join('')}
-      <div class="order-mini-total"><span>Total</span><span>₹${getTotal().toLocaleString('en-IN')}</span></div>`;
-    document.getElementById('checkoutModal').classList.add('open');
+    const summary = document.getElementById('modalSummary');
+    if (summary) {
+      summary.innerHTML = `
+        <h4>Order Summary</h4>
+        ${items.map(i => `<div class="order-mini-item"><span>${i.emoji} ${i.name} ×${i.qty}</span><span>₹${(i.price*i.qty).toLocaleString('en-IN')}</span></div>`).join('')}
+        <div class="order-mini-total"><span>Total</span><span>₹${getTotal().toLocaleString('en-IN')}</span></div>`;
+    }
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) checkoutModal.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
   function closeCheckout() {
-    document.getElementById('checkoutModal').classList.remove('open');
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) checkoutModal.classList.remove('open');
     document.body.style.overflow = '';
   }
   function closeSuccess() {
-    document.getElementById('successModal').classList.remove('open');
+    const successModal = document.getElementById('successModal');
+    if (successModal) successModal.classList.remove('open');
     document.body.style.overflow = '';
     cart = {};
     renderCart();
@@ -1986,20 +2009,22 @@
     e.preventDefault();
     const btn   = document.getElementById('submitBtn');
     const errEl = document.getElementById('formError');
-    errEl.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
 
-    const name    = document.getElementById('f_name').value.trim();
-    const phone   = document.getElementById('f_phone').value.trim();
-    const email   = document.getElementById('f_email').value.trim();
-    const address = document.getElementById('f_address').value.trim();
-    const notes   = document.getElementById('f_notes').value.trim();
+    const name    = document.getElementById('f_name')?.value.trim();
+    const phone   = document.getElementById('f_phone')?.value.trim();
+    const email   = document.getElementById('f_email')?.value.trim();
+    const address = document.getElementById('f_address')?.value.trim();
+    const notes   = document.getElementById('f_notes')?.value.trim();
 
-    if (!name)                            { showErr('Please enter your full name.'); return; }
+    if (!name)                                  { showErr('Please enter your full name.'); return; }
     if (!/^[6-9]\d{9}$/.test(phone))     { showErr('Please enter a valid 10-digit Indian mobile number.'); return; }
-    if (!address)                          { showErr('Please enter your delivery address.'); return; }
+    if (!address)                               { showErr('Please enter your delivery address.'); return; }
 
-    btn.textContent = '⏳ Placing Order...';
-    btn.disabled = true;
+    if (btn) {
+      btn.textContent = '⏳ Placing Order...';
+      btn.disabled = true;
+    }
 
     const items    = getCartItems();
     const total    = getTotal();
@@ -2018,7 +2043,6 @@
     };
 
     try {
-      // 1. Supabase save
       if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
           method: 'POST',
@@ -2040,13 +2064,8 @@
             status:           'new'
           })
         });
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error('Supabase error:', res.status, errText);
-        }
       }
 
-      // 2. WhatsApp message — always fires
       const waText = encodeURIComponent(
         `🆕 NEW ORDER — ${orderRef}\n\n` +
         `👤 Name: ${name}\n📞 Phone: ${phone}\n` +
@@ -2060,30 +2079,39 @@
       window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
 
       closeCheckout();
-      document.getElementById('successRef').textContent = orderRef;
-      document.getElementById('successModal').classList.add('open');
+      const successRef = document.getElementById('successRef');
+      if (successRef) successRef.textContent = orderRef;
+      const successModal = document.getElementById('successModal');
+      if (successModal) successModal.classList.add('open');
 
     } catch (err) {
       showErr('Something went wrong. Please try again or contact us on WhatsApp.');
-      btn.textContent = '✅ Confirm Order — Free Consultation';
-      btn.disabled = false;
+      if (btn) {
+        btn.textContent = '✅ Confirm Order — Free Consultation';
+        btn.disabled = false;
+      }
     }
   }
 
   function showErr(msg) {
     const el = document.getElementById('formError');
-    el.textContent = msg;
-    el.style.display = 'block';
+    if (el) {
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
     const btn = document.getElementById('submitBtn');
-    btn.textContent = '✅ Confirm Order — Free Consultation';
-    btn.disabled = false;
+    if (btn) {
+      btn.textContent = '✅ Confirm Order — Free Consultation';
+      btn.disabled = false;
+    }
   }
 
-  // ── LANGUAGE — handled by Google Translate widget ───────────
-
   // ── MODAL OVERLAY CLOSE ───────────────────────────────────────
-  document.getElementById('checkoutModal').addEventListener('click', function(e) { if(e.target===this) closeCheckout(); });
-  document.getElementById('successModal').addEventListener('click', function(e)  { if(e.target===this) closeSuccess(); });
+  const checkoutModalEl = document.getElementById('checkoutModal');
+  if (checkoutModalEl) checkoutModalEl.addEventListener('click', function(e) { if(e.target===this) closeCheckout(); });
+  
+  const successModalEl = document.getElementById('successModal');
+  if (successModalEl) successModalEl.addEventListener('click', function(e)  { if(e.target===this) closeSuccess(); });
 
   // ════════════════════════════════════════════════════════
   // CONSULTATION MODALS — GAZETTE & BPR
@@ -2094,7 +2122,7 @@
     'Old name proof: School/College certificate, PAN, or any Govt. ID',
     'Affidavit on ₹50 stamp paper (we will guide you on format)',
     'Passport-size photograph (2 copies)',
-    'Father's Aadhaar / Proof (for Minor applicants)',
+    'Father\'s Aadhaar / Proof (for Minor applicants)',
     'Reason-specific document: Marriage certificate (for marriage), Doctor certificate (for DOB), etc.',
   ];
 
@@ -2109,67 +2137,73 @@
   ];
 
   function openGazetteConsult() {
-    document.getElementById('gazetteConsultModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('gazetteConsultModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
   function closeGazetteConsult() {
-    document.getElementById('gazetteConsultModal').classList.remove('open');
-    document.body.style.overflow = '';
+    const modal = document.getElementById('gazetteConsultModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
   }
   function openBPRConsult() {
-    document.getElementById('bprConsultModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('bprConsultModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
   function closeBPRConsult() {
-    document.getElementById('bprConsultModal').classList.remove('open');
-    document.body.style.overflow = '';
+    const modal = document.getElementById('bprConsultModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
   }
   function closeConsultSuccess() {
-    document.getElementById('consultSuccessModal').classList.remove('open');
-    document.body.style.overflow = '';
+    const modal = document.getElementById('consultSuccessModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
   }
 
   function showConsultSuccess(checklist, waMsg, emailSubject, emailBody) {
     const ul = document.getElementById('checklistItems');
-    ul.innerHTML = checklist.map(item => `<li>${item}</li>`).join('');
-    document.getElementById('consultWABtn').onclick = () =>
-      window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
-    document.getElementById('consultEmailBtn').onclick = () =>
-      window.open(`mailto:harshcscemitra@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`, '_blank');
-    document.getElementById('consultSuccessModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    if (ul) ul.innerHTML = checklist.map(item => `<li>${item}</li>`).join('');
+    
+    const waBtn = document.getElementById('consultWABtn');
+    if (waBtn) waBtn.onclick = () => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+    
+    const emailBtn = document.getElementById('consultEmailBtn');
+    if (emailBtn) emailBtn.onclick = () => window.open(`mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`, '_blank');
+    
+    const modal = document.getElementById('consultSuccessModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
 
   function showConsultError(elId, msg) {
     const el = document.getElementById(elId);
-    el.textContent = msg;
-    el.style.display = 'block';
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el) {
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   function submitGazetteConsult() {
     const errEl = 'gazetteFormError';
-    document.getElementById(errEl).style.display = 'none';
+    const errObj = document.getElementById(errEl);
+    if (errObj) errObj.style.display = 'none';
 
-    const name   = document.getElementById('g_name').value.trim();
-    const mobile = document.getElementById('g_mobile').value.trim();
-    if (!name)                           { showConsultError(errEl, '⚠️ Please enter the applicant\'s full name.'); return; }
+    const name   = document.getElementById('g_name')?.value.trim();
+    const mobile = document.getElementById('g_mobile')?.value.trim();
+    if (!name)                                   { showConsultError(errEl, '⚠️ Please enter the applicant\'s full name.'); return; }
     if (!/^[6-9]\d{9}$/.test(mobile))   { showConsultError(errEl, '⚠️ Please enter a valid 10-digit Indian mobile number.'); return; }
 
-    const nameHiOld   = document.getElementById('g_name_hi_old').value.trim();
-    const nameEnOld   = document.getElementById('g_name_en_old').value.trim();
-    const nameHiNew   = document.getElementById('g_name_hi_new').value.trim();
-    const nameEnNew   = document.getElementById('g_name_en_new').value.trim();
-    const dob         = document.getElementById('g_dob').value;
+    const nameHiOld   = document.getElementById('g_name_hi_old')?.value.trim() || '';
+    const nameEnOld   = document.getElementById('g_name_en_old')?.value.trim() || '';
+    const nameHiNew   = document.getElementById('g_name_hi_new')?.value.trim() || '';
+    const nameEnNew   = document.getElementById('g_name_en_new')?.value.trim() || '';
+    const dob         = document.getElementById('g_dob')?.value || '';
     const applicant   = document.querySelector('input[name="g_applicant_type"]:checked')?.value || 'adult';
-    const fatherHi    = document.getElementById('g_father_hi').value.trim();
-    const fatherEn    = document.getElementById('g_father_en').value.trim();
-    const printAddr   = document.getElementById('g_print_address').value.trim();
-    const courierAddr = document.getElementById('g_courier_address').value.trim();
-    const calling     = document.getElementById('g_calling').value.trim();
-    const email       = document.getElementById('g_email').value.trim();
-    const reason      = document.getElementById('g_reason').value;
-    const notes       = document.getElementById('g_notes').value.trim();
+    const fatherHi    = document.getElementById('g_father_hi')?.value.trim() || '';
+    const fatherEn    = document.getElementById('g_father_en')?.value.trim() || '';
+    const printAddr   = document.getElementById('g_print_address')?.value.trim() || '';
+    const courierAddr = document.getElementById('g_courier_address')?.value.trim() || '';
+    const calling     = document.getElementById('g_calling')?.value.trim() || '';
+    const email       = document.getElementById('g_email')?.value.trim() || '';
+    const reason      = document.getElementById('g_reason')?.value || '';
+    const notes       = document.getElementById('g_notes')?.value.trim() || '';
 
     const waMsg =
       `📰 *GAZETTE CONSULTATION REQUEST*\n` +
@@ -2208,6 +2242,7 @@
   // ── BPR ──
   function addMachinery() {
     const list = document.getElementById('machineryList');
+    if (!list) return;
     const div  = document.createElement('div');
     div.className = 'machinery-item';
     div.innerHTML = `<input class="form-input" type="text" placeholder="e.g. Mixer Machine — ₹15,000"/><button class="remove-mach" onclick="removeMachinery(this)" title="Remove">✕</button>`;
@@ -2215,33 +2250,34 @@
   }
   function removeMachinery(btn) {
     const list = document.getElementById('machineryList');
-    if (list.children.length > 1) btn.parentElement.remove();
+    if (list && list.children.length > 1) btn.parentElement.remove();
   }
 
   function submitBPRConsult() {
     const errEl = 'bprFormError';
-    document.getElementById(errEl).style.display = 'none';
+    const errObj = document.getElementById(errEl);
+    if (errObj) errObj.style.display = 'none';
 
-    const name   = document.getElementById('b_name').value.trim();
-    const mobile = document.getElementById('b_mobile').value.trim();
-    if (!name)                           { showConsultError(errEl, '⚠️ Please enter your full name.'); return; }
+    const name   = document.getElementById('b_name')?.value.trim();
+    const mobile = document.getElementById('b_mobile')?.value.trim();
+    if (!name)                                   { showConsultError(errEl, '⚠️ Please enter your full name.'); return; }
     if (!/^[6-9]\d{9}$/.test(mobile))   { showConsultError(errEl, '⚠️ Please enter a valid 10-digit Indian mobile number.'); return; }
 
-    const email      = document.getElementById('b_email').value.trim();
-    const guardian   = document.getElementById('b_guardian').value.trim();
-    const address    = document.getElementById('b_address').value.trim();
-    const bizName    = document.getElementById('b_biz_name').value.trim();
-    const bizType    = document.getElementById('b_biz_type').value;
-    const bizAddr    = document.getElementById('b_biz_address').value.trim();
-    const scheme     = document.getElementById('b_loan_scheme').value;
-    const totalCost  = document.getElementById('b_total_cost').value;
-    const loanAmt    = document.getElementById('b_loan_amount').value;
-    const ownContrib = document.getElementById('b_own_contrib').value;
-    const premises   = document.getElementById('b_premises').value;
-    const power      = document.getElementById('b_power').value.trim();
-    const employees  = document.getElementById('b_employees').value;
-    const turnover   = document.getElementById('b_turnover').value;
-    const notes      = document.getElementById('b_notes').value.trim();
+    const email      = document.getElementById('b_email')?.value.trim() || '';
+    const guardian   = document.getElementById('b_guardian')?.value.trim() || '';
+    const address    = document.getElementById('b_address')?.value.trim() || '';
+    const bizName    = document.getElementById('b_biz_name')?.value.trim() || '';
+    const bizType    = document.getElementById('b_biz_type')?.value || '';
+    const bizAddr    = document.getElementById('b_biz_address')?.value.trim() || '';
+    const scheme     = document.getElementById('b_loan_scheme')?.value || '';
+    const totalCost  = document.getElementById('b_total_cost')?.value || '';
+    const loanAmt    = document.getElementById('b_loan_amount')?.value || '';
+    const ownContrib = document.getElementById('b_own_contrib')?.value || '';
+    const premises   = document.getElementById('b_premises')?.value || '';
+    const power      = document.getElementById('b_power')?.value.trim() || '';
+    const employees  = document.getElementById('b_employees')?.value || '';
+    const turnover   = document.getElementById('b_turnover')?.value || '';
+    const notes      = document.getElementById('b_notes')?.value.trim() || '';
     const machineries = [...document.querySelectorAll('#machineryList .machinery-item input')]
       .map(i => i.value.trim()).filter(Boolean);
 
@@ -2284,9 +2320,6 @@
   }
 
   // ── AUTH SYSTEM ─────────────────────────────────────────────
-  // Simple localStorage-based auth (no backend needed)
-  // For Google Sign-In, integrate Firebase Auth with your project
-
   let currentUser = null;
 
   function initAuth() {
@@ -2297,7 +2330,6 @@
   }
 
   function updateNavUser() {
-    const btn   = document.getElementById('userNavBtn');
     const label = document.getElementById('userNavLabel');
     const icon  = document.getElementById('userNavIcon');
     const menuSI  = document.getElementById('menuSignIn');
@@ -2306,64 +2338,80 @@
     const hdr     = document.getElementById('userMenuHeader');
     const hdrName = document.getElementById('userMenuName');
     const hdrEmail= document.getElementById('userMenuEmail');
+    
+    // ✅ SAFETY CHECK
+    if (!label || !icon || !menuSI) return;
+
     if (currentUser) {
       label.textContent = currentUser.name?.split(' ')[0] || 'Account';
       icon.textContent  = '😊';
       menuSI.style.display = 'none';
-      menuSU.style.display = 'none';
-      menuSO.style.display = 'block';
-      hdr.style.display    = 'block';
-      hdrName.textContent  = currentUser.name || '—';
-      hdrEmail.textContent = currentUser.email || '—';
+      if(menuSU) menuSU.style.display = 'none';
+      if(menuSO) menuSO.style.display = 'block';
+      if(hdr) hdr.style.display    = 'block';
+      if(hdrName) hdrName.textContent  = currentUser.name || '—';
+      if(hdrEmail) hdrEmail.textContent = currentUser.email || '—';
     } else {
       label.textContent = 'Sign In';
       icon.textContent  = '👤';
       menuSI.style.display = 'block';
-      menuSU.style.display = 'block';
-      menuSO.style.display = 'none';
-      hdr.style.display    = 'none';
+      if(menuSU) menuSU.style.display = 'block';
+      if(menuSO) menuSO.style.display = 'none';
+      if(hdr) hdr.style.display    = 'none';
     }
   }
 
   function toggleUserMenu() {
-    document.getElementById('userMenu').classList.toggle('open');
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.toggle('open');
   }
   function closeUserMenu() {
-    document.getElementById('userMenu').classList.remove('open');
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.remove('open');
   }
   document.addEventListener('click', (e) => {
-    if (!document.getElementById('userMenuWrap')?.contains(e.target)) closeUserMenu();
+    const wrap = document.getElementById('userMenuWrap');
+    if (wrap && !wrap.contains(e.target)) closeUserMenu();
   });
 
   function openAuthModal(tab = 'signin') {
     closeUserMenu();
     switchTab(tab);
-    document.getElementById('authOverlay').classList.add('open');
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
   function closeAuthModal() {
-    document.getElementById('authOverlay').classList.remove('open');
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.remove('open');
     document.body.style.overflow = '';
   }
   function switchTab(tab) {
-    document.getElementById('formSignIn').style.display = tab === 'signin' ? 'block' : 'none';
-    document.getElementById('formSignUp').style.display = tab === 'signup' ? 'block' : 'none';
-    document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
-    document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
-    document.getElementById('si_err').style.display = 'none';
-    document.getElementById('su_err').style.display = 'none';
+    const si = document.getElementById('formSignIn');
+    const su = document.getElementById('formSignUp');
+    const tsi = document.getElementById('tabSignIn');
+    const tsu = document.getElementById('tabSignUp');
+    
+    if(si) si.style.display = tab === 'signin' ? 'block' : 'none';
+    if(su) su.style.display = tab === 'signup' ? 'block' : 'none';
+    if(tsi) tsi.classList.toggle('active', tab === 'signin');
+    if(tsu) tsu.classList.toggle('active', tab === 'signup');
+    
+    const errSI = document.getElementById('si_err');
+    const errSU = document.getElementById('su_err');
+    if(errSI) errSI.style.display = 'none';
+    if(errSU) errSU.style.display = 'none';
   }
 
   function doSignIn() {
-    const email = document.getElementById('si_email').value.trim();
-    const pass  = document.getElementById('si_pass').value;
+    const email = document.getElementById('si_email')?.value.trim();
+    const pass  = document.getElementById('si_pass')?.value;
     const errEl = document.getElementById('si_err');
-    errEl.style.display = 'none';
-    if (!email || !pass) { errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block'; return; }
-    // Check local user store
+    if(errEl) errEl.style.display = 'none';
+    if (!email || !pass) { if(errEl){ errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block';} return; }
     const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
     const user  = users.find(u => u.email === email && u.pass === btoa(pass));
-    if (!user) { errEl.textContent = 'Incorrect email or password. New user? Sign Up.'; errEl.style.display = 'block'; return; }
+    if (!user) { if(errEl){ errEl.textContent = 'Incorrect email or password. New user? Sign Up.'; errEl.style.display = 'block';} return; }
     currentUser = { name: user.name, email: user.email, mobile: user.mobile };
     localStorage.setItem('hsc_user', JSON.stringify(currentUser));
     updateNavUser();
@@ -2372,17 +2420,17 @@
   }
 
   function doSignUp() {
-    const name   = document.getElementById('su_name').value.trim();
-    const email  = document.getElementById('su_email').value.trim();
-    const mobile = document.getElementById('su_mobile').value.trim();
-    const pass   = document.getElementById('su_pass').value;
+    const name   = document.getElementById('su_name')?.value.trim();
+    const email  = document.getElementById('su_email')?.value.trim();
+    const mobile = document.getElementById('su_mobile')?.value.trim();
+    const pass   = document.getElementById('su_pass')?.value;
     const errEl  = document.getElementById('su_err');
-    errEl.style.display = 'none';
-    if (!name || !email || !mobile || !pass) { errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block'; return; }
-    if (!/^[6-9]\d{9}$/.test(mobile)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; errEl.style.display = 'block'; return; }
-    if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+    if(errEl) errEl.style.display = 'none';
+    if (!name || !email || !mobile || !pass) { if(errEl){ errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block';} return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { if(errEl){ errEl.textContent = 'Enter a valid 10-digit mobile number.'; errEl.style.display = 'block';} return; }
+    if (pass.length < 6) { if(errEl){ errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block';} return; }
     const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
-    if (users.find(u => u.email === email)) { errEl.textContent = 'This email is already registered. Sign In instead.'; errEl.style.display = 'block'; return; }
+    if (users.find(u => u.email === email)) { if(errEl){ errEl.textContent = 'This email is already registered. Sign In instead.'; errEl.style.display = 'block';} return; }
     users.push({ name, email, mobile, pass: btoa(pass) });
     localStorage.setItem('hsc_users', JSON.stringify(users));
     currentUser = { name, email, mobile };
@@ -2393,9 +2441,7 @@
   }
 
   function signInWithGoogle() {
-    // Opens Gmail for OAuth — in production integrate Firebase Google Auth
-    const msg = 'Google Sign-In requires Firebase integration.\n\nSteps:\n1. Go to console.firebase.google.com\n2. Create project → Add web app\n3. Enable Google Auth provider\n4. Add Firebase SDK to this page\n\nFor now, please use Email Sign Up.';
-    alert(msg);
+    alert('Google Sign-In requires Firebase integration.\n\nFor now, please use Email Sign Up.');
   }
 
   function signOutUser() {
