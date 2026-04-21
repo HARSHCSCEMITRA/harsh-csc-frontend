@@ -419,6 +419,42 @@
   .btn-view-tracking{background:none;border:1.5px solid var(--saffron);color:var(--saffron);font-size:12px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
   .btn-view-tracking:hover{background:var(--saffron);color:#fff;}
 
+  /* ── USER AUTH ── */
+  .btn-signin{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:var(--white);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:var(--font-body);}
+  .btn-signin:hover{background:rgba(255,255,255,0.15);}
+  .user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--saffron);}
+  .user-menu-wrap{position:relative;}
+  .user-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--white);border:1px solid rgba(11,31,75,0.1);border-radius:14px;box-shadow:var(--shadow-lg);min-width:220px;z-index:300;overflow:hidden;display:none;}
+  .user-menu.open{display:block;}
+  .user-menu-header{padding:16px;background:var(--navy);color:var(--white);}
+  .user-menu-header strong{display:block;font-size:14px;margin-bottom:2px;}
+  .user-menu-header span{font-size:12px;opacity:0.6;}
+  .user-menu a,.user-menu button{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:14px;color:var(--navy);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer;font-family:var(--font-body);transition:background 0.15s;}
+  .user-menu a:hover,.user-menu button:hover{background:var(--light);}
+  .user-menu-divider{height:1px;background:rgba(11,31,75,0.08);margin:4px 0;}
+  /* Auth Modal */
+  .auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+  .auth-overlay.open{opacity:1;pointer-events:all;}
+  .auth-box{background:var(--white);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease both;}
+  .auth-head{padding:28px 28px 0;text-align:center;}
+  .auth-head h2{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .auth-head p{font-size:14px;color:var(--slate);}
+  .auth-tabs{display:flex;background:var(--light);border-radius:10px;padding:4px;margin:20px 28px 0;}
+  .auth-tab{flex:1;padding:9px;text-align:center;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;transition:all 0.2s;color:var(--slate);border:none;background:none;font-family:var(--font-body);}
+  .auth-tab.active{background:var(--white);color:var(--navy);box-shadow:0 2px 8px rgba(11,31,75,0.1);}
+  .auth-body{padding:20px 28px 28px;}
+  .auth-google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border:1.5px solid rgba(11,31,75,0.15);border-radius:10px;background:var(--white);font-size:15px;font-weight:600;color:var(--navy);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;margin-bottom:16px;}
+  .auth-google-btn:hover{border-color:rgba(11,31,75,0.3);background:var(--light);}
+  .auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--slate);font-size:12px;}
+  .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:rgba(11,31,75,0.1);}
+  .auth-field{margin-bottom:14px;}
+  .auth-field label{display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:5px;}
+  .auth-field input{width:100%;border:1.5px solid rgba(11,31,75,0.15);border-radius:10px;padding:12px 14px;font-size:15px;font-family:var(--font-body);color:var(--navy);background:var(--cream);outline:none;transition:border-color 0.2s;}
+  .auth-field input:focus{border-color:var(--saffron);}
+  .auth-err{font-size:12px;color:var(--red);margin-bottom:12px;display:none;}
+  .btn-auth-submit{width:100%;background:var(--saffron);color:var(--white);border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;margin-top:4px;}
+  .btn-auth-submit:hover{background:#d05a14;}
+
   /* ── RESPONSIVE ── */
   @media(max-width:768px){
     .hero-grid{grid-template-columns:1fr;}
@@ -435,13 +471,6 @@
 </style>
 </head>
 <body>
-
-<!-- ── ANNOUNCEMENT BAR ── -->
-<div class="ann-bar">
-  <span class="ann-badge">OFFER</span>
-  🎉 Trust of Rajasthan since 2017 — Gazette ₹5,100 <s style="opacity:0.7">₹10,200</s> | Business Report ₹1,499 <s style="opacity:0.7">₹2,998</s> — <strong>50% OFF!</strong> &nbsp;|&nbsp;
-  <a href="https://wa.me/917023029903?text=Hello%20Harsh%20CSC%20eMitra%2C%20I%20want%20to%20enquire%20about%20your%20services." target="_blank">📲 Book On WhatsApp →</a>
-</div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -460,7 +489,28 @@
     </div>
     <div class="nav-right">
       <div id="google_translate_element"></div>
-      <button class="btn-cart" onclick="openCartPanel()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
+
+      <!-- User Auth Button -->
+      <div class="user-menu-wrap" id="userMenuWrap">
+        <button class="btn-signin" id="userNavBtn" onclick="toggleUserMenu()">
+          <span id="userNavIcon">👤</span>
+          <span id="userNavLabel">Sign In</span>
+        </button>
+        <div class="user-menu" id="userMenu">
+          <div class="user-menu-header" id="userMenuHeader" style="display:none;">
+            <strong id="userMenuName">—</strong>
+            <span id="userMenuEmail">—</span>
+          </div>
+          <a href="#my-orders" onclick="closeUserMenu()">📦 My Orders</a>
+          <div class="user-menu-divider"></div>
+          <button onclick="openAuthModal('signin')" id="menuSignIn">🔐 Sign In</button>
+          <button onclick="openAuthModal('signup')" id="menuSignUp">✨ Create Account</button>
+          <button onclick="signOutUser()" id="menuSignOut" style="display:none;color:var(--red);">🚪 Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Order Cart -->
+      <button class="btn-cart" onclick="openCartPanel()">🛒 Order Cart <span class="cart-count" id="cartCount">0</span></button>
     </div>
   </div>
 </nav>
@@ -1166,7 +1216,7 @@
     <h2 class="section-title">Contact Us</h2>
     <p class="section-sub">Message us on WhatsApp for more information>
     <div class="contact-grid">
-      <!-- WhatsApp -->
+      <!-- 1. WhatsApp -->
       <div class="contact-card">
         <span class="contact-icon"><img src="whatsapplogo.png" alt="WhatsApp" style="width:32px;height:32px;object-fit:contain;border-radius:8px;"/></span>
         <div class="contact-label">Call / WhatsApp</div>
@@ -1176,29 +1226,7 @@
           <img src="whatsapplogo.png" alt="" style="width:16px;height:16px;object-fit:contain;border-radius:4px;"/> WhatsApp करें
         </a>
       </div>
-      <!-- Email -->
-      <div class="contact-card">
-        <span class="contact-icon"><img src="email.png" alt="Email" style="width:32px;height:32px;object-fit:contain;"/></span>
-        <div class="contact-label">Email</div>
-        <a class="contact-val" href="mailto:harshcscemitra@gmail.com">harshcscemitra@gmail.com</a>
-        <br/>
-        <a class="contact-wa" href="mailto:harshcscemitra@gmail.com" style="background:#EA4335;margin-top:10px;display:inline-flex;align-items:center;gap:8px;">
-          <img src="email.png" alt="" style="width:16px;height:16px;object-fit:contain;"/> Email करें
-        </a>
-      </div>
-      <!-- Address -->
-      <div class="contact-card">
-        <span class="contact-icon">📍</span>
-        <div class="contact-label">Address</div>
-        <span class="contact-val">Piplantri, Rajsamand<br/>Rajasthan — 313324</span>
-      </div>
-      <!-- Working Hours -->
-      <div class="contact-card">
-        <span class="contact-icon">🕐</span>
-        <div class="contact-label">Working Hours</div>
-        <span class="contact-val">Mon – Sat<br/>10:00 AM – 7:00 PM</span>
-      </div>
-      <!-- Instagram -->
+      <!-- 2. Instagram -->
       <div class="contact-card">
         <span class="contact-icon"><img src="instagramlogo.png" alt="Instagram" style="width:32px;height:32px;object-fit:contain;border-radius:8px;"/></span>
         <div class="contact-label">Instagram</div>
@@ -1208,7 +1236,7 @@
           <img src="instagramlogo.png" alt="" style="width:16px;height:16px;object-fit:contain;border-radius:4px;"/> Follow करें
         </a>
       </div>
-      <!-- Facebook -->
+      <!-- 3. Facebook -->
       <div class="contact-card">
         <span class="contact-icon"><img src="facebook_logo_new.png" alt="Facebook" style="width:32px;height:32px;object-fit:contain;border-radius:50%;"/></span>
         <div class="contact-label">Facebook</div>
@@ -1217,6 +1245,28 @@
         <a class="contact-wa" href="https://www.facebook.com/profile.php?id=61579881005930" target="_blank" style="background:#1877F2;margin-top:10px;">
           <img src="facebook_logo_new.png" alt="" style="width:16px;height:16px;object-fit:contain;border-radius:50%;"/> Like करें
         </a>
+      </div>
+      <!-- 4. Email -->
+      <div class="contact-card">
+        <span class="contact-icon"><img src="email.png" alt="Email" style="width:32px;height:32px;object-fit:contain;"/></span>
+        <div class="contact-label">Email</div>
+        <a class="contact-val" href="mailto:harshcscemitra@gmail.com">harshcscemitra@gmail.com</a>
+        <br/>
+        <a class="contact-wa" href="mailto:harshcscemitra@gmail.com" style="background:#EA4335;margin-top:10px;display:inline-flex;align-items:center;gap:8px;">
+          <img src="email.png" alt="" style="width:16px;height:16px;object-fit:contain;"/> Email करें
+        </a>
+      </div>
+      <!-- 5. Address -->
+      <div class="contact-card">
+        <span class="contact-icon">📍</span>
+        <div class="contact-label">Address</div>
+        <span class="contact-val">Piplantri, Rajsamand<br/>Rajasthan — 313324</span>
+      </div>
+      <!-- 6. Working Hours -->
+      <div class="contact-card">
+        <span class="contact-icon">🕐</span>
+        <div class="contact-label">Working Hours</div>
+        <span class="contact-val">Mon – Sat<br/>10:00 AM – 7:00 PM</span>
       </div>
     </div>
   </div>
@@ -1384,6 +1434,53 @@
     <div class="confirm-popup-actions">
       <button class="btn-confirm-no" onclick="closePayConfirm()">← No, Go Back</button>
       <button class="btn-confirm-yes" onclick="proceedToPayment()">✅ Yes, Pay Now →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     AUTH MODAL — Sign In / Sign Up
+══════════════════════════════════════════════════ -->
+<div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuthModal()">
+  <div class="auth-box">
+    <div class="auth-head">
+      <h2>Welcome to Harsh CSC</h2>
+      <p>Sign in to track your orders & consultations</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-body">
+      <!-- Google Sign In -->
+      <button class="auth-google-btn" onclick="signInWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.4 30.2 0 24 0 14.7 0 6.8 5.4 3 13.3l7.8 6C12.8 13.1 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.9-10 6.9-17z"/><path fill="#FBBC05" d="M10.8 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.3-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.1 0-11.2-3.7-13.2-8.9l-8.3 6C6.8 42.6 14.7 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-divider">or continue with email</div>
+
+      <!-- Sign In Form -->
+      <div id="formSignIn">
+        <div class="auth-field"><label>Email Address</label><input type="email" id="si_email" placeholder="your@email.com"/></div>
+        <div class="auth-field"><label>Password</label><input type="password" id="si_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignIn()"/></div>
+        <div class="auth-err" id="si_err"></div>
+        <button class="btn-auth-submit" onclick="doSignIn()">Sign In →</button>
+        <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--slate);">New here? <button onclick="switchTab('signup')" style="background:none;border:none;color:var(--saffron);font-weight:600;cursor:pointer;font-family:var(--font-body);">Create Account</button></p>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="formSignUp" style="display:none;">
+        <div class="auth-field"><label>Full Name</label><input type="text" id="su_name" placeholder="Ramesh Kumar"/></div>
+        <div class="auth-field"><label>Email Address</label><input type="email" id="su_email" placeholder="your@email.com"/></div>
+        <div class="auth-field"><label>Mobile Number</label><input type="tel" id="su_mobile" placeholder="10-digit number" maxlength="10"/></div>
+        <div class="auth-field"><label>Password</label><input type="password" id="su_pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doSignUp()"/></div>
+        <div class="auth-err" id="su_err"></div>
+        <button class="btn-auth-submit" onclick="doSignUp()">Create Account →</button>
+        <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--slate);">Already have account? <button onclick="switchTab('signin')" style="background:none;border:none;color:var(--saffron);font-weight:600;cursor:pointer;font-family:var(--font-body);">Sign In</button></p>
+      </div>
+    </div>
+    <div style="padding:0 28px 20px;text-align:center;">
+      <button onclick="closeAuthModal()" style="background:none;border:none;color:var(--slate);font-size:13px;cursor:pointer;font-family:var(--font-body);">Continue without signing in →</button>
     </div>
   </div>
 </div>
@@ -2186,7 +2283,140 @@
     showConsultSuccess(BPR_CHECKLIST, waMsg, `BPR Consultation — ${name}`, emailBody);
   }
 
+  // ── AUTH SYSTEM ─────────────────────────────────────────────
+  // Simple localStorage-based auth (no backend needed)
+  // For Google Sign-In, integrate Firebase Auth with your project
+
+  let currentUser = null;
+
+  function initAuth() {
+    const stored = localStorage.getItem('hsc_user');
+    if (stored) {
+      try { currentUser = JSON.parse(stored); updateNavUser(); } catch {}
+    }
+  }
+
+  function updateNavUser() {
+    const btn   = document.getElementById('userNavBtn');
+    const label = document.getElementById('userNavLabel');
+    const icon  = document.getElementById('userNavIcon');
+    const menuSI  = document.getElementById('menuSignIn');
+    const menuSU  = document.getElementById('menuSignUp');
+    const menuSO  = document.getElementById('menuSignOut');
+    const hdr     = document.getElementById('userMenuHeader');
+    const hdrName = document.getElementById('userMenuName');
+    const hdrEmail= document.getElementById('userMenuEmail');
+    if (currentUser) {
+      label.textContent = currentUser.name?.split(' ')[0] || 'Account';
+      icon.textContent  = '😊';
+      menuSI.style.display = 'none';
+      menuSU.style.display = 'none';
+      menuSO.style.display = 'block';
+      hdr.style.display    = 'block';
+      hdrName.textContent  = currentUser.name || '—';
+      hdrEmail.textContent = currentUser.email || '—';
+    } else {
+      label.textContent = 'Sign In';
+      icon.textContent  = '👤';
+      menuSI.style.display = 'block';
+      menuSU.style.display = 'block';
+      menuSO.style.display = 'none';
+      hdr.style.display    = 'none';
+    }
+  }
+
+  function toggleUserMenu() {
+    document.getElementById('userMenu').classList.toggle('open');
+  }
+  function closeUserMenu() {
+    document.getElementById('userMenu').classList.remove('open');
+  }
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('userMenuWrap')?.contains(e.target)) closeUserMenu();
+  });
+
+  function openAuthModal(tab = 'signin') {
+    closeUserMenu();
+    switchTab(tab);
+    document.getElementById('authOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAuthModal() {
+    document.getElementById('authOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function switchTab(tab) {
+    document.getElementById('formSignIn').style.display = tab === 'signin' ? 'block' : 'none';
+    document.getElementById('formSignUp').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+    document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+    document.getElementById('si_err').style.display = 'none';
+    document.getElementById('su_err').style.display = 'none';
+  }
+
+  function doSignIn() {
+    const email = document.getElementById('si_email').value.trim();
+    const pass  = document.getElementById('si_pass').value;
+    const errEl = document.getElementById('si_err');
+    errEl.style.display = 'none';
+    if (!email || !pass) { errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block'; return; }
+    // Check local user store
+    const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
+    const user  = users.find(u => u.email === email && u.pass === btoa(pass));
+    if (!user) { errEl.textContent = 'Incorrect email or password. New user? Sign Up.'; errEl.style.display = 'block'; return; }
+    currentUser = { name: user.name, email: user.email, mobile: user.mobile };
+    localStorage.setItem('hsc_user', JSON.stringify(currentUser));
+    updateNavUser();
+    closeAuthModal();
+    showAuthToast(`👋 Welcome back, ${user.name.split(' ')[0]}!`);
+  }
+
+  function doSignUp() {
+    const name   = document.getElementById('su_name').value.trim();
+    const email  = document.getElementById('su_email').value.trim();
+    const mobile = document.getElementById('su_mobile').value.trim();
+    const pass   = document.getElementById('su_pass').value;
+    const errEl  = document.getElementById('su_err');
+    errEl.style.display = 'none';
+    if (!name || !email || !mobile || !pass) { errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block'; return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; errEl.style.display = 'block'; return; }
+    if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+    const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
+    if (users.find(u => u.email === email)) { errEl.textContent = 'This email is already registered. Sign In instead.'; errEl.style.display = 'block'; return; }
+    users.push({ name, email, mobile, pass: btoa(pass) });
+    localStorage.setItem('hsc_users', JSON.stringify(users));
+    currentUser = { name, email, mobile };
+    localStorage.setItem('hsc_user', JSON.stringify(currentUser));
+    updateNavUser();
+    closeAuthModal();
+    showAuthToast(`🎉 Account created! Welcome, ${name.split(' ')[0]}!`);
+  }
+
+  function signInWithGoogle() {
+    // Opens Gmail for OAuth — in production integrate Firebase Google Auth
+    const msg = 'Google Sign-In requires Firebase integration.\n\nSteps:\n1. Go to console.firebase.google.com\n2. Create project → Add web app\n3. Enable Google Auth provider\n4. Add Firebase SDK to this page\n\nFor now, please use Email Sign Up.';
+    alert(msg);
+  }
+
+  function signOutUser() {
+    currentUser = null;
+    localStorage.removeItem('hsc_user');
+    updateNavUser();
+    closeUserMenu();
+    showAuthToast('👋 Signed out successfully.');
+  }
+
+  function showAuthToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--white);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.3);transition:all 0.3s;';
+    document.body.appendChild(t);
+    setTimeout(() => t.style.opacity = '0', 2500);
+    setTimeout(() => t.remove(), 3000);
+  }
+
   // ── INIT ──────────────────────────────────────────────────────
+  initAuth();
   renderCart();
 </script>
 <script type="text/javascript">
