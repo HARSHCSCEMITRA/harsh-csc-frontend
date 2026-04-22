@@ -856,7 +856,7 @@ async function saveStatusUpdate() {
   if(note) data.admin_note=note;
   const ok=await sbUpdateByRef(table,'order_ref',ref,data);
   if(ok){
-    showToast(`✅ Status updated to "${status}"','success`);
+    showToast(`✅ Status updated to "${status}"`, 'success');
     closeModal('statusModal');
     await refreshAll();
     if(notifyWA){
