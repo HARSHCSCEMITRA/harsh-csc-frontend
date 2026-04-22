@@ -8,23 +8,20 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#0a0e1a; --surface:#111827; --surface2:#1a2235; --surface3:#222d42;
-  --border:#2a3550; --border2:#354060;
-  --saffron:#e8671a; --saffron2:#f5a623; --gold:#f5c842;
-  --green:#22c55e; --green2:#16a34a;
-  --red:#ef4444; --red2:#dc2626;
-  --blue:#3b82f6; --purple:#8b5cf6;
-  --text:#e2e8f0; --text2:#94a3b8; --text3:#64748b;
-  --font:'Space Grotesk',sans-serif;
-  --mono:'JetBrains Mono',monospace;
-  --radius:12px; --radius-sm:8px;
-  --shadow:0 4px 24px rgba(0,0,0,0.4);
-  --shadow-lg:0 16px 48px rgba(0,0,0,0.6);
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--surface3:#222d42;
+  --border:#2a3550;--border2:#354060;
+  --saffron:#e8671a;--saffron2:#f5a623;--gold:#f5c842;
+  --green:#22c55e;--green2:#16a34a;
+  --red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);--shadow-lg:0 16px 48px rgba(0,0,0,0.6);
 }
 html{scroll-behavior:smooth;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
-/* ── LOGIN ── */
+/* LOGIN */
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);}
 .login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
@@ -41,7 +38,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .btn-login{width:100%;background:linear-gradient(135deg,var(--saffron),var(--saffron2));color:#fff;border:none;padding:14px;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
 .btn-login:hover{opacity:0.9;transform:translateY(-1px);}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 #app{display:none;min-height:100vh;}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;transition:transform 0.3s;}
 .sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
@@ -55,7 +52,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .nav-item.active{background:rgba(232,103,26,0.12);color:var(--saffron);font-weight:600;}
 .nav-item .nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
 .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);}
-.nav-badge.green{background:var(--green2);}
 .sidebar-footer{padding:16px;border-top:1px solid var(--border);}
 .admin-info{display:flex;align-items:center;gap:10px;}
 .admin-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--saffron),var(--gold));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
@@ -63,7 +59,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .admin-role{font-size:11px;color:var(--text3);}
 .btn-logout{margin-top:10px;width:100%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red);padding:8px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
 .btn-logout:hover{background:rgba(239,68,68,0.2);}
-
 .main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column;}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
 .topbar-title{font-size:18px;font-weight:700;}
@@ -72,13 +67,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse-green 2s ease infinite;}
 @keyframes pulse-green{0%,100%{opacity:1;}50%{opacity:0.4;}}
 .page-content{padding:28px;flex:1;}
-
-/* ── PAGES ── */
 .page{display:none;}
 .page.active{display:block;}
 
-/* ── STAT CARDS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;}
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:border-color 0.2s;}
 .stat-card:hover{border-color:var(--border2);}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
@@ -89,13 +82,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .stat-card.red::before{background:linear-gradient(90deg,var(--red),#f87171);}
 .stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
 .stat-value{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--text);line-height:1;}
-.stat-value span{font-size:13px;color:var(--text2);font-family:var(--font);font-weight:500;}
 .stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:28px;opacity:0.15;}
-.stat-change{font-size:12px;margin-top:8px;}
-.stat-change.up{color:var(--green);}
-.stat-change.down{color:var(--red);}
 
-/* ── TABLES ── */
+/* TABLES */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
 .card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .card-title{font-size:15px;font-weight:700;}
@@ -127,16 +116,16 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .badge-printing{background:rgba(139,92,246,0.15);color:#a78bfa;}
 .badge-dispatched{background:rgba(34,197,94,0.15);color:var(--green);}
 .badge-delivered{background:rgba(100,116,139,0.15);color:var(--text3);}
-.badge-paid{background:rgba(34,197,94,0.15);color:var(--green);}
 .badge-pending{background:rgba(245,166,35,0.15);color:var(--gold);}
+.badge-cancelled{background:rgba(239,68,68,0.15);color:var(--red);}
 .badge-gazette{background:rgba(232,103,26,0.15);color:var(--saffron);}
 .badge-bpr{background:rgba(59,130,246,0.15);color:#60a5fa;}
 .badge-pvc{background:rgba(139,92,246,0.15);color:#a78bfa;}
-.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
-.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:0.4;}
 .table-wrap{overflow-x:auto;}
 
-/* ── MODAL ── */
+/* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 .modal-bg.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease both;}
@@ -146,6 +135,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .modal-close{background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:30px;height:30px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
 .modal-close:hover{border-color:var(--border2);color:var(--text);}
 .modal-body{padding:20px 24px 24px;}
+.modal-footer{display:flex;gap:10px;padding:0 24px 24px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 .form-row.single{grid-template-columns:1fr;}
 .f-group label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;}
@@ -156,20 +146,18 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .f-select:focus{border-color:var(--saffron);}
 .f-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;resize:vertical;transition:border-color 0.2s;}
 .f-textarea:focus{border-color:var(--saffron);}
-.modal-footer{display:flex;gap:10px;padding:0 24px 24px;}
 
-/* ── NOTIFICATION ── */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);z-index:9999;transform:translateY(20px);opacity:0;transition:all 0.3s;max-width:320px;}
-#toast.show{transform:translateY(0);opacity:1;}
-#toast.success{border-color:rgba(34,197,94,0.4);color:var(--green);}
-#toast.error{border-color:rgba(239,68,68,0.4);color:var(--red);}
-#toast.info{border-color:rgba(59,130,246,0.4);color:var(--blue);}
+/* DETAIL VIEW */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.detail-item{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;}
+.detail-key{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
+.detail-val{font-size:13px;color:var(--text);font-weight:500;word-break:break-word;}
+.detail-val.mono{font-family:var(--mono);}
 
-/* ── SETTINGS ── */
+/* SETTINGS */
 .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;}
 .settings-section{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-.toggle-row:last-child{border-bottom:none;}
 .toggle-label{font-size:13px;font-weight:500;}
 .toggle-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 .toggle{width:40px;height:22px;background:var(--surface3);border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
@@ -177,40 +165,29 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.2s;}
 .toggle.on::after{transform:translateX(18px);}
 
-/* ── DETAIL VIEW ── */
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.detail-item{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;}
-.detail-key{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
-.detail-val{font-size:13px;color:var(--text);font-weight:500;}
-.detail-val.mono{font-family:var(--mono);}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);z-index:9999;transform:translateY(20px);opacity:0;transition:all 0.3s;max-width:320px;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.success{border-color:rgba(34,197,94,0.4);color:var(--green);}
+#toast.error{border-color:rgba(239,68,68,0.4);color:var(--red);}
+#toast.info{border-color:rgba(59,130,246,0.4);color:var(--blue);}
 
-/* ── WHATSAPP PREVIEW ── */
-.wa-preview{background:#0d1418;border-radius:12px;padding:16px;font-size:13px;line-height:1.7;color:#e9edef;white-space:pre-wrap;font-family:var(--mono);max-height:260px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);}
+/* SPINNER */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-/* ── RESPONSIVE ── */
+/* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
   .main{margin-left:0;}
   .form-row{grid-template-columns:1fr;}
   .detail-grid{grid-template-columns:1fr;}
-  .stats-grid{grid-template-columns:1fr 1fr;}
   .hamburger{display:flex!important;}
 }
 .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;margin-right:12px;}
 .overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49;display:none;}
 .overlay-bg.show{display:block;}
-
-/* ── CHART ── */
-.mini-chart{display:flex;align-items:flex-end;gap:4px;height:48px;margin-top:12px;}
-.mini-bar{flex:1;border-radius:3px 3px 0 0;background:rgba(232,103,26,0.3);transition:height 0.5s;}
-.mini-bar.active{background:var(--saffron);}
-
-/* ── LOADING ── */
-.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
@@ -218,7 +195,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
@@ -234,7 +211,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- APP -->
 <div id="app">
   <div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
 
@@ -246,24 +223,24 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
-      <button class="nav-item" onclick="showPage('orders',this)"><span class="nav-icon">📦</span>All Orders <span class="nav-badge" id="newOrderBadge">0</span></button>
-      <button class="nav-item" onclick="showPage('consultations',this)"><span class="nav-icon">📞</span>Consultations <span class="nav-badge" id="newConsultBadge">0</span></button>
+      <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+      <button class="nav-item" id="nav-orders" onclick="showPage('orders',this)"><span class="nav-icon">📦</span>All Orders <span class="nav-badge" id="newOrderBadge">0</span></button>
+      <button class="nav-item" id="nav-consultations" onclick="showPage('consultations',this)"><span class="nav-icon">📞</span>Consultations <span class="nav-badge" id="newConsultBadge">0</span></button>
       <div class="nav-section">Services</div>
-      <button class="nav-item" onclick="showPage('gazette',this)"><span class="nav-icon">📰</span>Gazette Orders</button>
-      <button class="nav-item" onclick="showPage('bpr',this)"><span class="nav-icon">📊</span>Project Reports</button>
-      <button class="nav-item" onclick="showPage('pvc',this)"><span class="nav-icon">🪪</span>PVC Cards</button>
+      <button class="nav-item" id="nav-gazette" onclick="showPage('gazette',this)"><span class="nav-icon">📰</span>Gazette Orders</button>
+      <button class="nav-item" id="nav-bpr" onclick="showPage('bpr',this)"><span class="nav-icon">📊</span>Project Reports</button>
+      <button class="nav-item" id="nav-pvc" onclick="showPage('pvc',this)"><span class="nav-icon">🪪</span>PVC Cards</button>
       <div class="nav-section">Manage</div>
-      <button class="nav-item" onclick="showPage('tracking',this)"><span class="nav-icon">📮</span>Add Tracking</button>
-      <button class="nav-item" onclick="showPage('messages',this)"><span class="nav-icon">💬</span>Send WhatsApp</button>
-      <button class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
+      <button class="nav-item" id="nav-tracking" onclick="showPage('tracking',this)"><span class="nav-icon">📮</span>Add Tracking</button>
+      <button class="nav-item" id="nav-messages" onclick="showPage('messages',this)"><span class="nav-icon">💬</span>Send WhatsApp</button>
+      <button class="nav-item" id="nav-settings" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
     </nav>
     <div class="sidebar-footer">
       <div class="admin-info">
         <div class="admin-avatar">H</div>
         <div><div class="admin-name">Harsh Bhai</div><div class="admin-role">Super Admin</div></div>
       </div>
-      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+      <button class="btn-logout" onclick="doLogout()">🚪 Sign Out</button>
     </div>
   </aside>
 
@@ -283,29 +260,28 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
     <div class="page-content">
 
-      <!-- ═══════ DASHBOARD ═══════ -->
+      <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card orange"><div class="stat-label">Total Revenue</div><div class="stat-value" id="statRevenue">₹0</div><div class="stat-icon">💰</div><div class="mini-chart" id="chart-rev"></div></div>
+        <div class="stats-grid">
+          <div class="stat-card orange"><div class="stat-label">Total Revenue</div><div class="stat-value" id="statRevenue">₹0</div><div class="stat-icon">💰</div></div>
           <div class="stat-card green"><div class="stat-label">Total Orders</div><div class="stat-value" id="statOrders">0</div><div class="stat-icon">📦</div></div>
           <div class="stat-card blue"><div class="stat-label">Consultations</div><div class="stat-value" id="statConsults">0</div><div class="stat-icon">📞</div></div>
           <div class="stat-card purple"><div class="stat-label">PVC Orders</div><div class="stat-value" id="statPVC">0</div><div class="stat-icon">🪪</div></div>
           <div class="stat-card red"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">0</div><div class="stat-icon">⏳</div></div>
         </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
           <div class="card">
-            <div class="card-head"><div class="card-title">Recent Orders</div><button class="btn-sm btn-secondary" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
+            <div class="card-head"><div class="card-title">Recent Orders</div><button class="btn-sm btn-secondary" onclick="showPage('orders',document.getElementById('nav-orders'))">View All</button></div>
             <div class="table-wrap"><table><thead><tr><th>Ref</th><th>Name</th><th>Service</th><th>Status</th></tr></thead><tbody id="recentOrdersTbl"><tr><td colspan="4" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
           </div>
           <div class="card">
-            <div class="card-head"><div class="card-title">Recent Consultations</div><button class="btn-sm btn-secondary" onclick="showPage('consultations',document.querySelector('[onclick*=consultations]'))">View All</button></div>
-            <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Service</th><th>Time</th></tr></thead><tbody id="recentConsultsTbl"><tr><td colspan="4" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
+            <div class="card-head"><div class="card-title">Recent Consultations</div><button class="btn-sm btn-secondary" onclick="showPage('consultations',document.getElementById('nav-consultations'))">View All</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Service</th><th>Date</th></tr></thead><tbody id="recentConsultsTbl"><tr><td colspan="4" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
           </div>
         </div>
       </div>
 
-      <!-- ═══════ ALL ORDERS ═══════ -->
+      <!-- ALL ORDERS -->
       <div class="page" id="page-orders">
         <div class="card">
           <div class="card-head">
@@ -314,7 +290,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
               <input class="search-box" id="searchOrders" placeholder="Search name, ref, phone…" oninput="filterOrders()"/>
               <select class="filter-select" id="filterOrderStatus" onchange="filterOrders()">
                 <option value="">All Status</option>
-                <option>new</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option>
+                <option>new</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option>
               </select>
               <select class="filter-select" id="filterOrderType" onchange="filterOrders()">
                 <option value="">All Types</option>
@@ -325,16 +301,16 @@ tr:hover td{background:rgba(255,255,255,0.02);}
           </div>
           <div class="table-wrap">
             <table><thead><tr><th>Ref #</th><th>Customer</th><th>Mobile</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-            <tbody id="ordersTbl"></tbody></table>
+            <tbody id="ordersTbl"><tr><td colspan="8" class="empty-state"><div class="spinner"></div></td></tr></tbody></table>
           </div>
         </div>
       </div>
 
-      <!-- ═══════ CONSULTATIONS ═══════ -->
+      <!-- CONSULTATIONS -->
       <div class="page" id="page-consultations">
         <div class="card">
           <div class="card-head">
-            <div class="card-title">Consultation Requests</div>
+            <div class="card-title">📞 Consultation Requests</div>
             <div class="card-tools">
               <input class="search-box" id="searchConsults" placeholder="Search name, phone…" oninput="filterConsults()"/>
               <select class="filter-select" id="filterConsultType" onchange="filterConsults()">
@@ -345,36 +321,36 @@ tr:hover td{background:rgba(255,255,255,0.02);}
           </div>
           <div class="table-wrap">
             <table><thead><tr><th>Name</th><th>Mobile</th><th>Service</th><th>Reason / Business</th><th>Date</th><th>Actions</th></tr></thead>
-            <tbody id="consultsTbl"></tbody></table>
+            <tbody id="consultsTbl"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody></table>
           </div>
         </div>
       </div>
 
-      <!-- ═══════ GAZETTE ═══════ -->
+      <!-- GAZETTE -->
       <div class="page" id="page-gazette">
         <div class="card">
           <div class="card-head"><div class="card-title">📰 Gazette Notification Orders</div><div class="card-tools"><input class="search-box" id="searchGazette" placeholder="Search…" oninput="filterGazette()"/></div></div>
-          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Old Name</th><th>New Name</th><th>DOB</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="gazetteTbl"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Old Name</th><th>New Name</th><th>DOB</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="gazetteTbl"><tr><td colspan="9" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
         </div>
       </div>
 
-      <!-- ═══════ BPR ═══════ -->
+      <!-- BPR -->
       <div class="page" id="page-bpr">
         <div class="card">
           <div class="card-head"><div class="card-title">📊 Business Project Report Orders</div><div class="card-tools"><input class="search-box" id="searchBPR" placeholder="Search…" oninput="filterBPR()"/></div></div>
-          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Business</th><th>Loan Scheme</th><th>Total Cost</th><th>Loan Amt</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bprTbl"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Business</th><th>Loan Scheme</th><th>Total Cost</th><th>Loan Amt</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bprTbl"><tr><td colspan="9" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
         </div>
       </div>
 
-      <!-- ═══════ PVC ═══════ -->
+      <!-- PVC -->
       <div class="page" id="page-pvc">
         <div class="card">
           <div class="card-head"><div class="card-title">🪪 PVC Card Orders</div><div class="card-tools"><input class="search-box" id="searchPVC" placeholder="Search…" oninput="filterPVC()"/><select class="filter-select" id="filterPVCStatus" onchange="filterPVC()"><option value="">All Status</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option></select></div></div>
-          <div class="table-wrap"><table><thead><tr><th>Ref #</th><th>Name</th><th>Mobile</th><th>Card Type</th><th>Qty</th><th>Amount</th><th>Tracking #</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="pvcTbl"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Ref #</th><th>Name</th><th>Mobile</th><th>Card Type</th><th>Qty</th><th>Amount</th><th>Tracking #</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="pvcTbl"><tr><td colspan="10" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
         </div>
       </div>
 
-      <!-- ═══════ ADD TRACKING ═══════ -->
+      <!-- TRACKING -->
       <div class="page" id="page-tracking">
         <div style="max-width:560px;">
           <div class="card">
@@ -382,8 +358,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
             <div class="modal-body">
               <div class="form-row single"><div class="f-group"><label>Order Reference #</label><input class="f-input" id="trackRef" placeholder="e.g. PVC-AB1234 or HSC-ABC123" oninput="lookupOrder()"/></div></div>
               <div id="trackOrderInfo" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;"></div>
-              <div class="form-row single"><div class="f-group"><label>India Post Speed Post Tracking Number</label><input class="f-input" id="trackNum" placeholder="e.g. EE123456789IN"/></div></div>
-              <div class="form-row"><div class="f-group"><label>Update Status</label><select class="f-select" id="trackStatus"><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option></select></div><div class="f-group"><label>Note (optional)</label><input class="f-input" id="trackNote" placeholder="Internal note…"/></div></div>
+              <div class="form-row single"><div class="f-group"><label>Speed Post Tracking Number</label><input class="f-input" id="trackNum" placeholder="e.g. EE123456789IN"/></div></div>
+              <div class="form-row">
+                <div class="f-group"><label>Update Status</label><select class="f-select" id="trackStatus"><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option></select></div>
+                <div class="f-group"><label>Note (optional)</label><input class="f-input" id="trackNote" placeholder="Internal note…"/></div>
+              </div>
               <div class="form-row single"><div class="f-group"><label>Notify Customer on WhatsApp?</label><div style="display:flex;align-items:center;gap:10px;margin-top:6px;"><div class="toggle on" id="trackWAToggle" onclick="this.classList.toggle('on')"></div><span style="font-size:13px;color:var(--text2);">Send WhatsApp notification</span></div></div></div>
               <div style="display:flex;gap:10px;margin-top:8px;">
                 <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveTracking()">💾 Save Tracking</button>
@@ -398,7 +377,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
 
-      <!-- ═══════ WHATSAPP MESSAGES ═══════ -->
+      <!-- WHATSAPP -->
       <div class="page" id="page-messages">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
           <div class="card">
@@ -415,7 +394,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
                 <option value="payment_reminder">💰 Payment Reminder</option>
                 <option value="custom">✏️ Custom Message</option>
               </select></div></div>
-              <div class="form-row single"><div class="f-group"><label>Message</label><textarea class="f-textarea" id="waMsg" rows="7" placeholder="Type your message…"></textarea></div></div>
+              <div class="form-row single"><div class="f-group"><label>Message</label><textarea class="f-textarea" id="waMsg" rows="8" placeholder="Type your message…"></textarea></div></div>
               <button class="btn-sm btn-green" style="width:100%;padding:12px;font-size:14px;" onclick="sendWhatsApp()">💬 Open WhatsApp</button>
             </div>
           </div>
@@ -426,7 +405,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
 
-      <!-- ═══════ SETTINGS ═══════ -->
+      <!-- SETTINGS -->
       <div class="page" id="page-settings">
         <div class="settings-grid">
           <div>
@@ -436,38 +415,20 @@ tr:hover td{background:rgba(255,255,255,0.02);}
                 <div class="settings-section">Contact Info</div>
                 <div class="form-row single"><div class="f-group"><label>WhatsApp Number</label><input class="f-input" id="s_whatsapp" value="917023029903"/></div></div>
                 <div class="form-row single"><div class="f-group"><label>Admin Email</label><input class="f-input" id="s_email" value="harshcscemitra@gmail.com"/></div></div>
-                <div class="form-row single"><div class="f-group"><label>Business Address</label><input class="f-input" id="s_address" value="Piplantri, Rajsamand, Rajasthan — 313324"/></div></div>
                 <div class="settings-section" style="margin-top:20px;">Pricing</div>
                 <div class="form-row">
                   <div class="f-group"><label>Gazette Price (₹)</label><input class="f-input" id="s_gazette_price" type="number" value="5100"/></div>
                   <div class="f-group"><label>BPR Price (₹)</label><input class="f-input" id="s_bpr_price" type="number" value="1499"/></div>
                 </div>
-                <div class="form-row">
-                  <div class="f-group"><label>PVC Price (₹/card)</label><input class="f-input" id="s_pvc_price" type="number" value="99"/></div>
-                  <div class="f-group"><label>Razorpay Key</label><input class="f-input" id="s_rzp_key" placeholder="rzp_live_…"/></div>
-                </div>
-                <div class="settings-section" style="margin-top:20px;">Supabase Config</div>
-                <div class="form-row single"><div class="f-group"><label>Supabase URL</label><input class="f-input" id="s_sb_url" value="https://qhqvmzrdncxddzlfrgrn.supabase.co"/></div></div>
-                <div class="form-row single"><div class="f-group"><label>Supabase Anon Key</label><textarea class="f-textarea" id="s_sb_key" rows="2">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc</textarea></div></div>
-                <button class="btn-sm btn-primary" style="width:100%;padding:12px;margin-top:8px;" onclick="saveSettings()">💾 Save Settings</button>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div class="card">
-              <div class="card-head"><div class="card-title">🔔 Notifications</div></div>
-              <div style="padding:16px 20px;">
-                <div class="settings-section">Alerts</div>
-                <div class="toggle-row"><div><div class="toggle-label">New Order Alert</div><div class="toggle-sub">Notify on every new order</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-                <div class="toggle-row"><div><div class="toggle-label">Consultation Request</div><div class="toggle-sub">Alert on new consultation form</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-                <div class="toggle-row"><div><div class="toggle-label">Payment Success</div><div class="toggle-sub">Alert on Razorpay payment</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
                 <div class="settings-section" style="margin-top:20px;">Admin Password</div>
                 <div class="form-row single"><div class="f-group"><label>New Password</label><input class="f-input" id="s_newpass" type="password" placeholder="Leave blank to keep current"/></div></div>
                 <div class="form-row single"><div class="f-group"><label>Confirm Password</label><input class="f-input" id="s_confirmpass" type="password" placeholder="Confirm new password"/></div></div>
                 <button class="btn-sm btn-secondary" style="width:100%;padding:12px;margin-top:8px;" onclick="changePassword()">🔒 Change Password</button>
               </div>
             </div>
-            <div class="card" style="margin-top:20px;">
+          </div>
+          <div>
+            <div class="card">
               <div class="card-head"><div class="card-title">🗄️ Database Status</div></div>
               <div style="padding:16px 20px;">
                 <div id="dbStatus"><div class="spinner"></div> Checking connection…</div>
@@ -478,11 +439,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
 
-    </div><!-- end page-content -->
-  </div><!-- end main -->
-</div><!-- end app -->
+    </div>
+  </div>
+</div>
 
-<!-- ── ORDER DETAIL MODAL ── -->
+<!-- ORDER DETAIL MODAL -->
 <div class="modal-bg" id="orderModal">
   <div class="modal">
     <div class="modal-head"><h3 id="orderModalTitle">Order Details</h3><button class="modal-close" onclick="closeModal('orderModal')">✕</button></div>
@@ -495,7 +456,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   </div>
 </div>
 
-<!-- ── STATUS UPDATE MODAL ── -->
+<!-- STATUS UPDATE MODAL -->
 <div class="modal-bg" id="statusModal">
   <div class="modal" style="max-width:400px;">
     <div class="modal-head"><h3>Update Order Status</h3><button class="modal-close" onclick="closeModal('statusModal')">✕</button></div>
@@ -504,7 +465,10 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div class="form-row single"><div class="f-group"><label>Status</label><select class="f-select" id="su_status"><option>new</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div></div>
       <div class="form-row single"><div class="f-group"><label>Tracking Number (if dispatched)</label><input class="f-input" id="su_tracking" placeholder="Speed Post number"/></div></div>
       <div class="form-row single"><div class="f-group"><label>Internal Note</label><textarea class="f-textarea" id="su_note" rows="2" placeholder="Optional note…"></textarea></div></div>
-      <div class="toggle-row"><div><div class="toggle-label">Notify Customer on WhatsApp</div></div><div class="toggle on" id="su_wa_toggle" onclick="this.classList.toggle('on')"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+        <span style="font-size:13px;font-weight:500;">Notify Customer on WhatsApp</span>
+        <div class="toggle on" id="su_wa_toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm btn-primary" style="flex:1;" onclick="saveStatusUpdate()">💾 Save</button>
@@ -517,14 +481,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
 <script>
 // ══════════════════════════════════════════
-//  CONFIG — same as main site
+//  CONFIG
 // ══════════════════════════════════════════
 const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
 const WHATSAPP_NUM = '917023029903';
-
-// Admin credentials (change password in Settings)
-let ADMIN_USER = localStorage.getItem('hsc_admin_user') || 'admin';
 let ADMIN_PASS = localStorage.getItem('hsc_admin_pass') || 'harsh@2017';
 
 // ══════════════════════════════════════════
@@ -533,13 +494,15 @@ let ADMIN_PASS = localStorage.getItem('hsc_admin_pass') || 'harsh@2017';
 function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
-  if (u === ADMIN_USER && p === ADMIN_PASS) {
+  if ((u === 'admin' || u === 'harsh') && p === ADMIN_PASS) {
     sessionStorage.setItem('hsc_auth', '1');
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     initApp();
   } else {
-    document.getElementById('loginErr').style.display = 'block';
+    const err = document.getElementById('loginErr');
+    err.style.display = 'block';
+    err.textContent = '❌ Incorrect username or password.';
   }
 }
 function doLogout() {
@@ -553,49 +516,32 @@ function changePassword() {
   if (np !== cp) { showToast('Passwords do not match', 'error'); return; }
   localStorage.setItem('hsc_admin_pass', np);
   ADMIN_PASS = np;
-  showToast('Password changed successfully', 'success');
+  showToast('✅ Password changed!', 'success');
   document.getElementById('s_newpass').value = '';
   document.getElementById('s_confirmpass').value = '';
 }
 
 // ══════════════════════════════════════════
-//  DATA STORE
+//  SUPABASE HELPERS
 // ══════════════════════════════════════════
 let allOrders = [], allConsults = [], allPVCOrders = [];
 let currentOrderId = null;
 
-// SB fetch helper
-async function sbFetch(table, query = '') {
+async function sbFetch(table, query='') {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}&order=created_at.desc&limit=200`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}&order=created_at.desc&limit=500`, {
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}
     });
     if (!res.ok) return [];
     return await res.json();
   } catch { return []; }
 }
-async function sbUpdate(table, id, data) {
+async function sbUpdateByRef(table, col, val, data) {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(data)
-    });
-    return res.ok;
-  } catch { return false; }
-}
-async function sbUpdateByRef(table, ref_col, ref_val, data) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${ref_col}=eq.${encodeURIComponent(ref_val)}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(data)
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, {
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify(data)
     });
     return res.ok;
   } catch { return false; }
@@ -605,17 +551,12 @@ async function sbUpdateByRef(table, ref_col, ref_val, data) {
 //  INIT
 // ══════════════════════════════════════════
 function initApp() {
-  // Live clock
-  setInterval(() => {
-    document.getElementById('liveTime').textContent = new Date().toLocaleTimeString('en-IN');
-  }, 1000);
+  setInterval(()=>{ document.getElementById('liveTime').textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
+  // Auto refresh every 60 seconds
+  setInterval(refreshAll, 60000);
   loadTemplateList();
   refreshAll();
-  // Check auth on load
-  if (!sessionStorage.getItem('hsc_auth')) {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-  }
+  testDB();
 }
 
 async function refreshAll() {
@@ -630,100 +571,97 @@ async function refreshAll() {
 }
 
 async function loadAllData() {
-  // Orders (checkout orders)
-  allOrders   = await sbFetch('orders', 'select=*');
-  // Consultations from gazette_consults + bpr_consults
-  const gaz   = (await sbFetch('gazette_consults', 'select=*')).map(r => ({...r, service:'Gazette'}));
-  const bpr   = (await sbFetch('bpr_consults', 'select=*')).map(r => ({...r, service:'BPR'}));
-  allConsults = [...gaz, ...bpr].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-  allPVCOrders = await sbFetch('pvc_orders', 'select=*');
+  allOrders    = await sbFetch('orders','select=*');
+  const gaz    = (await sbFetch('gazette_consults','select=*')).map(r=>({...r,service:'Gazette'}));
+  const bpr    = (await sbFetch('bpr_consults','select=*')).map(r=>({...r,service:'BPR'}));
+  allConsults  = [...gaz,...bpr].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  allPVCOrders = await sbFetch('pvc_orders','select=*');
 
-  // Update badges
-  const newO = allOrders.filter(o => o.status === 'new').length;
-  const newC = allConsults.filter(c => !c.read).length;
-  document.getElementById('newOrderBadge').textContent = newO;
-  document.getElementById('newConsultBadge').textContent = newC;
+  const newO = allOrders.filter(o=>o.status==='new').length;
+  const newC = allConsults.filter(c=>!c.read).length;
+  document.getElementById('newOrderBadge').textContent = newO || '0';
+  document.getElementById('newConsultBadge').textContent = newC || '0';
 }
 
 // ══════════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════════
 function renderDashboard() {
-  const pvcRev = allPVCOrders.filter(o => o.status !== 'Cancelled').reduce((s,o) => s + (o.amount||0), 0);
-  const ordRev = allOrders.reduce((s,o) => s + (o.total_amount||0), 0);
-  document.getElementById('statRevenue').innerHTML = '₹' + (pvcRev + ordRev).toLocaleString('en-IN') + '<span> total</span>';
-  document.getElementById('statOrders').textContent = allOrders.length + allPVCOrders.length;
+  const pvcRev = allPVCOrders.reduce((s,o)=>s+(o.amount||0),0);
+  const ordRev = allOrders.reduce((s,o)=>s+(o.total_amount||0),0);
+  document.getElementById('statRevenue').textContent = '₹'+(pvcRev+ordRev).toLocaleString('en-IN');
+  document.getElementById('statOrders').textContent  = allOrders.length + allPVCOrders.length;
   document.getElementById('statConsults').textContent = allConsults.length;
-  document.getElementById('statPVC').textContent = allPVCOrders.length;
-  const pending = allOrders.filter(o => o.status==='new' || o.status==='Processing').length + allPVCOrders.filter(o => o.status==='Processing' || o.status==='Printing').length;
+  document.getElementById('statPVC').textContent     = allPVCOrders.length;
+  const pending = allOrders.filter(o=>o.status==='new'||o.status==='Processing').length +
+                  allPVCOrders.filter(o=>o.status==='Processing'||o.status==='Printing').length;
   document.getElementById('statPending').textContent = pending;
 
-  // Recent orders
-  const recent5O = [...allOrders, ...allPVCOrders.map(o => ({...o, order_ref: o.order_ref, customer_name: o.customer_name, _type:'PVC', total_amount: o.amount}))].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5);
-  document.getElementById('recentOrdersTbl').innerHTML = recent5O.length ? recent5O.map(o => `
-    <tr>
-      <td class="td-mono">${o.order_ref||'—'}</td>
-      <td class="td-main">${o.customer_name||'—'}</td>
-      <td>${serviceTag(o._type || guessService(o))}</td>
-      <td>${statusBadge(o.status)}</td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty-state"><div class="empty-icon">📦</div>No orders yet</td></tr>';
+  const recent5O = [...allOrders,...allPVCOrders.map(o=>({...o,_type:'PVC',total_amount:o.amount}))]
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5);
+  document.getElementById('recentOrdersTbl').innerHTML = recent5O.length
+    ? recent5O.map(o=>`<tr>
+        <td class="td-mono">${o.order_ref||'—'}</td>
+        <td class="td-main">${o.customer_name||'—'}</td>
+        <td>${serviceTag(o._type||guessService(o))}</td>
+        <td>${statusBadge(o.status)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" class="empty-state"><div class="empty-icon">📦</div>No orders yet</td></tr>';
 
-  // Recent consultations
   const recent5C = allConsults.slice(0,5);
-  document.getElementById('recentConsultsTbl').innerHTML = recent5C.length ? recent5C.map(c => `
-    <tr>
-      <td class="td-main">${c.customer_name||c.name||'—'}</td>
-      <td class="td-mono">${c.mobile||c.customer_phone||'—'}</td>
-      <td>${serviceTag(c.service)}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty-state"><div class="empty-icon">📞</div>No consultations yet</td></tr>';
+  document.getElementById('recentConsultsTbl').innerHTML = recent5C.length
+    ? recent5C.map(c=>`<tr>
+        <td class="td-main">${c.customer_name||'—'}</td>
+        <td class="td-mono">${c.mobile||'—'}</td>
+        <td>${serviceTag(c.service)}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" class="empty-state"><div class="empty-icon">📞</div>No consultations yet</td></tr>';
 }
 
 function guessService(o) {
-  if (o.items) {
-    try { const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; return items[0]?.name?.includes('Gazette') ? 'Gazette' : 'BPR'; } catch { return '?'; }
-  }
-  return o._type || '?';
+  if (!o.items) return o._type||'?';
+  try {
+    const items = typeof o.items==='string'?JSON.parse(o.items):o.items;
+    return items[0]?.name?.includes('Gazette')?'Gazette':'BPR';
+  } catch { return '?'; }
 }
 
 // ══════════════════════════════════════════
 //  ORDERS TABLE
 // ══════════════════════════════════════════
 function renderOrdersTable() {
-  const search = (document.getElementById('searchOrders')?.value||'').toLowerCase();
+  const search  = (document.getElementById('searchOrders')?.value||'').toLowerCase();
   const fStatus = document.getElementById('filterOrderStatus')?.value||'';
   const fType   = document.getElementById('filterOrderType')?.value||'';
-
   const combined = [
-    ...allOrders.map(o => ({...o, _service: guessService(o), _amount: o.total_amount})),
-    ...allPVCOrders.map(o => ({...o, _service: 'PVC', _amount: o.amount, order_ref: o.order_ref, customer_name: o.customer_name, customer_phone: o.customer_phone}))
-  ].sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
+    ...allOrders.map(o=>({...o,_service:guessService(o),_amount:o.total_amount})),
+    ...allPVCOrders.map(o=>({...o,_service:'PVC',_amount:o.amount}))
+  ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-  const filtered = combined.filter(o => {
-    const txt = `${o.order_ref} ${o.customer_name} ${o.customer_phone||o.customer_mobile}`.toLowerCase();
-    const matchSearch = !search || txt.includes(search);
-    const matchStatus = !fStatus || (o.status||'').toLowerCase().includes(fStatus.toLowerCase());
-    const matchType   = !fType   || o._service === fType;
-    return matchSearch && matchStatus && matchType;
+  const filtered = combined.filter(o=>{
+    const txt=`${o.order_ref||''} ${o.customer_name||''} ${o.customer_phone||''}`.toLowerCase();
+    return (!search||txt.includes(search))&&(!fStatus||(o.status||'').toLowerCase().includes(fStatus.toLowerCase()))&&(!fType||o._service===fType);
   });
 
-  document.getElementById('ordersTbl').innerHTML = filtered.length ? filtered.map(o => `
-    <tr>
-      <td class="td-mono">${o.order_ref||'—'}</td>
-      <td class="td-main">${o.customer_name||'—'}</td>
-      <td class="td-mono">${o.customer_phone||o.customer_mobile||'—'}</td>
-      <td>${serviceTag(o._service)}</td>
-      <td style="font-weight:700;color:var(--gold);">₹${Number(o._amount||0).toLocaleString('en-IN')}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
-      <td><div style="display:flex;gap:6px;">
-        <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','${o._service}')">👁 View</button>
-        <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','${o._service}','${o.status}')">✏️</button>
-        <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone||o.customer_mobile}','${o.order_ref}','${o._service}','${o.status}')">💬</button>
-      </div></td>
-    </tr>`).join('') : '<tr><td colspan="8" class="empty-state"><div class="empty-icon">📦</div>No orders found</td></tr>';
+  document.getElementById('ordersTbl').innerHTML = filtered.length
+    ? filtered.map(o=>`<tr>
+        <td class="td-mono">${o.order_ref||'—'}</td>
+        <td class="td-main">${o.customer_name||'—'}</td>
+        <td class="td-mono">${o.customer_phone||'—'}</td>
+        <td>${serviceTag(o._service)}</td>
+        <td style="font-weight:700;color:var(--gold);">₹${Number(o._amount||0).toLocaleString('en-IN')}</td>
+        <td>${statusBadge(o.status)}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
+        <td><div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','${o._service}')">👁</button>
+          <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','${o._service}','${o.status}','${o.tracking_number||''}')">✏️</button>
+          <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone||''}','${o.order_ref}','${o._service}','${o.status}','${o.tracking_number||''}')">💬</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="empty-state"><div class="empty-icon">📦</div>No orders found</td></tr>';
 }
-function filterOrders() { renderOrdersTable(); }
+function filterOrders(){renderOrdersTable();}
 
 // ══════════════════════════════════════════
 //  CONSULTATIONS TABLE
@@ -731,170 +669,165 @@ function filterOrders() { renderOrdersTable(); }
 function renderConsultationsTable() {
   const search = (document.getElementById('searchConsults')?.value||'').toLowerCase();
   const fType  = document.getElementById('filterConsultType')?.value||'';
-  const filtered = allConsults.filter(c => {
-    const name = c.customer_name||c.name||'';
-    const mob  = c.mobile||c.customer_phone||'';
-    const txt  = `${name} ${mob}`.toLowerCase();
-    return (!search || txt.includes(search)) && (!fType || c.service === fType);
+  const filtered = allConsults.filter(c=>{
+    const txt=`${c.customer_name||''} ${c.mobile||''}`.toLowerCase();
+    return (!search||txt.includes(search))&&(!fType||c.service===fType);
   });
-  document.getElementById('consultsTbl').innerHTML = filtered.length ? filtered.map(c => `
-    <tr>
-      <td class="td-main">${c.customer_name||c.name||'—'}</td>
-      <td class="td-mono">${c.mobile||c.customer_phone||'—'}</td>
-      <td>${serviceTag(c.service)}</td>
-      <td style="color:var(--text2);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${c.reason||c.biz_type||'—'}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
-      <td><div style="display:flex;gap:6px;">
-        <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','${c.service}')">👁 View</button>
-        <button class="btn-sm btn-green" onclick="waNum('${c.mobile||c.customer_phone}')">💬</button>
-      </div></td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty-state"><div class="empty-icon">📞</div>No consultations found</td></tr>';
+  document.getElementById('consultsTbl').innerHTML = filtered.length
+    ? filtered.map(c=>`<tr>
+        <td class="td-main">${c.customer_name||'—'}</td>
+        <td class="td-mono">${c.mobile||'—'}</td>
+        <td>${serviceTag(c.service)}</td>
+        <td style="color:var(--text2);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${c.reason||c.biz_type||'—'}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
+        <td><div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','${c.service}')">👁 View</button>
+          <button class="btn-sm btn-green" onclick="waNum('${c.mobile||''}')">💬</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="empty-state"><div class="empty-icon">📞</div>No consultations found</td></tr>';
 }
-function filterConsults() { renderConsultationsTable(); }
+function filterConsults(){renderConsultationsTable();}
 
 // ══════════════════════════════════════════
 //  GAZETTE TABLE
 // ══════════════════════════════════════════
 function renderGazetteTable() {
-  const s = (document.getElementById('searchGazette')?.value||'').toLowerCase();
-  const data = allConsults.filter(c => c.service === 'Gazette' && (!s || `${c.customer_name||''} ${c.mobile||''}`.toLowerCase().includes(s)));
-  document.getElementById('gazetteTbl').innerHTML = data.length ? data.map(c => `
-    <tr>
-      <td class="td-main">${c.customer_name||c.name||'—'}</td>
-      <td class="td-mono">${c.mobile||c.customer_phone||'—'}</td>
-      <td style="font-size:12px;">${c.old_name_en||'—'}</td>
-      <td style="font-size:12px;color:var(--gold);">${c.new_name_en||'—'}</td>
-      <td style="font-size:12px;">${c.dob||'—'}</td>
-      <td style="font-size:12px;max-width:140px;">${c.reason||'—'}</td>
-      <td>${statusBadge(c.status||'Pending')}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
-      <td><div style="display:flex;gap:6px;"><button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','Gazette')">👁</button><button class="btn-sm btn-green" onclick="waNum('${c.mobile}')">💬</button></div></td>
-    </tr>`).join('') : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📰</div>No gazette orders</td></tr>';
+  const s=(document.getElementById('searchGazette')?.value||'').toLowerCase();
+  const data=allConsults.filter(c=>c.service==='Gazette'&&(!s||`${c.customer_name||''} ${c.mobile||''}`.toLowerCase().includes(s)));
+  document.getElementById('gazetteTbl').innerHTML = data.length
+    ? data.map(c=>`<tr>
+        <td class="td-main">${c.customer_name||'—'}</td>
+        <td class="td-mono">${c.mobile||'—'}</td>
+        <td style="font-size:12px;">${c.old_name_en||'—'}</td>
+        <td style="font-size:12px;color:var(--gold);">${c.new_name_en||'—'}</td>
+        <td style="font-size:12px;">${c.dob||'—'}</td>
+        <td style="font-size:12px;max-width:140px;">${c.reason||'—'}</td>
+        <td>${statusBadge(c.status||'Pending')}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
+        <td><div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','Gazette')">👁</button>
+          <button class="btn-sm btn-green" onclick="waNum('${c.mobile||''}')">💬</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📰</div>No gazette orders</td></tr>';
 }
-function filterGazette() { renderGazetteTable(); }
+function filterGazette(){renderGazetteTable();}
 
 // ══════════════════════════════════════════
 //  BPR TABLE
 // ══════════════════════════════════════════
 function renderBPRTable() {
-  const s = (document.getElementById('searchBPR')?.value||'').toLowerCase();
-  const data = allConsults.filter(c => c.service === 'BPR' && (!s || `${c.customer_name||''} ${c.mobile||''}`.toLowerCase().includes(s)));
-  document.getElementById('bprTbl').innerHTML = data.length ? data.map(c => `
-    <tr>
-      <td class="td-main">${c.customer_name||c.name||'—'}</td>
-      <td class="td-mono">${c.mobile||c.customer_phone||'—'}</td>
-      <td style="font-size:12px;">${c.biz_name||'—'}</td>
-      <td style="font-size:12px;">${c.loan_scheme||'—'}</td>
-      <td style="color:var(--gold);font-family:var(--mono);">₹${Number(c.total_cost||0).toLocaleString('en-IN')}</td>
-      <td style="color:var(--saffron);font-family:var(--mono);">₹${Number(c.loan_amount||0).toLocaleString('en-IN')}</td>
-      <td>${statusBadge(c.status||'Pending')}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
-      <td><div style="display:flex;gap:6px;"><button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','BPR')">👁</button><button class="btn-sm btn-green" onclick="waNum('${c.mobile}')">💬</button></div></td>
-    </tr>`).join('') : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📊</div>No BPR orders</td></tr>';
+  const s=(document.getElementById('searchBPR')?.value||'').toLowerCase();
+  const data=allConsults.filter(c=>c.service==='BPR'&&(!s||`${c.customer_name||''} ${c.mobile||''}`.toLowerCase().includes(s)));
+  document.getElementById('bprTbl').innerHTML = data.length
+    ? data.map(c=>`<tr>
+        <td class="td-main">${c.customer_name||'—'}</td>
+        <td class="td-mono">${c.mobile||'—'}</td>
+        <td style="font-size:12px;">${c.biz_name||'—'}</td>
+        <td style="font-size:12px;">${c.loan_scheme||'—'}</td>
+        <td style="color:var(--gold);font-family:var(--mono);">₹${Number(c.total_cost||0).toLocaleString('en-IN')}</td>
+        <td style="color:var(--saffron);font-family:var(--mono);">₹${Number(c.loan_amount||0).toLocaleString('en-IN')}</td>
+        <td>${statusBadge(c.status||'Pending')}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
+        <td><div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','BPR')">👁</button>
+          <button class="btn-sm btn-green" onclick="waNum('${c.mobile||''}')">💬</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📊</div>No BPR orders</td></tr>';
 }
-function filterBPR() { renderBPRTable(); }
+function filterBPR(){renderBPRTable();}
 
 // ══════════════════════════════════════════
 //  PVC TABLE
 // ══════════════════════════════════════════
 function renderPVCTable() {
-  const s = (document.getElementById('searchPVC')?.value||'').toLowerCase();
-  const fSt = document.getElementById('filterPVCStatus')?.value||'';
-  const data = allPVCOrders.filter(o => {
-    const txt = `${o.customer_name||''} ${o.customer_phone||''} ${o.order_ref||''}`.toLowerCase();
-    return (!s || txt.includes(s)) && (!fSt || o.status === fSt);
+  const s=(document.getElementById('searchPVC')?.value||'').toLowerCase();
+  const fSt=document.getElementById('filterPVCStatus')?.value||'';
+  const data=allPVCOrders.filter(o=>{
+    const txt=`${o.customer_name||''} ${o.customer_phone||''} ${o.order_ref||''}`.toLowerCase();
+    return (!s||txt.includes(s))&&(!fSt||o.status===fSt);
   });
-  document.getElementById('pvcTbl').innerHTML = data.length ? data.map(o => `
-    <tr>
-      <td class="td-mono">${o.order_ref||'—'}</td>
-      <td class="td-main">${o.customer_name||'—'}</td>
-      <td class="td-mono">${o.customer_phone||'—'}</td>
-      <td>${o.card_type||'—'}</td>
-      <td style="text-align:center;">${o.quantity||1}</td>
-      <td style="color:var(--gold);font-weight:700;">₹${Number(o.amount||0).toLocaleString('en-IN')}</td>
-      <td>${o.tracking_number ? `<span class="td-mono" style="color:var(--green);">${o.tracking_number}</span>` : '<span style="color:var(--text3);">—</span>'}</td>
-      <td>${statusBadge(o.status)}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
-      <td><div style="display:flex;gap:5px;">
-        <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','PVC')">👁</button>
-        <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','PVC','${o.status}','${o.tracking_number||''}')">✏️</button>
-        <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone}','${o.order_ref}','PVC','${o.status}')">💬</button>
-      </div></td>
-    </tr>`).join('') : '<tr><td colspan="10" class="empty-state"><div class="empty-icon">🪪</div>No PVC orders</td></tr>';
+  document.getElementById('pvcTbl').innerHTML = data.length
+    ? data.map(o=>`<tr>
+        <td class="td-mono">${o.order_ref||'—'}</td>
+        <td class="td-main">${o.customer_name||'—'}</td>
+        <td class="td-mono">${o.customer_phone||'—'}</td>
+        <td>${o.card_type||'—'}</td>
+        <td style="text-align:center;">${o.quantity||1}</td>
+        <td style="color:var(--gold);font-weight:700;">₹${Number(o.amount||0).toLocaleString('en-IN')}</td>
+        <td>${o.tracking_number?`<span class="td-mono" style="color:var(--green);">${o.tracking_number}</span>`:'<span style="color:var(--text3);">—</span>'}</td>
+        <td>${statusBadge(o.status)}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
+        <td><div style="display:flex;gap:5px;">
+          <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','PVC')">👁</button>
+          <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','PVC','${o.status}','${o.tracking_number||''}')">✏️</button>
+          <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone||''}','${o.order_ref}','PVC','${o.status}','${o.tracking_number||''}')">💬</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="10" class="empty-state"><div class="empty-icon">🪪</div>No PVC orders</td></tr>';
 }
-function filterPVC() { renderPVCTable(); }
+function filterPVC(){renderPVCTable();}
 
 // ══════════════════════════════════════════
 //  VIEW DETAIL MODALS
 // ══════════════════════════════════════════
 function viewOrder(ref, service) {
-  const o = service === 'PVC'
-    ? allPVCOrders.find(x => x.order_ref === ref)
-    : allOrders.find(x => x.order_ref === ref);
-  if (!o) { showToast('Order not found', 'error'); return; }
-
-  currentOrderId = { ref, service, id: o.id };
-  document.getElementById('orderModalTitle').textContent = `📦 Order — ${ref}`;
-
-  let html = '<div class="detail-grid">';
-  const rows = service === 'PVC' ? [
-    ['Order Ref', ref, true], ['Customer', o.customer_name], ['Mobile', o.customer_phone, true],
-    ['Card Type', o.card_type], ['Quantity', o.quantity], ['Amount', '₹' + Number(o.amount||0).toLocaleString('en-IN')],
-    ['Status', statusBadge(o.status)], ['Payment ID', o.payment_id||'—', true],
-    ['Tracking #', o.tracking_number||'Not assigned yet'], ['Address', o.address||'—'],
-    ['Date', fmtDate(o.created_at)]
-  ] : [
-    ['Order Ref', ref, true], ['Customer', o.customer_name], ['Mobile', o.customer_phone, true],
-    ['Email', o.customer_email||'—'], ['Amount', '₹' + Number(o.total_amount||0).toLocaleString('en-IN')],
-    ['Status', statusBadge(o.status)], ['Address', o.delivery_address||'—'],
-    ['Notes', o.notes||'—'], ['Date', fmtDate(o.created_at)]
-  ];
-  rows.forEach(([k,v,mono]) => {
-    html += `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${mono?'mono':''}">${v}</div></div>`;
-  });
-  html += '</div>';
-  document.getElementById('orderModalBody').innerHTML = html;
-
-  const phone = o.customer_phone||o.customer_mobile||'';
-  document.getElementById('orderWABtn').onclick = () => waOrder(phone, ref, service, o.status, o.tracking_number);
-  document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number||''); };
+  const o = service==='PVC'
+    ? allPVCOrders.find(x=>x.order_ref===ref)
+    : allOrders.find(x=>x.order_ref===ref);
+  if (!o){showToast('Order not found','error');return;}
+  currentOrderId={ref,service,id:o.id};
+  document.getElementById('orderModalTitle').textContent=`📦 Order — ${ref}`;
+  const rows = service==='PVC'
+    ? [['Order Ref',ref,true],['Customer',o.customer_name],['Mobile',o.customer_phone,true],
+       ['Card Type',o.card_type],['Quantity',o.quantity],['Amount','₹'+Number(o.amount||0).toLocaleString('en-IN')],
+       ['Status',statusBadge(o.status)],['Payment ID',o.payment_id||'—',true],
+       ['Tracking #',o.tracking_number||'Not assigned yet'],['Address',o.address||'—'],['Date',fmtDate(o.created_at)]]
+    : [['Order Ref',ref,true],['Customer',o.customer_name],['Mobile',o.customer_phone,true],
+       ['Email',o.customer_email||'—'],['Amount','₹'+Number(o.total_amount||0).toLocaleString('en-IN')],
+       ['Status',statusBadge(o.status)],['Address',o.delivery_address||'—'],
+       ['Notes',o.notes||'—'],['Date',fmtDate(o.created_at)]];
+  document.getElementById('orderModalBody').innerHTML=
+    '<div class="detail-grid">'+rows.map(([k,v,m])=>
+      `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m?'mono':''}">${v||'—'}</div></div>`
+    ).join('')+'</div>';
+  const phone=o.customer_phone||'';
+  document.getElementById('orderWABtn').onclick=()=>waOrder(phone,ref,service,o.status,o.tracking_number||'');
+  document.getElementById('orderUpdateBtn').onclick=()=>{closeModal('orderModal');openStatusModal(ref,service,o.status,o.tracking_number||'');};
   openModal('orderModal');
 }
 
 function viewConsult(id, service) {
-  const c = allConsults.find(x => String(x.id) === String(id) && x.service === service);
-  if (!c) { showToast('Record not found', 'error'); return; }
-  document.getElementById('orderModalTitle').textContent = `📞 Consultation — ${service}`;
-  const phone = c.mobile||c.customer_phone||'';
-  let html = '<div class="detail-grid">';
-  const rows = service === 'Gazette' ? [
-    ['Name', c.customer_name||c.name], ['Mobile', phone, true],
-    ['Email', c.email||'—'], ['Applicant Type', c.applicant_type||'—'],
-    ['Old Name (Hindi)', c.old_name_hi||'—'], ['Old Name (English)', c.old_name_en||'—'],
-    ['New Name (Hindi)', c.new_name_hi||'—'], ['New Name (English)', c.new_name_en||'—'],
-    ['DOB', c.dob||'—'], ['Father (English)', c.father_en||'—'],
-    ['Reason', c.reason||'—'], ['Print Address', c.print_address||'—'],
-    ['Courier Address', c.courier_address||'—'], ['Notes', c.notes||'—'],
-    ['Date', fmtDate(c.created_at)]
-  ] : [
-    ['Name', c.customer_name||c.name], ['Mobile', phone, true],
-    ['Email', c.email||'—'], ['Father/Spouse', c.guardian||'—'],
-    ['Home Address', c.address||'—'], ['Business Name', c.biz_name||'—'],
-    ['Business Type', c.biz_type||'—'], ['Location', c.biz_address||'—'],
-    ['Loan Scheme', c.loan_scheme||'—'], ['Total Cost', c.total_cost ? '₹'+Number(c.total_cost).toLocaleString('en-IN') : '—'],
-    ['Loan Amount', c.loan_amount ? '₹'+Number(c.loan_amount).toLocaleString('en-IN') : '—'],
-    ['Own Contribution', c.own_contrib ? '₹'+Number(c.own_contrib).toLocaleString('en-IN') : '—'],
-    ['Premises', c.premises||'—'], ['Power Load', c.power||'—'],
-    ['Employees', c.employees||'—'], ['Expected Turnover', c.turnover ? '₹'+Number(c.turnover).toLocaleString('en-IN') : '—'],
-    ['Machinery', c.machineries||'—'], ['Notes', c.notes||'—'], ['Date', fmtDate(c.created_at)]
-  ];
-  rows.forEach(([k,v,mono]) => {
-    html += `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${mono?'mono':''}">${v||'—'}</div></div>`;
-  });
-  html += '</div>';
-  document.getElementById('orderModalBody').innerHTML = html;
-  document.getElementById('orderWABtn').onclick = () => waNum(phone);
-  document.getElementById('orderUpdateBtn').style.display = 'none';
+  const c=allConsults.find(x=>String(x.id)===String(id)&&x.service===service);
+  if (!c){showToast('Record not found','error');return;}
+  document.getElementById('orderModalTitle').textContent=`📞 Consultation — ${service}`;
+  const phone=c.mobile||'';
+  const rows = service==='Gazette'
+    ? [['Name',c.customer_name],['Mobile',c.mobile,true],['Email',c.email||'—'],
+       ['Applicant Type',c.applicant_type||'—'],['Old Name (Hindi)',c.old_name_hi||'—'],
+       ['Old Name (English)',c.old_name_en||'—'],['New Name (Hindi)',c.new_name_hi||'—'],
+       ['New Name (English)',c.new_name_en||'—'],['DOB',c.dob||'—'],
+       ['Father (Hindi)',c.father_hi||'—'],['Father (English)',c.father_en||'—'],
+       ['Reason',c.reason||'—'],['Print Address',c.print_address||'—'],
+       ['Courier Address',c.courier_address||'—'],['Notes',c.notes||'—'],['Date',fmtDate(c.created_at)]]
+    : [['Name',c.customer_name],['Mobile',c.mobile,true],['Email',c.email||'—'],
+       ['Father/Spouse',c.guardian||'—'],['Home Address',c.address||'—'],
+       ['Business Name',c.biz_name||'—'],['Business Type',c.biz_type||'—'],
+       ['Location',c.biz_address||'—'],['Loan Scheme',c.loan_scheme||'—'],
+       ['Total Cost',c.total_cost?'₹'+Number(c.total_cost).toLocaleString('en-IN'):'—'],
+       ['Loan Amount',c.loan_amount?'₹'+Number(c.loan_amount).toLocaleString('en-IN'):'—'],
+       ['Own Contribution',c.own_contrib?'₹'+Number(c.own_contrib).toLocaleString('en-IN'):'—'],
+       ['Premises',c.premises||'—'],['Power Load',c.power||'—'],
+       ['Employees',c.employees||'—'],['Machinery',c.machineries||'—'],
+       ['Notes',c.notes||'—'],['Date',fmtDate(c.created_at)]];
+  document.getElementById('orderModalBody').innerHTML=
+    '<div class="detail-grid">'+rows.map(([k,v,m])=>
+      `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m?'mono':''}">${v||'—'}</div></div>`
+    ).join('')+'</div>';
+  document.getElementById('orderWABtn').onclick=()=>waNum(phone);
+  document.getElementById('orderUpdateBtn').style.display='none';
   openModal('orderModal');
 }
 
@@ -902,39 +835,37 @@ function viewConsult(id, service) {
 //  STATUS UPDATE
 // ══════════════════════════════════════════
 function openStatusModal(ref, service, currentStatus, tracking='') {
-  document.getElementById('su_ref').value = ref;
-  document.getElementById('su_status').value = currentStatus;
-  document.getElementById('su_tracking').value = tracking||'';
-  document.getElementById('su_note').value = '';
-  currentOrderId = { ref, service };
+  document.getElementById('su_ref').value=ref;
+  document.getElementById('su_status').value=currentStatus;
+  document.getElementById('su_tracking').value=tracking||'';
+  document.getElementById('su_note').value='';
+  document.getElementById('orderUpdateBtn').style.display='';
+  currentOrderId={ref,service};
   openModal('statusModal');
 }
-
 async function saveStatusUpdate() {
-  const ref      = document.getElementById('su_ref').value;
-  const status   = document.getElementById('su_status').value;
-  const tracking = document.getElementById('su_tracking').value.trim();
-  const note     = document.getElementById('su_note').value.trim();
-  const notifyWA = document.getElementById('su_wa_toggle').classList.contains('on');
-  const { service } = currentOrderId;
-
-  const table = service === 'PVC' ? 'pvc_orders' : 'orders';
-  const data  = { status };
-  if (tracking) data.tracking_number = tracking;
-  if (note)     data.admin_note = note;
-
-  const ok = await sbUpdateByRef(table, 'order_ref', ref, data);
-  if (ok) {
-    showToast(`Status updated to "${status}"`, 'success');
+  const ref=document.getElementById('su_ref').value;
+  const status=document.getElementById('su_status').value;
+  const tracking=document.getElementById('su_tracking').value.trim();
+  const note=document.getElementById('su_note').value.trim();
+  const notifyWA=document.getElementById('su_wa_toggle').classList.contains('on');
+  const {service}=currentOrderId;
+  const table=service==='PVC'?'pvc_orders':'orders';
+  const data={status};
+  if(tracking) data.tracking_number=tracking;
+  if(note) data.admin_note=note;
+  const ok=await sbUpdateByRef(table,'order_ref',ref,data);
+  if(ok){
+    showToast(`✅ Status updated to "${status}"','success`);
     closeModal('statusModal');
     await refreshAll();
-    if (notifyWA) {
-      const o = service === 'PVC' ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
-      const phone = o?.customer_phone || o?.customer_mobile || '';
-      if (phone) waOrder(phone, ref, service, status, tracking);
+    if(notifyWA){
+      const o=service==='PVC'?allPVCOrders.find(x=>x.order_ref===ref):allOrders.find(x=>x.order_ref===ref);
+      const phone=o?.customer_phone||'';
+      if(phone) waOrder(phone,ref,service,status,tracking);
     }
   } else {
-    showToast('Update failed. Check Supabase connection.', 'error');
+    showToast('❌ Update failed. Check connection.','error');
   }
 }
 
@@ -942,296 +873,195 @@ async function saveStatusUpdate() {
 //  TRACKING PAGE
 // ══════════════════════════════════════════
 function lookupOrder() {
-  const ref = document.getElementById('trackRef').value.trim();
-  const infoEl = document.getElementById('trackOrderInfo');
-  if (ref.length < 5) { infoEl.style.display = 'none'; return; }
-  const o = allPVCOrders.find(x => x.order_ref?.toUpperCase() === ref.toUpperCase())
-         || allOrders.find(x => x.order_ref?.toUpperCase() === ref.toUpperCase());
-  if (o) {
-    infoEl.style.display = 'block';
-    infoEl.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Found:</span> ${o.customer_name||'—'} · ${o.customer_phone||'—'} · ${statusBadge(o.status)}`;
-    document.getElementById('trackStatus').value = o.status || 'Processing';
-    if (o.tracking_number) document.getElementById('trackNum').value = o.tracking_number;
+  const ref=document.getElementById('trackRef').value.trim();
+  const infoEl=document.getElementById('trackOrderInfo');
+  if(ref.length<5){infoEl.style.display='none';return;}
+  const o=allPVCOrders.find(x=>x.order_ref?.toUpperCase()===ref.toUpperCase())
+         ||allOrders.find(x=>x.order_ref?.toUpperCase()===ref.toUpperCase());
+  if(o){
+    infoEl.style.display='block';
+    infoEl.innerHTML=`<span style="color:var(--green);font-weight:700;">✅ Found:</span> ${o.customer_name||'—'} · ${o.customer_phone||'—'} · ${statusBadge(o.status)}`;
+    document.getElementById('trackStatus').value=o.status||'Processing';
+    if(o.tracking_number) document.getElementById('trackNum').value=o.tracking_number;
   } else {
-    infoEl.style.display = 'block';
-    infoEl.innerHTML = `<span style="color:var(--red);">❌ Order not found for ref: ${ref}</span>`;
+    infoEl.style.display='block';
+    infoEl.innerHTML=`<span style="color:var(--red);">❌ Order not found: ${ref}</span>`;
   }
 }
-
 async function saveTracking() {
-  const ref     = document.getElementById('trackRef').value.trim();
-  const num     = document.getElementById('trackNum').value.trim();
-  const status  = document.getElementById('trackStatus').value;
-  const note    = document.getElementById('trackNote').value.trim();
-  const notifyWA = document.getElementById('trackWAToggle').classList.contains('on');
-
-  if (!ref) { showToast('Enter an order reference', 'error'); return; }
-
-  const isPVC = ref.startsWith('PVC-');
-  const table = isPVC ? 'pvc_orders' : 'orders';
-  const data  = { status };
-  if (num) data.tracking_number = num;
-  if (note) data.admin_note = note;
-
-  const ok = await sbUpdateByRef(table, 'order_ref', ref, data);
-  if (ok) {
-    showToast('Tracking saved!', 'success');
+  const ref=document.getElementById('trackRef').value.trim();
+  const num=document.getElementById('trackNum').value.trim();
+  const status=document.getElementById('trackStatus').value;
+  const note=document.getElementById('trackNote').value.trim();
+  const notifyWA=document.getElementById('trackWAToggle').classList.contains('on');
+  if(!ref){showToast('Enter an order reference','error');return;}
+  const isPVC=ref.startsWith('PVC-');
+  const table=isPVC?'pvc_orders':'orders';
+  const data={status};
+  if(num) data.tracking_number=num;
+  if(note) data.admin_note=note;
+  const ok=await sbUpdateByRef(table,'order_ref',ref,data);
+  if(ok){
+    showToast('✅ Tracking saved!','success');
     await refreshAll();
-    const o = isPVC ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
-    if (notifyWA && o) {
-      const phone = o.customer_phone||o.customer_mobile||'';
-      if (phone) waOrder(phone, ref, isPVC?'PVC':'Order', status, num);
+    if(notifyWA){
+      const o=isPVC?allPVCOrders.find(x=>x.order_ref===ref):allOrders.find(x=>x.order_ref===ref);
+      const phone=o?.customer_phone||'';
+      if(phone) waOrder(phone,ref,isPVC?'PVC':'Order',status,num);
     }
-    document.getElementById('trackRef').value = '';
-    document.getElementById('trackNum').value = '';
-    document.getElementById('trackOrderInfo').style.display = 'none';
+    document.getElementById('trackRef').value='';
+    document.getElementById('trackNum').value='';
+    document.getElementById('trackOrderInfo').style.display='none';
   } else {
-    showToast('Save failed. Check connection.', 'error');
+    showToast('❌ Save failed.','error');
   }
 }
-
 function renderTrackingHistory() {
-  const recent = [...allOrders, ...allPVCOrders].filter(o => o.tracking_number).sort((a,b) => new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at)).slice(0,10);
-  document.getElementById('trackingHistTbl').innerHTML = recent.length ? recent.map(o => `
-    <tr>
-      <td class="td-mono">${o.order_ref||'—'}</td>
-      <td>${o.customer_name||'—'}</td>
-      <td><span class="td-mono" style="color:var(--green);">${o.tracking_number}</span></td>
-      <td>${statusBadge(o.status)}</td>
-      <td style="color:var(--text3);font-size:12px;">${fmtDate(o.updated_at||o.created_at)}</td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty-state" style="padding:24px;">No tracking updates yet</td></tr>';
+  const recent=[...allOrders,...allPVCOrders]
+    .filter(o=>o.tracking_number)
+    .sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at))
+    .slice(0,10);
+  document.getElementById('trackingHistTbl').innerHTML=recent.length
+    ? recent.map(o=>`<tr>
+        <td class="td-mono">${o.order_ref||'—'}</td>
+        <td>${o.customer_name||'—'}</td>
+        <td><span class="td-mono" style="color:var(--green);">${o.tracking_number}</span></td>
+        <td>${statusBadge(o.status)}</td>
+        <td style="color:var(--text3);font-size:12px;">${fmtDate(o.updated_at||o.created_at)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="empty-state" style="padding:24px;">No tracking updates yet</td></tr>';
 }
 
 // ══════════════════════════════════════════
-//  WHATSAPP MESSAGES
+//  WHATSAPP
 // ══════════════════════════════════════════
 const WA_TEMPLATES = {
-  order_received: (name, ref) =>
-`🙏 नमस्ते ${name} जी!
-
-✅ आपका Order Received हो गया है।
-📋 Order Ref: *${ref}*
-
-हमारी टीम जल्द ही आपसे संपर्क करेगी।
-किसी भी प्रश्न के लिए WhatsApp करें।
-
-— Harsh CSC eMitra 🏛️`,
-
-  doc_needed: (name, ref) =>
-`🙏 नमस्ते ${name} जी!
-
-📎 आपके Order (${ref}) के लिए Documents चाहिए।
-
-कृपया निम्नलिखित documents इस WhatsApp पर भेजें:
-• Aadhaar Card (front + back)
-• PAN Card
-• Passport Photo (2 copies)
-
-जल्दी से भेजें ताकि काम जल्दी हो सके।
-
-— Harsh CSC eMitra 🏛️`,
-
-  processing: (name, ref) =>
-`🙏 नमस्ते ${name} जी!
-
-⚙️ आपके Order (${ref}) का काम शुरू हो गया है।
-
-हम आपको update करते रहेंगे।
-धन्यवाद आप पर विश्वास के लिए! 🙏
-
-— Harsh CSC eMitra 🏛️`,
-
-  dispatched: (name, ref, tracking='') =>
-`🙏 नमस्ते ${name} जी!
-
-📮 आपका Order *Dispatch* हो गया है!
-📋 Order Ref: *${ref}*
-${tracking ? `📬 Speed Post Tracking: *${tracking}*\n🔗 Track: https://www.indiapost.gov.in` : ''}
-
-2-5 दिनों में आपके घर पहुंच जाएगा।
-
-— Harsh CSC eMitra 🏛️`,
-
-  delivered: (name, ref) =>
-`🙏 नमस्ते ${name} जी!
-
-🎉 आपका Order *Delivered* हो गया!
-📋 Order Ref: *${ref}*
-
-हमें उम्मीद है आपको हमारी service पसंद आई।
-Review देना न भूलें! ⭐
-
-— Harsh CSC eMitra 🏛️`,
-
-  payment_reminder: (name, ref, amount) =>
-`🙏 नमस्ते ${name} जी!
-
-💰 आपके Order (${ref}) का Payment Pending है।
-Amount: *₹${amount}*
-
-कृपया जल्दी payment करें ताकि आपका काम शुरू हो सके।
-
-— Harsh CSC eMitra 🏛️`,
-
-  custom: () => ''
+  order_received:(name,ref)=>`🙏 नमस्ते ${name} जी!\n\n✅ आपका Order Received हो गया है।\n📋 Order Ref: *${ref}*\n\nहमारी टीम जल्द ही आपसे संपर्क करेगी।\n\n— Harsh CSC eMitra 🏛️`,
+  doc_needed:(name,ref)=>`🙏 नमस्ते ${name} जी!\n\n📎 आपके Order (${ref}) के लिए Documents चाहिए।\n\nकृपया WhatsApp पर भेजें:\n• Aadhaar Card (front + back)\n• PAN Card\n• Passport Photo\n\n— Harsh CSC eMitra 🏛️`,
+  processing:(name,ref)=>`🙏 नमस्ते ${name} जी!\n\n⚙️ आपके Order (${ref}) का काम शुरू हो गया है।\n\nधन्यवाद! 🙏\n\n— Harsh CSC eMitra 🏛️`,
+  dispatched:(name,ref,tracking='')=>`🙏 नमस्ते ${name} जी!\n\n📮 आपका Order *Dispatch* हो गया है!\n📋 Order Ref: *${ref}*\n${tracking?`📬 Speed Post Tracking: *${tracking}*\n🔗 Track: https://www.indiapost.gov.in`:''}\n\n2-5 दिनों में पहुंच जाएगा।\n\n— Harsh CSC eMitra 🏛️`,
+  delivered:(name,ref)=>`🙏 नमस्ते ${name} जी!\n\n🎉 आपका Order *Delivered* हो गया!\n📋 Order Ref: *${ref}*\n\nहमें उम्मीद है आपको service पसंद आई। ⭐\n\n— Harsh CSC eMitra 🏛️`,
+  payment_reminder:(name,ref,amount)=>`🙏 नमस्ते ${name} जी!\n\n💰 आपके Order (${ref}) का Payment Pending है।\nAmount: *₹${amount}*\n\nकृपया जल्दी payment करें।\n\n— Harsh CSC eMitra 🏛️`,
+  custom:()=>''
 };
-
-function applyTemplate() {
-  const key = document.getElementById('waTemplate').value;
-  if (!key || key === 'custom') { document.getElementById('waMsg').value = ''; return; }
-  const tmpl = WA_TEMPLATES[key];
-  document.getElementById('waMsg').value = tmpl('Customer', 'HSC-XXXXXX', 'EE123456789IN') || '';
+function applyTemplate(){
+  const key=document.getElementById('waTemplate').value;
+  if(!key||key==='custom'){document.getElementById('waMsg').value='';return;}
+  document.getElementById('waMsg').value=WA_TEMPLATES[key]('Customer','HSC-XXXXXX','EE123456789IN')||'';
 }
-
-function sendWhatsApp() {
-  const mobile = document.getElementById('waMobile').value.trim();
-  const msg    = document.getElementById('waMsg').value.trim();
-  if (!mobile || !/^[6-9]\d{9}$/.test(mobile)) { showToast('Enter valid 10-digit mobile', 'error'); return; }
-  if (!msg) { showToast('Enter a message', 'error'); return; }
-  window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`, '_blank');
+function sendWhatsApp(){
+  const mobile=document.getElementById('waMobile').value.trim();
+  const msg=document.getElementById('waMsg').value.trim();
+  if(!mobile||!/^[6-9]\d{9}$/.test(mobile)){showToast('Enter valid 10-digit mobile','error');return;}
+  if(!msg){showToast('Enter a message','error');return;}
+  window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`,'_blank');
 }
-
-function waOrder(phone, ref, service, status, tracking='') {
-  if (!phone || phone === 'undefined') { showToast('Phone number not available', 'error'); return; }
-  const cleanPhone = phone.replace(/\D/g,'').replace(/^91/,'');
-  const o = service === 'PVC'
-    ? allPVCOrders.find(x => x.order_ref === ref)
-    : allOrders.find(x => x.order_ref === ref);
-  const name = o?.customer_name || 'Customer';
-
-  let msg = '';
-  if (status === 'Dispatched' || status === 'dispatched') msg = WA_TEMPLATES.dispatched(name, ref, tracking);
-  else if (status === 'Delivered' || status === 'delivered') msg = WA_TEMPLATES.delivered(name, ref);
-  else msg = WA_TEMPLATES.order_received(name, ref);
-
-  window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+function waOrder(phone,ref,service,status,tracking=''){
+  if(!phone){showToast('Phone number not available','error');return;}
+  const clean=phone.replace(/\D/g,'').replace(/^91/,'');
+  const o=service==='PVC'?allPVCOrders.find(x=>x.order_ref===ref):allOrders.find(x=>x.order_ref===ref);
+  const name=o?.customer_name||'Customer';
+  let msg='';
+  if(status==='Dispatched') msg=WA_TEMPLATES.dispatched(name,ref,tracking);
+  else if(status==='Delivered') msg=WA_TEMPLATES.delivered(name,ref);
+  else msg=WA_TEMPLATES.order_received(name,ref);
+  window.open(`https://wa.me/91${clean}?text=${encodeURIComponent(msg)}`,'_blank');
 }
-
-function waNum(phone) {
-  if (!phone) return;
-  const clean = phone.replace(/\D/g,'').replace(/^91/,'');
-  window.open(`https://wa.me/91${clean}`, '_blank');
+function waNum(phone){
+  if(!phone) return;
+  const clean=phone.replace(/\D/g,'').replace(/^91/,'');
+  window.open(`https://wa.me/91${clean}`,'_blank');
 }
-
-function loadTemplateList() {
-  const keys = Object.keys(WA_TEMPLATES).filter(k => k !== 'custom');
-  const labels = { order_received:'✅ Order Received', doc_needed:'📎 Documents Needed', processing:'⚙️ Processing', dispatched:'📮 Dispatched', delivered:'🎉 Delivered', payment_reminder:'💰 Payment Reminder' };
-  document.getElementById('templateList').innerHTML = keys.map(k => `
-    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;cursor:pointer;" onclick="previewTemplate('${k}')">
+function loadTemplateList(){
+  const labels={order_received:'✅ Order Received',doc_needed:'📎 Documents Needed',processing:'⚙️ Processing',dispatched:'📮 Dispatched',delivered:'🎉 Delivered',payment_reminder:'💰 Payment Reminder'};
+  document.getElementById('templateList').innerHTML=Object.keys(labels).map(k=>`
+    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;cursor:pointer;" onclick="document.getElementById('waTemplate').value='${k}';applyTemplate();showPage('messages',document.getElementById('nav-messages'))">
       <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${labels[k]}</div>
-      <div style="font-size:11px;color:var(--text3);">Click to preview & use</div>
+      <div style="font-size:11px;color:var(--text3);">Click to use</div>
     </div>`).join('');
-}
-
-function previewTemplate(key) {
-  document.getElementById('waTemplate').value = key;
-  applyTemplate();
-  showPage('messages', document.querySelector('[onclick*=messages]'));
-}
-
-// ══════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════
-function saveSettings() { showToast('Settings saved! Update config in index.html too.', 'info'); }
-
-async function testDB() {
-  const el = document.getElementById('dbStatus');
-  el.innerHTML = '<div class="spinner"></div> Testing…';
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=id&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    if (res.ok) {
-      el.innerHTML = '<span style="color:var(--green);">✅ Connected to Supabase successfully!</span>';
-    } else {
-      el.innerHTML = `<span style="color:var(--red);">❌ Error ${res.status}</span>`;
-    }
-  } catch(e) {
-    el.innerHTML = `<span style="color:var(--red);">❌ Connection failed</span>`;
-  }
 }
 
 // ══════════════════════════════════════════
 //  EXPORT
 // ══════════════════════════════════════════
-function exportOrders() {
-  const rows = [['Ref','Customer','Phone','Email','Service','Amount','Status','Date','Address','Notes']];
-  const combined = [
-    ...allOrders.map(o => [o.order_ref,o.customer_name,o.customer_phone,o.customer_email||'',guessService(o),o.total_amount,o.status,fmtDate(o.created_at),o.delivery_address||'',o.notes||'']),
-    ...allPVCOrders.map(o => [o.order_ref,o.customer_name,o.customer_phone,'','PVC',o.amount,o.status,fmtDate(o.created_at),o.address||o.delivery_address||'',''])
-  ];
-  combined.forEach(r => rows.push(r));
-  downloadCSV(rows, 'hsc_orders_' + new Date().toISOString().split('T')[0] + '.csv');
+function exportOrders(){
+  const rows=[['Ref','Customer','Phone','Service','Amount','Status','Date']];
+  [...allOrders.map(o=>[o.order_ref,o.customer_name,o.customer_phone,guessService(o),o.total_amount,o.status,fmtDate(o.created_at)]),
+   ...allPVCOrders.map(o=>[o.order_ref,o.customer_name,o.customer_phone,'PVC',o.amount,o.status,fmtDate(o.created_at)])]
+    .forEach(r=>rows.push(r));
+  downloadCSV(rows,'hsc_orders_'+new Date().toISOString().split('T')[0]+'.csv');
+}
+function exportConsults(){
+  const rows=[['Name','Mobile','Service','Reason','Date']];
+  allConsults.forEach(c=>rows.push([c.customer_name||c.name,c.mobile,c.service,c.reason||c.biz_type||'',fmtDate(c.created_at)]));
+  downloadCSV(rows,'hsc_consultations_'+new Date().toISOString().split('T')[0]+'.csv');
+}
+function downloadCSV(rows,filename){
+  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=filename;a.click();
 }
 
-function exportConsults() {
-  const rows = [['Name','Mobile','Service','Reason','Date']];
-  allConsults.forEach(c => rows.push([c.customer_name||c.name,c.mobile||c.customer_phone,c.service,c.reason||c.biz_type||'',fmtDate(c.created_at)]));
-  downloadCSV(rows, 'hsc_consultations_' + new Date().toISOString().split('T')[0] + '.csv');
-}
-
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+// ══════════════════════════════════════════
+//  DB TEST
+// ══════════════════════════════════════════
+async function testDB(){
+  const el=document.getElementById('dbStatus');
+  if(!el) return;
+  el.innerHTML='<div class="spinner"></div> Testing…';
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/orders?select=id&limit=1`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+    el.innerHTML=res.ok?'<span style="color:var(--green);">✅ Connected to Supabase!</span>':`<span style="color:var(--red);">❌ Error ${res.status}</span>`;
+  }catch{el.innerHTML='<span style="color:var(--red);">❌ Connection failed</span>';}
 }
 
 // ══════════════════════════════════════════
 //  UI HELPERS
 // ══════════════════════════════════════════
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + name)?.classList.add('active');
-  if (btn) btn.classList.add('active');
-  const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings' };
-  document.getElementById('pageTitle').textContent = titles[name] || name;
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page=document.getElementById('page-'+name);
+  if(page) page.classList.add('active');
+  if(btn) btn.classList.add('active');
+  const titles={dashboard:'Dashboard',orders:'All Orders',consultations:'Consultations',gazette:'Gazette Orders',bpr:'Project Reports',pvc:'PVC Cards',tracking:'Add Tracking',messages:'Send WhatsApp',settings:'Settings'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
   closeSidebar();
 }
-
-function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
-document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => { if(e.target===m) closeModal(m.id); }));
-
-function showToast(msg, type='info') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show ' + type;
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.modal-bg').forEach(m=>{if(e.target===m)closeModal(m.id);});
+});
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+type;
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.className = '', 3500);
+  t._timer=setTimeout(()=>t.className='',3500);
 }
-
-function statusBadge(s) {
-  const map = { new:'badge-new', new:'badge-new', Processing:'badge-processing', Printing:'badge-printing', Dispatched:'badge-dispatched', Delivered:'badge-delivered', paid:'badge-paid', Pending:'badge-pending', Cancelled:'badge-red', new:'badge-new' };
-  const cls = map[s] || 'badge-pending';
-  return `<span class="badge ${cls}">${s||'—'}</span>`;
+function statusBadge(s){
+  const map={new:'badge-new',Processing:'badge-processing',Printing:'badge-printing',Dispatched:'badge-dispatched',Delivered:'badge-delivered',Pending:'badge-pending',Cancelled:'badge-cancelled'};
+  return `<span class="badge ${map[s]||'badge-pending'}">${s||'—'}</span>`;
 }
-
-function serviceTag(s) {
-  const map = { Gazette:'badge-gazette', BPR:'badge-bpr', PVC:'badge-pvc' };
+function serviceTag(s){
+  const map={Gazette:'badge-gazette',BPR:'badge-bpr',PVC:'badge-pvc'};
   return `<span class="badge ${map[s]||'badge-pending'}">${s||'?'}</span>`;
 }
-
-function fmtDate(d) {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); } catch { return '—'; }
+function fmtDate(d){
+  if(!d) return '—';
+  try{return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return '—';}
 }
-
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlayBg').classList.add('show');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlayBg').classList.remove('show');
-}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlayBg').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlayBg').classList.remove('show');}
 
 // ══════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════
-window.onload = () => {
-  if (sessionStorage.getItem('hsc_auth')) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+window.onload=()=>{
+  if(sessionStorage.getItem('hsc_auth')){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
     initApp();
   }
 };
