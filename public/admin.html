@@ -963,8 +963,10 @@ function waOrder(phone,ref,service,status,tracking=''){
   const name=o?.customer_name||'Customer';
   let msg='';
   if(status==='Dispatched') msg=WA_TEMPLATES.dispatched(name,ref,tracking);
-  else if(status==='Delivered') msg=WA_TEMPLATES.delivered(name,ref);
-  else msg=WA_TEMPLATES.order_received(name,ref);
+else if(status==='Delivered') msg=WA_TEMPLATES.delivered(name,ref);
+else if(status==='Cancelled') msg=`🙏 नमस्ते ${name} जी!\n\n❌ आपका Order *Cancelled* कर दिया गया है।\n📋 Order Ref: *${ref}*\n\nकिसी भी सहायता के लिए WhatsApp करें।\n\n— Harsh CSC eMitra 🏛️`;
+else if(status==='Processing') msg=WA_TEMPLATES.processing(name,ref);
+else msg=WA_TEMPLATES.order_received(name,ref);
   window.open(`https://wa.me/91${clean}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 function waNum(phone){
