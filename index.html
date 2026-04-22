@@ -2182,7 +2182,7 @@
     }
   }
 
-  function submitGazetteConsult() {
+  async function submitGazetteConsult() {
     const errEl = 'gazetteFormError';
     const errObj = document.getElementById(errEl);
     if (errObj) errObj.style.display = 'none';
@@ -2235,7 +2235,38 @@
       (nameEnNew ? `New Name: ${nameEnNew}\n` : '') +
       (reason    ? `Reason: ${reason}\n` : '') +
       (notes     ? `Notes: ${notes}\n` : '');
-
+// ── Supabase Save ──
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/gazette_consults`, {
+        method  : 'POST',
+        headers : {
+          'apikey'       : SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type' : 'application/json',
+          'Prefer'       : 'return=minimal'
+        },
+        body: JSON.stringify({
+          customer_name   : name,
+          mobile          : mobile,
+          calling_number  : calling || null,
+          email           : email   || null,
+          old_name_hi     : nameHiOld || null,
+          old_name_en     : nameEnOld || null,
+          new_name_hi     : nameHiNew || null,
+          new_name_en     : nameEnNew || null,
+          dob             : dob || null,
+          applicant_type  : applicant,
+          father_hi       : fatherHi || null,
+          father_en       : fatherEn || null,
+          print_address   : printAddr   || null,
+          courier_address : courierAddr || null,
+          reason          : reason || null,
+          notes           : notes  || null,
+          status          : 'Pending',
+          read            : false
+        })
+      });
+    } catch(e) { console.error('Gazette save failed:', e); }
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
     closeGazetteConsult();
     showConsultSuccess(GAZETTE_CHECKLIST, waMsg, `Gazette Consultation — ${name}`, emailBody);
@@ -2255,7 +2286,7 @@
     if (list && list.children.length > 1) btn.parentElement.remove();
   }
 
-  function submitBPRConsult() {
+  async function submitBPRConsult() {
     const errEl = 'bprFormError';
     const errObj = document.getElementById(errEl);
     if (errObj) errObj.style.display = 'none';
@@ -2315,7 +2346,40 @@
       (bizName ? `Business: ${bizName}\n` : '') + (bizType ? `Type: ${bizType}\n` : '') +
       (scheme  ? `Scheme: ${scheme}\n` : '') + `Total Cost: ${fmt(totalCost)}\nLoan: ${fmt(loanAmt)}\n` +
       (notes   ? `Notes: ${notes}\n` : '');
-
+// ── Supabase Save ──
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/bpr_consults`, {
+        method  : 'POST',
+        headers : {
+          'apikey'       : SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type' : 'application/json',
+          'Prefer'       : 'return=minimal'
+        },
+        body: JSON.stringify({
+          customer_name : name,
+          mobile        : mobile,
+          email         : email    || null,
+          guardian      : guardian || null,
+          address       : address  || null,
+          biz_name      : bizName  || null,
+          biz_type      : bizType  || null,
+          biz_address   : bizAddr  || null,
+          loan_scheme   : scheme   || null,
+          total_cost    : totalCost   ? Number(totalCost)   : null,
+          loan_amount   : loanAmt     ? Number(loanAmt)     : null,
+          own_contrib   : ownContrib  ? Number(ownContrib)  : null,
+          premises      : premises || null,
+          power         : power    || null,
+          employees     : employees   ? Number(employees)   : null,
+          turnover      : turnover    ? Number(turnover)    : null,
+          machineries   : machineries.length ? machineries.join(', ') : null,
+          notes         : notes    || null,
+          status        : 'Pending',
+          read          : false
+        })
+      });
+    } catch(e) { console.error('BPR save failed:', e); }
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
     closeBPRConsult();
     showConsultSuccess(BPR_CHECKLIST, waMsg, `BPR Consultation — ${name}`, emailBody);
