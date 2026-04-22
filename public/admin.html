@@ -587,8 +587,8 @@ async function loadAllData() {
 //  DASHBOARD
 // ══════════════════════════════════════════
 function renderDashboard() {
-  const pvcRev = allPVCOrders.reduce((s,o)=>s+(o.amount||0),0);
-  const ordRev = allOrders.reduce((s,o)=>s+(o.total_amount||0),0);
+  const pvcRev = allPVCOrders.filter(o=>o.status!=='Cancelled'&&o.status!=='cancelled').reduce((s,o)=>s+(o.amount||0),0);
+const ordRev = allOrders.filter(o=>o.status!=='Cancelled'&&o.status!=='cancelled').reduce((s,o)=>s+(o.total_amount||0),0);
   document.getElementById('statRevenue').textContent = '₹'+(pvcRev+ordRev).toLocaleString('en-IN');
   document.getElementById('statOrders').textContent  = allOrders.length + allPVCOrders.length;
   document.getElementById('statConsults').textContent = allConsults.length;
