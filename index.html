@@ -1560,6 +1560,8 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 <script>
   // ── CONFIG ────────────────────────────────────────────────────
   const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
@@ -2440,8 +2442,43 @@
     showAuthToast(`🎉 Account created! Welcome, ${name.split(' ')[0]}!`);
   }
 
+  // ── FIREBASE GOOGLE SIGN-IN SETUP ─────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyC10w39ss8AmIiJK5ZvCPu_MbiiO2BmqnA",
+    authDomain: "harsh-csc-emitra-54134.firebaseapp.com",
+    projectId: "harsh-csc-emitra-54134",
+    storageBucket: "harsh-csc-emitra-54134.firebasestorage.app",
+    messagingSenderId: "745283604188",
+    appId: "1:745283604188:web:aa949783dc3e63e5fc2e19"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+
   function signInWithGoogle() {
-    alert('Google Sign-In requires Firebase integration.\n\nFor now, please use Email Sign Up.');
+    firebase.auth().signInWithPopup(googleProvider)
+      .then((result) => {
+        const user = result.user;
+        // ग्राहक का नाम और ईमेल लोकल स्टोरेज में सेव करें
+        currentUser = { 
+          name: user.displayName || 'Google User', 
+          email: user.email, 
+          mobile: user.phoneNumber || '' 
+        };
+        localStorage.setItem('hsc_user', JSON.stringify(currentUser));
+        updateNavUser();
+        closeAuthModal();
+        showAuthToast(`👋 Welcome, ${currentUser.name.split(' ')[0]}!`);
+      })
+      .catch((error) => {
+        console.error("Google Sign-In Error: ", error);
+        const errEl = document.getElementById('si_err');
+        if (errEl) {
+          errEl.textContent = 'Google Sign-In failed. Please try again.';
+          errEl.style.display = 'block';
+        }
+      });
   }
 
   function signOutUser() {
