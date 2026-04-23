@@ -495,6 +495,14 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="modal-body">
       <div class="form-row single"><div class="f-group"><label>Order Ref</label><input class="f-input" id="su_ref" readonly/></div></div>
       <div class="form-row single"><div class="f-group"><label>Status</label><select class="f-select" id="su_status"><option>new</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div></div>
+      <div class="form-row single"><div class="f-group"><label>Payment Status</label>
+        <select class="f-select" id="su_payment_status">
+          <option value="Payment Not Received">❌ Payment Not Received</option>
+          <option value="Payment Received">✅ Payment Received</option>
+          <option value="Partial Payment">⚠️ Partial Payment</option>
+          <option value="Refunded">↩️ Refunded</option>
+        </select>
+      </div></div>
       <div class="form-row single"><div class="f-group"><label>Tracking Number (if dispatched)</label><input class="f-input" id="su_tracking" placeholder="Speed Post number"/></div></div>
       <div class="form-row single"><div class="f-group"><label>Internal Note</label><textarea class="f-textarea" id="su_note" rows="2" placeholder="Optional note…"></textarea></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
@@ -1042,7 +1050,7 @@ function viewOrder(ref, service) {
        ['Tracking #', o.tracking_number || 'Not assigned yet'], ['Address', o.address || '—'], ['Date', fmtDate(o.created_at)]]
     : [['Order Ref', ref, true], ['Customer', o.customer_name], ['Mobile', o.customer_phone, true],
        ['Email', o.customer_email || '—'], ['Amount', '₹' + Number(o.total_amount || 0).toLocaleString('en-IN')],
-       ['Status', statusBadge(o.status)], ['Payment', o.payment_status || 'pending'],
+       ['Status', statusBadge(o.status)], ['Payment', o.payment_status || 'Payment Not Received'],
        ['Address', o.delivery_address || '—'], ['Notes', o.notes || '—'], ['Date', fmtDate(o.created_at)]];
   document.getElementById('orderModalBody').innerHTML =
     '<div class="detail-grid">' + rows.map(([k, v, m]) =>
@@ -1091,6 +1099,10 @@ function openStatusModal(ref, service, currentStatus, tracking = '') {
   document.getElementById('su_status').value = currentStatus;
   document.getElementById('su_tracking').value = tracking || '';
   document.getElementById('su_note').value = '';
+  // Set current payment status
+  const o = service === 'PVC' ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
+  const ps = document.getElementById('su_payment_status');
+  if (ps) ps.value = o?.payment_status || 'Payment Not Received';
   currentOrderId = { ref, service };
   openModal('statusModal');
 }
@@ -1103,9 +1115,11 @@ async function saveStatusUpdate() {
   const notifyWA = document.getElementById('su_wa_toggle').classList.contains('on');
   const { service } = currentOrderId;
   const table = service === 'PVC' ? 'pvc_orders' : 'orders';
+  const paymentStatus = document.getElementById('su_payment_status')?.value || '';
   const data = { status };
   if (tracking) data.tracking_number = tracking;
   if (note) data.admin_note = note;
+  if (paymentStatus) data.payment_status = paymentStatus;
   const ok = await sbUpdateByRef(table, 'order_ref', ref, data);
   if (ok) {
     showToast(`✅ Status updated to "${status}"!`, 'success');
