@@ -119,7 +119,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .badge-processing{background:rgba(245,166,35,0.15);color:var(--gold);}
 .badge-printing{background:rgba(139,92,246,0.15);color:#a78bfa;}
 .badge-dispatched{background:rgba(34,197,94,0.15);color:var(--green);}
-.badge-delivered{background:rgba(100,116,139,0.15);color:var(--text3);}
+.badge-delivered{background:rgba(34,197,94,0.15);color:var(--green);}
 .badge-completed{background:rgba(34,197,94,0.15);color:var(--green);}
 .badge-pending{background:rgba(245,166,35,0.15);color:var(--gold);}
 .badge-agreed{background:rgba(59,130,246,0.15);color:#60a5fa;}
@@ -812,11 +812,21 @@ function renderConsultationsTable() {
           <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','${c.service}')">👁</button>
           <button class="btn-sm btn-orange" onclick="openConsultModal('${c.id}','${c.service}')">✏️ Status</button>
           <button class="btn-sm btn-green" onclick="waNum('${c.mobile || ''}')">💬</button>
+          ${(c.status === 'NotInterested') ? `<button class="btn-sm btn-red" onclick="confirmDeleteConsult('${c.id}','${c.service}')">🗑️ Delete</button>` : ''}
         </div></td>
       </tr>`).join('')
     : '<tr><td colspan="7" class="empty-state"><div class="empty-icon">📞</div>No consultations found</td></tr>';
 }
 function filterConsults() { renderConsultationsTable(); }
+
+function confirmDeleteConsult(id, service) {
+  const table = service === 'Gazette' ? 'gazette_consults' : 'bpr_consults';
+  showConfirm('🗑️', 'Delete Consultation?', 'Yeh consultation permanently delete ho jayegi!', async () => {
+    const ok = await sbDeleteByRef(table, 'id', id);
+    if (ok) { showToast('✅ Consultation deleted!', 'success'); await refreshAll(); }
+    else showToast('❌ Delete failed', 'error');
+  });
+}
 
 function openConsultModal(id, service) {
   const c = allConsults.find(x => String(x.id) === String(id) && x.service === service);
