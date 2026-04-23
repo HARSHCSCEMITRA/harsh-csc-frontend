@@ -213,6 +213,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -483,6 +484,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="modal-footer">
       <button class="btn-sm btn-green" id="orderWABtn">💬 WhatsApp</button>
       <button class="btn-sm btn-primary" id="orderUpdateBtn">✏️ Update Status</button>
+      <button class="btn-sm" id="invoiceBtn" style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);">🧾 Invoice</button>
       <button class="btn-sm btn-secondary" onclick="closeModal('orderModal')">Close</button>
     </div>
   </div>
@@ -1059,6 +1061,11 @@ function viewOrder(ref, service) {
   document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone || '', ref, service, o.status, o.tracking_number || '');
   document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number || ''); };
   document.getElementById('orderUpdateBtn').style.display = '';
+  // Invoice button sirf tab dikhao jab payment received ho
+  const invoiceBtn = document.getElementById('invoiceBtn');
+  const isPaid = (o.payment_status || '').toLowerCase().includes('received');
+  invoiceBtn.style.display = isPaid ? 'inline-flex' : 'none';
+  if (isPaid) invoiceBtn.onclick = () => generateInvoice(ref, service);
   openModal('orderModal');
 }
 
@@ -1369,6 +1376,243 @@ function fmtDate(d) {
 }
 function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlayBg').classList.add('show'); }
 function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlayBg').classList.remove('show'); }
+
+
+// ══════════════════════════════════════════
+//  INVOICE GENERATOR
+// ══════════════════════════════════════════
+function generateInvoice(ref, service) {
+  const o = service === 'PVC'
+    ? allPVCOrders.find(x => x.order_ref === ref)
+    : allOrders.find(x => x.order_ref === ref);
+  if (!o) { showToast('Order not found', 'error'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, pageH = 297;
+  let y = 0;
+
+  // ── HEADER BACKGROUND ──
+  doc.setFillColor(11, 31, 75);
+  doc.rect(0, 0, W, 42, 'F');
+
+  // ── LOGO CIRCLE ──
+  doc.setFillColor(232, 103, 26);
+  doc.circle(20, 21, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('HC', 20, 25, { align: 'center' });
+
+  // ── COMPANY NAME ──
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('Harsh CSC eMitra', 35, 18);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 200, 200);
+  doc.text('Digital Government Services | Piplantri, Rajsamand, Rajasthan', 35, 25);
+  doc.text('WhatsApp: +91 70230 29903  |  harshcscemitra@gmail.com', 35, 31);
+  doc.text('Since 2017 | CSC VLE Certified', 35, 37);
+
+  // ── INVOICE LABEL ──
+  doc.setFillColor(232, 103, 26);
+  doc.rect(140, 0, 70, 42, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INVOICE', 175, 18, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(ref, 175, 26, { align: 'center' });
+  doc.text(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), 175, 33, { align: 'center' });
+
+  y = 52;
+
+  // ── BILL TO / ORDER INFO ──
+  doc.setFillColor(245, 247, 252);
+  doc.rect(10, y, 90, 38, 'F');
+  doc.setFillColor(235, 240, 255);
+  doc.rect(110, y, 90, 38, 'F');
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 100, 120);
+  doc.text('BILL TO', 15, y + 7);
+  doc.setTextColor(11, 31, 75);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(o.customer_name || 'Customer', 15, y + 15);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 100);
+  if (o.customer_phone || o.mobile) doc.text('Ph: ' + (o.customer_phone || o.mobile), 15, y + 22);
+  if (o.customer_email) doc.text(o.customer_email, 15, y + 29);
+  const addr = o.delivery_address || o.address || '';
+  if (addr && addr !== 'N/A') doc.text(addr.substring(0, 38), 15, y + 36);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 100, 120);
+  doc.text('ORDER DETAILS', 115, y + 7);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 100);
+  doc.text('Order Ref  :  ' + ref, 115, y + 15);
+  doc.text('Date          :  ' + new Date().toLocaleDateString('en-IN'), 115, y + 22);
+  doc.text('Status        :  ' + (o.status || 'new'), 115, y + 29);
+  doc.text('Payment    :  ' + (o.payment_status || 'Payment Not Received'), 115, y + 36);
+
+  y += 48;
+
+  // ── TABLE HEADER ──
+  doc.setFillColor(11, 31, 75);
+  doc.rect(10, y, 190, 9, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('#', 15, y + 6);
+  doc.text('Service / Description', 25, y + 6);
+  doc.text('Qty', 140, y + 6);
+  doc.text('Rate (Rs.)', 155, y + 6);
+  doc.text('Amount (Rs.)', 180, y + 6, { align: 'right' });
+
+  y += 9;
+
+  // ── TABLE ROWS ──
+  let items = [];
+  if (service === 'PVC') {
+    items = [{ name: 'PVC Card — ' + (o.card_type || 'Standard'), qty: o.quantity || 1, price: o.amount || 0 }];
+  } else {
+    try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch { items = []; }
+    if (!items.length) items = [{ name: service === 'Gazette' ? 'Gazette Notification' : 'Business Project Report', qty: 1, price: o.total_amount || 0 }];
+  }
+
+  items.forEach((item, i) => {
+    const bg = i % 2 === 0 ? [255, 255, 255] : [248, 249, 255];
+    doc.setFillColor(...bg);
+    doc.rect(10, y, 190, 10, 'F');
+    doc.setTextColor(50, 50, 80);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(String(i + 1), 15, y + 7);
+    doc.text(String(item.name || '').substring(0, 55), 25, y + 7);
+    doc.text(String(item.qty || 1), 142, y + 7);
+    doc.text('Rs.' + Number(item.price || 0).toLocaleString('en-IN'), 155, y + 7);
+    doc.text('Rs.' + Number((item.price || 0) * (item.qty || 1)).toLocaleString('en-IN'), 198, y + 7, { align: 'right' });
+    y += 10;
+  });
+
+  // ── TOTALS ──
+  const total = service === 'PVC' ? (o.amount || 0) : (o.total_amount || 0);
+  y += 4;
+  doc.setDrawColor(220, 220, 235);
+  doc.line(120, y, 200, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 100);
+  doc.text('Subtotal:', 140, y);
+  doc.text('Rs.' + Number(total).toLocaleString('en-IN'), 198, y, { align: 'right' });
+  y += 7;
+  doc.text('GST / Tax:', 140, y);
+  doc.text('Included', 198, y, { align: 'right' });
+  y += 3;
+  doc.setDrawColor(11, 31, 75);
+  doc.line(120, y, 200, y);
+  y += 6;
+  doc.setFillColor(11, 31, 75);
+  doc.rect(120, y - 1, 80, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL:', 140, y + 6);
+  doc.text('Rs.' + Number(total).toLocaleString('en-IN'), 198, y + 6, { align: 'right' });
+
+  y += 18;
+
+  // ── PAYMENT STATUS BANNER ──
+  const isPaid = (o.payment_status || '').includes('Received');
+  doc.setFillColor(isPaid ? 34 : 239, isPaid ? 197 : 68, isPaid ? 94 : 68, 0.15);
+  doc.setFillColor(isPaid ? 220 : 255, isPaid ? 252 : 235, isPaid ? 231 : 235);
+  doc.rect(10, y, 190, 12, 'F');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(isPaid ? 22 : 185, isPaid ? 163 : 28, isPaid ? 74 : 28);
+  const payText = isPaid ? '✓  PAYMENT RECEIVED — Thank you!' : '!  PAYMENT PENDING — Please complete payment';
+  doc.text(payText, 105, y + 8, { align: 'center' });
+
+  y += 20;
+
+  // ── BANK / PAYMENT DETAILS ──
+  doc.setFillColor(250, 248, 240);
+  doc.rect(10, y, 90, 32, 'F');
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(11, 31, 75);
+  doc.text('PAYMENT OPTIONS', 15, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(70, 70, 90);
+  doc.setFontSize(8);
+  doc.text('UPI ID  :  harshcscemitra@upi', 15, y + 14);
+  doc.text('WhatsApp Pay  :  +91 70230 29903', 15, y + 21);
+  doc.text('Cash at center also accepted', 15, y + 28);
+
+  // ── TERMS ──
+  doc.setFillColor(240, 245, 255);
+  doc.rect(110, y, 90, 32, 'F');
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(11, 31, 75);
+  doc.text('TERMS & CONDITIONS', 115, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(70, 70, 90);
+  doc.text('1. Payment due within 7 days', 115, y + 14);
+  doc.text('2. Document delivery via WhatsApp', 115, y + 21);
+  doc.text('3. No refund after processing starts', 115, y + 28);
+
+  y += 40;
+
+  // ── THANK YOU NOTE ──
+  doc.setFillColor(232, 103, 26);
+  doc.rect(10, y, 190, 14, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('धन्यवाद! Thank you for choosing Harsh CSC eMitra', 105, y + 6, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Trusted since 2017 | Piplantri, Rajsamand | WhatsApp: +91 70230 29903', 105, y + 12, { align: 'center' });
+
+  y += 20;
+
+  // ── FOOTER ──
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 170);
+  doc.text('This is a computer generated invoice. | harshcscemitra.vercel.app', 105, y, { align: 'center' });
+
+  // ── SAVE & SHARE OPTIONS ──
+  const filename = `Invoice_${ref}_${o.customer_name || 'Customer'}.pdf`;
+
+  // Download PDF
+  doc.save(filename);
+
+  // Show WhatsApp share option after download
+  showToast('✅ Invoice downloaded! WhatsApp pe share karo.', 'success');
+
+  // Ask if want to share on WhatsApp
+  setTimeout(() => {
+    const phone = o.customer_phone || o.mobile || '';
+    if (phone) {
+      const clean = phone.replace(/\D/g, '').replace(/^91/, '');
+      const msg = `🙏 नमस्ते ${o.customer_name || ''} जी!\n\n🧾 आपका Invoice तैयार है।\n📋 Order Ref: *${ref}*\n💰 Amount: *Rs.${Number(total).toLocaleString('en-IN')}*\n\nInvoice PDF attached करके भेज रहे हैं।\n\n— Harsh CSC eMitra 🏛️`;
+      if (confirm('Invoice download ho gayi! Customer ko WhatsApp pe message bhejein?')) {
+        window.open(`https://wa.me/91${clean}?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    }
+  }, 500);
+}
 
 // ══════════════════════════════════════════
 //  BOOT
