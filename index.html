@@ -500,6 +500,9 @@
   .btn-razorpay{width:100%;background:var(--navy);color:var(--white);border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
   .btn-razorpay:hover{background:#1a3570;}
   .btn-razorpay.disabled{opacity:0.4;cursor:not-allowed;}
+
+  .upi-qr-placeholder{width:200px;height:200px;border-radius:12px;border:3px dashed var(--saffron);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;color:var(--slate);text-align:center;line-height:1.4;background:var(--light);}
+  .upi-qr-placeholder small{font-size:10px;color:var(--text3);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -1130,19 +1133,21 @@
     </div>
 
     <div class="order-track-result" id="orderTrackResult"></div>
-
-    <!-- UTR Submission Form -->
-    <div style="max-width:520px;margin:28px auto 0;background:var(--white);border-radius:20px;padding:24px 28px;box-shadow:0 4px 24px rgba(11,31,75,0.08);border:1px solid rgba(11,31,75,0.08);">
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px;">💳 Payment Confirm Karein</h3>
-      <p style="font-size:13px;color:var(--slate);margin-bottom:20px;">UPI se payment kar di? Order Ref aur UTR number darj karein — hum verify karke confirm karenge.</p>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+    
+    <!-- UTR Payment Form - shown only when needed -->
+    <div id="utrPaymentSection" style="display:none;max-width:520px;margin:24px auto 0;background:var(--white);border-radius:20px;padding:24px 28px;box-shadow:0 4px 24px rgba(11,31,75,0.08);border:2px solid rgba(232,103,26,0.2);">
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">💳 Payment Confirm Karein</h3>
+      <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">UPI se payment kar di? UTR number darj karein — hum verify karke confirm karenge.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
         <input class="form-input" id="utrOrderRef" type="text" placeholder="Order Ref # (e.g. HSC-AB1234)" style="font-family:var(--font-mono);"/>
         <input class="form-input" id="utrMobile" type="tel" placeholder="Registered Mobile Number" maxlength="10"/>
         <input class="form-input" id="utrNumber" type="text" placeholder="UPI UTR / Transaction ID (12 digits)"/>
         <div id="utrMsg" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;"></div>
-        <button class="btn-primary" style="width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;" onclick="submitUTR()">✅ Submit UTR Number</button>
+        <button class="btn-primary" style="width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;" onclick="submitUTR()">✅ Submit UTR Number</button>
       </div>
     </div>
+
+
   </div>
 </section>
 
@@ -1362,7 +1367,7 @@
 <!-- ══════════════════════════════════════════════════
      PVC CARD ORDER MODAL
 ══════════════════════════════════════════════════ -->
-<div class="consult-modal-overlay" id="pvcModal" onclick="if(event.target===this)closePVCModal()">
+<div class="consult-modal-overlay" id="pvcModal">
   <div class="consult-modal-box">
     <div class="consult-modal-head">
       <div class="consult-modal-head-info">
@@ -1739,15 +1744,26 @@
       `\n⏰ ${new Date().toLocaleString('en-IN')}`;
   }
 
-  function sendPVCOnWhatsApp() {
+  async function sendPVCOnWhatsApp() {
     const msg = buildPVCWhatsAppMsg();
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    // Save order to Supabase FIRST (with pending payment status)
+    await savePVCOrder('PENDING');
+    
     setTimeout(() => {
       const modal = document.getElementById('pvcModal');
       if (modal) modal.classList.remove('open');
       document.body.style.overflow = '';
-      openUPIModal();
-    }, 800);
+      // Set UPI context for PVC order
+      const pvcAmount = pvcState.totalPrice || (pvcState.pricePerCard * pvcState.qty);
+      upiOrderContext = { 
+        amount: pvcAmount, 
+        orderRef: pvcState.orderRef, 
+        isCart: false 
+      };
+      openUPIModal(pvcAmount, pvcState.orderRef, false);
+    }, 300);
   }
 
   // ── PAYMENT CONFIRMATION POPUP ─────────────────────────────────
@@ -1833,10 +1849,10 @@
           quantity:        pvcState.qty,
           amount:          pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty,
           address:         `${address}, PIN ${pin}, ${state}`,
-          payment_id:      paymentId,
-          payment_status:  paymentId && paymentId.startsWith('UPI-') ? 'utr_submitted' : 'paid',
+          payment_id:      paymentId === 'PENDING' ? null : paymentId,
+          payment_status:  paymentId === 'PENDING' ? 'pending' : (paymentId && paymentId.startsWith('UPI-') ? 'utr_submitted' : 'paid'),
           utr_number:      paymentId && paymentId.startsWith('UPI-') ? paymentId.replace('UPI-','') : null,
-          status:          'Processing',
+          status:          paymentId === 'PENDING' ? 'new' : 'Processing',
           tracking_number: null,
           created_at:      new Date().toISOString()
         })
@@ -1946,7 +1962,19 @@
           <p>No orders found for <strong>${mobile}</strong>.<br/>If you just placed an order, it may take a few minutes to appear.</p>
           <p style="margin-top:8px;font-size:13px">Need help? <a href="https://wa.me/${WHATSAPP_NUM}" target="_blank" style="color:var(--saffron);font-weight:600">WhatsApp us →</a></p>
         </div>`;
+      const utrSec = document.getElementById('utrPaymentSection');
+      if (utrSec) utrSec.style.display = 'none';
       return;
+    }
+    // Show UTR form if any order has pending payment
+    const hasPendingPayment = merged.some(o => 
+      o.status === 'new' || o.payment_status === 'pending' || o.payment_status === 'utr_submitted'
+    );
+    const utrSec = document.getElementById('utrPaymentSection');
+    if (utrSec) {
+      utrSec.style.display = hasPendingPayment ? 'block' : 'none';
+      const utrMob = document.getElementById('utrMobile');
+      if (utrMob) utrMob.value = mobile;
     }
 
     const statusIcon = { Processing:'⏳', Printing:'🖨️', Dispatched:'📮', Delivered:'✅' };
@@ -1955,10 +1983,12 @@
       <div class="order-history-list">
         ${merged.map(o => `
           <div class="order-hist-item">
-            <div class="ohi-icon">🪪</div>
+            <div class="ohi-icon">${o.type === "Service" ? "📄" : "🪪"}</div>
             <div class="ohi-info">
               <h5>${o.card} × ${o.qty} — <span style="font-family:var(--font-mono);font-size:12px">${o.ref}</span></h5>
               <p>₹${Number(o.amount).toLocaleString('en-IN')} · ${o.date}</p>
+              ${o.payment_status === 'utr_submitted' ? '<p style="font-size:12px;color:#d97706;margin-top:2px;">💰 UTR submitted — verification pending</p>' : ''}
+              ${o.payment_status === 'pending' || o.status === 'new' ? '<p style="font-size:12px;color:#dc2626;margin-top:2px;">⚠️ Payment pending — <button onclick="document.getElementById('utrPaymentSection').style.display='block';document.getElementById('utrOrderRef').value=''+o.ref+''" style="background:none;border:none;color:var(--saffron);font-weight:700;cursor:pointer;font-size:12px;text-decoration:underline;">Submit UTR</button></p>' : ''}
               ${o.tracking
                 ? `<div style="margin-top:8px">
                      <span style="font-size:12px;color:var(--slate)">Speed Post Tracking:</span>
@@ -2150,9 +2180,9 @@
       if (btn) { btn.textContent = '✅ Confirm Order'; btn.disabled = false; }
       closeCheckout();
       clearCart();
-      // Open UPI Payment modal
+      // Open UPI Payment modal for cart order
       upiOrderContext = { amount: total, orderRef: orderRef, isCart: true };
-      openUPIModal();
+      openUPIModal(total, orderRef, true);
 
     } catch (err) {
       showErr('Something went wrong. Please try again or contact us on WhatsApp.');
@@ -2458,13 +2488,17 @@
   let upiOrderContext = null; // stores current order details for UPI flow
 
   function openUPIModal(amount, orderRef, isCart) {
-    // Can be called from PVC flow or cart checkout flow
-    if (amount !== undefined) {
-      upiOrderContext = { amount, orderRef, isCart };
+    // Set context if params provided
+    if (amount !== undefined && amount !== null) {
+      upiOrderContext = { amount, orderRef, isCart: isCart || false };
+    } else if (!upiOrderContext) {
+      // PVC fallback
+      const pvcAmt = pvcState.totalPrice || (pvcState.pricePerCard * pvcState.qty);
+      upiOrderContext = { amount: pvcAmt, orderRef: pvcState.orderRef, isCart: false };
     }
     const amountEl = document.getElementById('upiAmountDisplay');
     if (amountEl) {
-      const amt = upiOrderContext?.amount || (pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty);
+      const amt = upiOrderContext?.amount || 0;
       amountEl.textContent = '₹' + Number(amt).toLocaleString('en-IN');
     }
     document.getElementById('upiTransactionId').value = '';
@@ -2509,15 +2543,16 @@
     }
 
     if (!upiOrderContext?.isCart) {
-      // PVC flow
-      await savePVCOrder('UPI-' + utr);
-      await saveUTR(pvcState.orderRef, utr, 'pvc_orders');
+      // PVC flow - order already saved, just update UTR
+      await saveUTR(upiOrderContext.orderRef || pvcState.orderRef, utr, 'pvc_orders');
       closeUPIModal();
       showPVCSuccess('UPI-' + utr);
+      const orderRef = upiOrderContext.orderRef || pvcState.orderRef;
+      const amt = upiOrderContext.amount || (pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty);
       const waMsg = `✅ *UPI Payment Confirmed!*
 
-📋 Order Ref: *${pvcState.orderRef}*
-💰 Amount: ₹${Number(pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty).toLocaleString('en-IN')}
+📋 Order Ref: *${orderRef}*
+💰 Amount: ₹${Number(amt).toLocaleString('en-IN')}
 🏦 UTR: *${utr}*
 
 Aapka order confirm ho gaya! 🙏
@@ -2831,7 +2866,7 @@ Payment receive ho gaya! 🙏
 <!-- ══════════════════════════════════════════════════
      UPI QR PAYMENT MODAL
 ══════════════════════════════════════════════════ -->
-<div class="upi-modal-overlay" id="upiModal" onclick="if(event.target===this)closeUPIModal()">
+<div class="upi-modal-overlay" id="upiModal">
   <div class="upi-modal-box">
     <div class="upi-modal-head">
       <div>
@@ -2844,7 +2879,8 @@ Payment receive ho gaya! 🙏
       <div class="upi-amount-box" id="upiAmountDisplay">₹0</div>
 
       <div class="upi-qr-wrap">
-        <img src="qr.jpeg" alt="UPI QR Code — Harsh Paliwal" class="upi-qr-img" onerror="this.style.display='none'"/>
+        <img src="qr.jpeg" alt="UPI QR Code — Harsh Paliwal" class="upi-qr-img" 
+             onerror="this.outerHTML='<div class=\'upi-qr-placeholder\'>📱<br/>QR Code<br/><small>Add qr.jpeg to your project</small></div>'"/>
         <div class="upi-tid">
           <strong style="font-size:15px;color:var(--navy);">📲 Scan &amp; Pay</strong><br/>
           <span style="color:var(--saffron);font-weight:700;">Screenshot share karein WhatsApp pe</span>
