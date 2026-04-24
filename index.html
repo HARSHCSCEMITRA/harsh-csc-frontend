@@ -394,7 +394,7 @@
   .orders-search-row input{flex:1;}
   .btn-track{background:var(--navy);color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;white-space:nowrap;}
   .btn-track:hover{background:var(--saffron);}
-  .order-track-result{margin-top:24px;display:none;}
+  .order-track-result{margin-top:24px;}
   .order-track-card{background:var(--cream);border:1.5px solid rgba(11,31,75,0.1);border-radius:16px;padding:24px;}
   .order-track-card h4{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;}
   .order-track-meta{font-size:13px;color:var(--slate);margin-bottom:16px;}
@@ -1898,23 +1898,25 @@
 
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       resultEl.style.display = 'block';
+      resultEl.style.marginTop = '20px';
       resultEl.innerHTML = `<div class="track-empty">⚠️ Please enter a valid 10-digit Indian mobile number.</div>`;
       return;
     }
     resultEl.style.display = 'block';
+    resultEl.style.marginTop = '20px';
     resultEl.innerHTML = `<div class="track-empty">🔄 Looking up your orders…</div>`;
 
     let pvcOrders = [], mainOrders = [];
     try {
       // PVC Orders
       const r1 = await fetch(
-        `${SUPABASE_URL}/rest/v1/pvc_orders?customer_phone=eq.${mobile}&select=order_ref,card_type,quantity,amount,status,tracking_number,created_at&order=created_at.desc`,
+        `${SUPABASE_URL}/rest/v1/pvc_orders?customer_phone=eq.${mobile}&select=order_ref,card_type,quantity,amount,status,payment_status,tracking_number,created_at&order=created_at.desc`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
       if (r1.ok) pvcOrders = await r1.json();
       // Gazette + BPR Orders
       const r2 = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?customer_phone=eq.${mobile}&select=order_ref,items,total_amount,status,tracking_number,created_at&order=created_at.desc`,
+        `${SUPABASE_URL}/rest/v1/orders?customer_phone=eq.${mobile}&select=order_ref,items,total_amount,status,payment_status,tracking_number,created_at&order=created_at.desc`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
       if (r2.ok) mainOrders = await r2.json();
@@ -1929,30 +1931,36 @@
     const allPVCRefs = new Set(pvcOrders.map(o => o.order_ref));
     const merged = [
       ...pvcOrders.map(o => ({
-        ref:      o.order_ref,
-        card:     o.card_type,
-        qty:      o.quantity,
-        amount:   o.amount,
-        status:   o.status === 'paid' ? 'Processing' : (o.status || 'Processing'),
-        tracking: o.tracking_number,
-        date:     new Date(o.created_at).toLocaleDateString('en-IN'),
-        type:     'PVC'
+        ref:            o.order_ref,
+        card:           o.card_type,
+        qty:            o.quantity,
+        amount:         o.amount,
+        status:         o.status === 'paid' ? 'Processing' : (o.status || 'new'),
+        payment_status: o.payment_status || 'pending',
+        tracking:       o.tracking_number,
+        date:           new Date(o.created_at).toLocaleDateString('en-IN'),
+        type:           'PVC'
       })),
       ...mainOrders.map(o => {
         let serviceName = 'Order';
         try { const it = typeof o.items==='string'?JSON.parse(o.items):o.items; serviceName = it[0]?.name || 'Order'; } catch{}
         return {
-          ref:      o.order_ref,
-          card:     serviceName,
-          qty:      1,
-          amount:   o.total_amount,
-          status:   o.status || 'Processing',
-          tracking: o.tracking_number,
-          date:     new Date(o.created_at).toLocaleDateString('en-IN'),
-          type:     'Service'
+          ref:            o.order_ref,
+          card:           serviceName,
+          qty:            1,
+          amount:         o.total_amount,
+          status:         o.status || 'new',
+          payment_status: o.payment_status || 'pending',
+          tracking:       o.tracking_number,
+          date:           new Date(o.created_at).toLocaleDateString('en-IN'),
+          type:           'Service'
         };
       }),
-      ...localOrders.filter(o => !allPVCRefs.has(o.ref))
+      ...localOrders.filter(o => !allPVCRefs.has(o.ref)).map(o => ({
+        ...o,
+        payment_status: o.payment_status || 'pending',
+        type: 'PVC'
+      }))
     ];
 
     if (merged.length === 0) {
@@ -1968,7 +1976,7 @@
     }
     // Show UTR form if any order has pending payment
     const hasPendingPayment = merged.some(o => 
-      o.status === 'new' || o.payment_status === 'pending' || o.payment_status === 'utr_submitted'
+      o.status === 'new' || o.payment_status === 'pending'
     );
     const utrSec = document.getElementById('utrPaymentSection');
     if (utrSec) {
@@ -1977,31 +1985,42 @@
       if (utrMob) utrMob.value = mobile;
     }
 
-    const statusIcon = { Processing:'⏳', Printing:'🖨️', Dispatched:'📮', Delivered:'✅' };
+    // Build HTML safely without nested template literal issues
+    const orderCards = merged.map(o => {
+      const icon = o.type === 'Service' ? '📄' : '🪪';
+      const statusClass = o.status?.toLowerCase() === 'dispatched' ? 'dispatched' 
+                        : o.status?.toLowerCase() === 'delivered' ? 'delivered' : 'processing';
+      const sIcon = {Processing:'⏳',Printing:'🖨️',Dispatched:'📮',Delivered:'✅',new:'🆕'}[o.status] || '⏳';
+      const displayStatus = o.status === 'new' ? 'Pending' : (o.status || 'Processing');
 
-    resultEl.innerHTML = `
-      <div class="order-history-list">
-        ${merged.map(o => `
-          <div class="order-hist-item">
-            <div class="ohi-icon">${o.type === "Service" ? "📄" : "🪪"}</div>
-            <div class="ohi-info">
-              <h5>${o.card} × ${o.qty} — <span style="font-family:var(--font-mono);font-size:12px">${o.ref}</span></h5>
-              <p>₹${Number(o.amount).toLocaleString('en-IN')} · ${o.date}</p>
-              ${o.payment_status === 'utr_submitted' ? '<p style="font-size:12px;color:#d97706;margin-top:2px;">💰 UTR submitted — verification pending</p>' : ''}
-              ${o.payment_status === 'pending' || o.status === 'new' ? '<p style="font-size:12px;color:#dc2626;margin-top:2px;">⚠️ Payment pending — <button onclick="document.getElementById('utrPaymentSection').style.display='block';document.getElementById('utrOrderRef').value=''+o.ref+''" style="background:none;border:none;color:var(--saffron);font-weight:700;cursor:pointer;font-size:12px;text-decoration:underline;">Submit UTR</button></p>' : ''}
-              ${o.tracking
-                ? `<div style="margin-top:8px">
-                     <span style="font-size:12px;color:var(--slate)">Speed Post Tracking:</span>
-                     <div class="track-number-box">${o.tracking}</div>
-                     <a href="https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;color:var(--saffron);font-weight:600">Track on India Post →</a>
-                   </div>`
-                : `<p style="margin-top:4px;font-size:12px;color:var(--slate)">Tracking number will appear here once dispatched.</p>`}
-            </div>
-            <span class="ohi-status ${o.status?.toLowerCase() === 'dispatched' ? 'dispatched' : o.status?.toLowerCase() === 'delivered' ? 'delivered' : 'processing'}">
-              ${statusIcon[o.status] || '⏳'} ${o.status || 'Processing'}
-            </span>
-          </div>`).join('')}
-      </div>`;
+      let paymentBadge = '';
+      if (o.payment_status === 'utr_submitted') {
+        paymentBadge = '<p style="font-size:12px;color:#d97706;margin-top:4px;">💰 UTR submitted — verification pending</p>';
+      } else if (o.payment_status === 'pending' || o.status === 'new') {
+        paymentBadge = '<p style="font-size:12px;color:#dc2626;margin-top:4px;">⚠️ Payment pending</p>';
+      } else if (o.payment_status === 'paid') {
+        paymentBadge = '<p style="font-size:12px;color:#15803d;margin-top:4px;">✅ Payment confirmed</p>';
+      }
+
+      let trackingHtml = '';
+      if (o.tracking) {
+        trackingHtml = '<div style="margin-top:10px"><span style="font-size:12px;color:var(--slate)">Speed Post Tracking:</span><div class="track-number-box">' + o.tracking + '</div><a href="https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx" target="_blank" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--saffron);font-weight:600">Track on India Post →</a></div>';
+      } else {
+        trackingHtml = '<p style="margin-top:4px;font-size:12px;color:var(--slate)">Tracking will appear here once dispatched.</p>';
+      }
+
+      return '<div class="order-hist-item">' +
+        '<div class="ohi-icon">' + icon + '</div>' +
+        '<div class="ohi-info">' +
+          '<h5>' + o.card + ' &times; ' + o.qty + ' &mdash; <span style="font-family:var(--font-mono);font-size:12px">' + o.ref + '</span></h5>' +
+          '<p>&#8377;' + Number(o.amount).toLocaleString('en-IN') + ' &middot; ' + o.date + '</p>' +
+          paymentBadge +
+          trackingHtml +
+        '</div>' +
+        '<span class="ohi-status ' + statusClass + '">' + sIcon + ' ' + displayStatus + '</span>' +
+      '</div>';
+    });
+    resultEl.innerHTML = '<div class="order-history-list">' + orderCards.join('') + '</div>';
   }
 
   // ── CART STATE ────────────────────────────────────────────────
@@ -2024,6 +2043,11 @@
   function getCartItems()     { return Object.values(cart); }
   function getTotal()         { return getCartItems().reduce((s,i) => s + i.price * i.qty, 0); }
   function getTotalQty()      { return getCartItems().reduce((s,i) => s + i.qty, 0); }
+
+  function clearCart() {
+    cart = {};
+    renderCart();
+  }
 
   function renderCart() {
     const items    = getCartItems();
@@ -2137,6 +2161,7 @@
       notes:            notes || null,
       items:            JSON.stringify(items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty }))),
       total_amount:     total,
+      payment_status:   'pending',
       status:           'new',
       created_at:       new Date().toISOString()
     };
@@ -2615,10 +2640,11 @@ Payment receive ho gaya! 🙏
 
   // ── UTR SUBMISSION (Standalone form in My Orders) ────────────
   async function submitUTR() {
-    const orderRef = document.getElementById('utrOrderRef')?.value.trim().toUpperCase();
-    const mobile   = document.getElementById('utrMobile')?.value.trim();
-    const utr      = document.getElementById('utrNumber')?.value.trim();
+    const orderRef = (document.getElementById('utrOrderRef')?.value.trim() || '').toUpperCase();
+    const mobile   = document.getElementById('utrMobile')?.value.trim() || '';
+    const utr      = document.getElementById('utrNumber')?.value.trim() || '';
     const msgEl    = document.getElementById('utrMsg');
+    const btn      = document.querySelector('#utrPaymentSection button');
 
     const showMsg = (msg, ok) => {
       if (!msgEl) return;
@@ -2629,44 +2655,71 @@ Payment receive ho gaya! 🙏
       msgEl.textContent = msg;
     };
 
-    if (!orderRef) { showMsg('⚠️ Order Ref darj karein', false); return; }
+    if (!orderRef) { showMsg('⚠️ Order Ref darj karein (e.g. HSC-ABCD12)', false); return; }
     if (!/^[6-9]\d{9}$/.test(mobile)) { showMsg('⚠️ Valid 10-digit mobile number darj karein', false); return; }
-    if (!utr || utr.length < 8) { showMsg('⚠️ Valid UTR/Transaction ID darj karein', false); return; }
+    if (!utr || utr.length < 6) { showMsg('⚠️ Valid UTR / Transaction ID darj karein', false); return; }
 
-    showMsg('⏳ Submit ho raha hai...', true);
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Submit ho raha hai...'; }
+    showMsg('⏳ Verifying...', true);
 
-    // Try orders table first, then pvc_orders
+    const payload = { utr_number: utr, payment_status: 'utr_submitted' };
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+
     let saved = false;
     try {
-      const r1 = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}`, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify({ utr_number: utr, payment_status: 'utr_submitted' })
-      });
-      const d1 = await r1.json();
-      if (Array.isArray(d1) && d1.length > 0) saved = true;
+      // Try main orders table
+      const r1 = await fetch(
+        `${SUPABASE_URL}/rest/v1/orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}`,
+        { method: 'PATCH', headers, body: JSON.stringify(payload) }
+      );
+      if (r1.ok) {
+        // Check if any row was actually updated
+        const check = await fetch(
+          `${SUPABASE_URL}/rest/v1/orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}&select=order_ref`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        const rows = await check.json();
+        if (Array.isArray(rows) && rows.length > 0) saved = true;
+      }
 
+      // Try pvc_orders table
       if (!saved) {
-        const r2 = await fetch(`${SUPABASE_URL}/rest/v1/pvc_orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}`, {
-          method: 'PATCH',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-          body: JSON.stringify({ utr_number: utr, payment_status: 'utr_submitted' })
-        });
-        const d2 = await r2.json();
-        if (Array.isArray(d2) && d2.length > 0) saved = true;
+        const r2 = await fetch(
+          `${SUPABASE_URL}/rest/v1/pvc_orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}`,
+          { method: 'PATCH', headers, body: JSON.stringify(payload) }
+        );
+        if (r2.ok) {
+          const check2 = await fetch(
+            `${SUPABASE_URL}/rest/v1/pvc_orders?order_ref=eq.${orderRef}&customer_phone=eq.${mobile}&select=order_ref`,
+            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+          );
+          const rows2 = await check2.json();
+          if (Array.isArray(rows2) && rows2.length > 0) saved = true;
+        }
       }
     } catch(e) { console.error('UTR submit error:', e); }
 
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Submit UTR Number'; }
+
     if (saved) {
-      showMsg('✅ UTR received! हम verify करके confirm करेंगे। WhatsApp pe update milega.', true);
+      showMsg('✅ UTR received! हम verify करके WhatsApp pe confirm करेंगे।', true);
       document.getElementById('utrOrderRef').value = '';
-      document.getElementById('utrMobile').value = '';
       document.getElementById('utrNumber').value = '';
-      // Also send WhatsApp notification
-      const waMsg = `💰 *UTR Submitted*\n\n📋 Order Ref: *${orderRef}*\n📱 Mobile: ${mobile}\n🏦 UTR: *${utr}*\n\nPlease verify & confirm. 🙏`;
-      setTimeout(() => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank'), 500);
+      const waMsg = `💰 *UTR Submitted — Harsh CSC eMitra*
+
+📋 Order Ref: *${orderRef}*
+📱 Mobile: ${mobile}
+🏦 UTR/Transaction ID: *${utr}*
+
+Kripya verify karke confirm karein. 🙏`;
+      setTimeout(() => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank'), 300);
     } else {
-      showMsg('❌ Order Ref ya Mobile number match nahi kiya. Check karein aur dobara try karein.', false);
+      showMsg('❌ Order Ref ya Mobile number match nahi kiya. Apna registered mobile number check karein.', false);
     }
   }
 
