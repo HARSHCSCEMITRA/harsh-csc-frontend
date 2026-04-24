@@ -385,28 +385,53 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
       <!-- TRACKING -->
       <div class="page" id="page-tracking">
-        <div style="max-width:560px;">
-          <div class="card">
-            <div class="card-head"><div class="card-title">📮 Add / Update Speed Post Tracking</div></div>
-            <div class="modal-body">
-              <div class="form-row single"><div class="f-group"><label>Order Reference #</label><input class="f-input" id="trackRef" placeholder="e.g. PVC-AB1234 or HSC-ABC123" oninput="lookupOrder()"/></div></div>
-              <div id="trackOrderInfo" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;"></div>
-              <div class="form-row single"><div class="f-group"><label>Speed Post Tracking Number</label><input class="f-input" id="trackNum" placeholder="e.g. EE123456789IN"/></div></div>
-              <div class="form-row">
-                <div class="f-group"><label>Update Status</label><select class="f-select" id="trackStatus"><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option></select></div>
-                <div class="f-group"><label>Note (optional)</label><input class="f-input" id="trackNote" placeholder="Internal note…"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+          <!-- LEFT: Mobile Number Search -->
+          <div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">📱 Customer Ka Mobile Se Dhundo</div></div>
+              <div class="modal-body">
+                <div class="f-group" style="margin-bottom:14px;">
+                  <label>Customer Mobile Number</label>
+                  <div style="display:flex;gap:8px;margin-top:6px;">
+                    <input class="f-input" id="mobileSearchInput" placeholder="10-digit mobile number" maxlength="10" type="tel" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
+                    <button class="btn-sm btn-primary" style="padding:10px 18px;white-space:nowrap;" onclick="searchByMobile()">🔍 Search</button>
+                  </div>
+                  <div style="font-size:12px;color:var(--text3);margin-top:6px;">Customer ka registered mobile number dalein</div>
+                </div>
+                <div id="mobileSearchResult" style="display:none;"></div>
               </div>
-              <div class="form-row single"><div class="f-group"><label>Notify Customer on WhatsApp?</label><div style="display:flex;align-items:center;gap:10px;margin-top:6px;"><div class="toggle on" id="trackWAToggle" onclick="this.classList.toggle('on')"></div><span style="font-size:13px;color:var(--text2);">Send WhatsApp notification</span></div></div></div>
-              <div style="display:flex;gap:10px;margin-top:8px;">
-                <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveTracking()">💾 Save Tracking</button>
-                <button class="btn-sm btn-secondary" onclick="document.getElementById('trackRef').value='';document.getElementById('trackOrderInfo').style.display='none';">Clear</button>
+            </div>
+
+            <!-- Add/Update Tracking -->
+            <div class="card">
+              <div class="card-head"><div class="card-title">📮 Tracking Update Karo</div></div>
+              <div class="modal-body">
+                <div class="form-row single"><div class="f-group"><label>Order Reference #</label><input class="f-input" id="trackRef" placeholder="e.g. PVC-AB1234 or HSC-ABC123" oninput="lookupOrder()"/></div></div>
+                <div id="trackOrderInfo" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:13px;"></div>
+                <div class="form-row single"><div class="f-group"><label>Speed Post Tracking Number</label><input class="f-input" id="trackNum" placeholder="e.g. EE123456789IN"/></div></div>
+                <div class="form-row">
+                  <div class="f-group"><label>Update Status</label><select class="f-select" id="trackStatus"><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option></select></div>
+                  <div class="f-group"><label>Note (optional)</label><input class="f-input" id="trackNote" placeholder="Internal note…"/></div>
+                </div>
+                <div class="form-row single"><div class="f-group"><label>Notify Customer on WhatsApp?</label><div style="display:flex;align-items:center;gap:10px;margin-top:6px;"><div class="toggle on" id="trackWAToggle" onclick="this.classList.toggle('on')"></div><span style="font-size:13px;color:var(--text2);">Send WhatsApp notification</span></div></div></div>
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                  <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveTracking()">💾 Save Tracking</button>
+                  <button class="btn-sm btn-secondary" onclick="clearTrackingForm()">Clear</button>
+                </div>
               </div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-head"><div class="card-title">Recent Tracking Updates</div></div>
-            <div class="table-wrap"><table><thead><tr><th>Ref</th><th>Customer</th><th>Tracking #</th><th>Status</th><th>Updated</th></tr></thead><tbody id="trackingHistTbl"></tbody></table></div>
+
+          <!-- RIGHT: Recent Tracking History -->
+          <div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">🕓 Recent Tracking Updates</div></div>
+              <div class="table-wrap"><table><thead><tr><th>Ref</th><th>Customer</th><th>Mobile</th><th>Tracking #</th><th>Status</th></tr></thead><tbody id="trackingHistTbl"></tbody></table></div>
+            </div>
           </div>
+
         </div>
       </div>
 
@@ -1184,6 +1209,84 @@ async function saveStatusUpdate() {
 // ══════════════════════════════════════════
 //  TRACKING PAGE
 // ══════════════════════════════════════════
+// ── Lookup by Mobile ──
+function lookupByMobile() {
+  const mobile = document.getElementById('lookupMobile').value.trim();
+  if (mobile.length < 10) return;
+  const clean = mobile.replace(/\D/g, '');
+  const allCombined = [
+    ...allOrders.map(o => ({ ...o, _type: 'Order' })),
+    ...allPVCOrders.map(o => ({ ...o, _type: 'PVC', total_amount: o.amount }))
+  ];
+  const found = allCombined.filter(o => {
+    const ph = (o.customer_phone || o.mobile || '').replace(/\D/g, '');
+    return ph.endsWith(clean) || clean.endsWith(ph.slice(-8));
+  });
+  renderLookupResults(found, 'mobile: ' + mobile);
+}
+
+// ── Lookup by Ref ──
+function lookupByRef() {
+  const ref = document.getElementById('lookupRef').value.trim().toUpperCase();
+  if (ref.length < 4) return;
+  const allCombined = [
+    ...allOrders.map(o => ({ ...o, _type: 'Order' })),
+    ...allPVCOrders.map(o => ({ ...o, _type: 'PVC', total_amount: o.amount }))
+  ];
+  const found = allCombined.filter(o => (o.order_ref || '').toUpperCase().includes(ref));
+  renderLookupResults(found, 'ref: ' + ref);
+}
+
+// ── Render Lookup Results ──
+function renderLookupResults(orders, query) {
+  const resultsEl = document.getElementById('lookupResults');
+  const listEl = document.getElementById('lookupResultsList');
+  const emptyEl = document.getElementById('lookupEmpty');
+  if (orders.length === 0) {
+    resultsEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  resultsEl.style.display = 'block';
+  listEl.innerHTML = orders.map(o => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">${o.customer_name || '—'}</div>
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono);">${o.customer_phone || '—'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--saffron);font-weight:700;">${o.order_ref || '—'}</div>
+          <div style="margin-top:3px;">${statusBadge(o.status)}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px;">
+        <div style="font-size:11px;color:var(--text3);">
+          ${o.tracking_number ? `📮 <span style="color:var(--green);font-family:var(--mono);">${o.tracking_number}</span>` : '<span style="color:var(--text3);">No tracking yet</span>'}
+          · ₹${Number(o.total_amount || 0).toLocaleString('en-IN')}
+          · ${o.payment_status || 'Payment Not Received'}
+        </div>
+        <div style="display:flex;gap:5px;">
+          <button class="btn-sm btn-orange" style="font-size:11px;" onclick="fillTrackingForm('${o.order_ref}','${o._type}')">📮 Update Tracking</button>
+          <button class="btn-sm btn-green" style="font-size:11px;" onclick="waOrder('${o.customer_phone || ''}','${o.order_ref}','${o._type}','${o.status}','${o.tracking_number || ''}')">💬 WhatsApp</button>
+          <button class="btn-sm btn-blue" style="font-size:11px;" onclick="viewOrder('${o.order_ref}','${o._type}')">👁 View</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Fill Tracking Form from Lookup ──
+function fillTrackingForm(ref, service) {
+  document.getElementById('trackRef').value = ref;
+  lookupOrder();
+  // Scroll to tracking form
+  document.getElementById('trackRef').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('trackRef').focus();
+}
+
+// ── Lookup Order by Ref (for tracking form) ──
 function lookupOrder() {
   const ref = document.getElementById('trackRef').value.trim();
   const infoEl = document.getElementById('trackOrderInfo');
@@ -1192,13 +1295,31 @@ function lookupOrder() {
     || allOrders.find(x => x.order_ref?.toUpperCase() === ref.toUpperCase());
   if (o) {
     infoEl.style.display = 'block';
-    infoEl.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Found:</span> ${o.customer_name || '—'} · ${o.customer_phone || '—'} · ${statusBadge(o.status)}`;
+    infoEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span style="color:var(--green);font-weight:700;">✅ Found:</span>
+          <span style="font-weight:600;margin-left:6px;">${o.customer_name || '—'}</span>
+          <span style="color:var(--text3);margin-left:6px;font-family:var(--mono);font-size:12px;">${o.customer_phone || '—'}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${statusBadge(o.status)}
+          ${o.tracking_number ? `<span style="font-family:var(--mono);font-size:11px;color:var(--green);">📮 ${o.tracking_number}</span>` : ''}
+        </div>
+      </div>`;
     document.getElementById('trackStatus').value = o.status || 'Processing';
     if (o.tracking_number) document.getElementById('trackNum').value = o.tracking_number;
   } else {
     infoEl.style.display = 'block';
     infoEl.innerHTML = `<span style="color:var(--red);">❌ Order not found: ${ref}</span>`;
   }
+}
+
+function clearTracking() {
+  document.getElementById('trackRef').value = '';
+  document.getElementById('trackNum').value = '';
+  document.getElementById('trackNote').value = '';
+  document.getElementById('trackOrderInfo').style.display = 'none';
 }
 
 async function saveTracking() {
@@ -1234,16 +1355,135 @@ function renderTrackingHistory() {
   const recent = [...allOrders, ...allPVCOrders]
     .filter(o => o.tracking_number)
     .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-    .slice(0, 10);
+    .slice(0, 15);
   document.getElementById('trackingHistTbl').innerHTML = recent.length
     ? recent.map(o => `<tr>
-        <td class="td-mono">${o.order_ref || '—'}</td>
-        <td>${o.customer_name || '—'}</td>
+        <td class="td-mono" style="cursor:pointer;color:var(--saffron);" onclick="fillTrackRef('${o.order_ref}')">${o.order_ref || '—'}</td>
+        <td class="td-main">${o.customer_name || '—'}</td>
+        <td class="td-mono" style="cursor:pointer;" onclick="document.getElementById('mobileSearchInput').value='${(o.customer_phone||'').replace(/\D/g,'').slice(-10)}';searchByMobile();">${o.customer_phone || '—'}</td>
         <td><span class="td-mono" style="color:var(--green);">${o.tracking_number}</span></td>
         <td>${statusBadge(o.status)}</td>
-        <td style="color:var(--text3);font-size:12px;">${fmtDate(o.updated_at || o.created_at)}</td>
       </tr>`).join('')
     : '<tr><td colspan="5" class="empty-state" style="padding:24px;">No tracking updates yet</td></tr>';
+}
+
+function fillTrackRef(ref) {
+  document.getElementById('trackRef').value = ref;
+  lookupOrder();
+  showPage('tracking', document.getElementById('nav-tracking'));
+}
+
+function clearTrackingForm() {
+  document.getElementById('trackRef').value = '';
+  document.getElementById('trackNum').value = '';
+  document.getElementById('trackNote').value = '';
+  document.getElementById('trackOrderInfo').style.display = 'none';
+}
+
+function searchByMobile() {
+  const raw = document.getElementById('mobileSearchInput').value.trim();
+  const mobile = raw.replace(/\D/g, '').slice(-10);
+  const resultEl = document.getElementById('mobileSearchResult');
+
+  if (mobile.length < 10) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<div style="color:var(--red);font-size:13px;">❌ 10-digit mobile number dalein</div>';
+    return;
+  }
+
+  // Search in all orders + pvc orders
+  const matchOrders = [...allOrders, ...allPVCOrders.map(o => ({...o, _pvc: true}))]
+    .filter(o => {
+      const ph = (o.customer_phone || o.mobile || '').replace(/\D/g, '').slice(-10);
+      return ph === mobile;
+    })
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // Also search in consultations
+  const matchConsults = allConsults.filter(c => {
+    const ph = (c.mobile || '').replace(/\D/g, '').slice(-10);
+    return ph === mobile;
+  });
+
+  resultEl.style.display = 'block';
+
+  if (!matchOrders.length && !matchConsults.length) {
+    resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;font-size:13px;color:var(--red);">
+      ❌ Is mobile number pe koi order ya consultation nahi mila: <strong>${mobile}</strong>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Customer name
+  const cName = matchOrders[0]?.customer_name || matchConsults[0]?.customer_name || 'Customer';
+  html += `<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;background:var(--saffron);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;">${cName.charAt(0).toUpperCase()}</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);">${cName}</div>
+      <div style="font-size:12px;color:var(--text3);">📱 ${mobile} &nbsp;|&nbsp; ${matchOrders.length} Orders &nbsp;|&nbsp; ${matchConsults.length} Consultations</div>
+    </div>
+    <button class="btn-sm btn-green" style="margin-left:auto;" onclick="waNum('${mobile}')">💬 WhatsApp</button>
+  </div>`;
+
+  // Orders
+  if (matchOrders.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Orders (${matchOrders.length})</div>`;
+    matchOrders.forEach(o => {
+      const ref = o.order_ref;
+      const amt = o._pvc ? o.amount : o.total_amount;
+      const svc = o._pvc ? 'PVC' : guessService(o);
+      html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--saffron);">${ref}</span>
+              ${serviceTag(svc)}
+              ${statusBadge(o.status)}
+            </div>
+            <div style="font-size:12px;color:var(--text3);">
+              Amount: <strong style="color:var(--gold);">₹${Number(amt||0).toLocaleString('en-IN')}</strong>
+              &nbsp;|&nbsp; Payment: <span style="${(o.payment_status||'').includes('Received')?'color:var(--green)':'color:var(--red)'};">${o.payment_status || 'Not Received'}</span>
+              ${o.tracking_number ? `&nbsp;|&nbsp; Tracking: <span style="color:var(--green);font-family:var(--mono);">${o.tracking_number}</span>` : ''}
+              ${o.utr_number ? `&nbsp;|&nbsp; UTR: <span style="color:var(--blue);font-family:var(--mono);">${o.utr_number}</span>` : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">${fmtDate(o.created_at)}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm btn-secondary" onclick="fillTrackRef('${ref}')">📮 Track</button>
+            <button class="btn-sm btn-blue" onclick="viewOrder('${ref}','${o._pvc?'PVC':svc}')">👁 View</button>
+            <button class="btn-sm btn-primary" onclick="openStatusModal('${ref}','${o._pvc?'PVC':svc}','${o.status}','${o.tracking_number||''}')">✏️</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Consultations
+  if (matchConsults.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin:12px 0 8px;">Consultations (${matchConsults.length})</div>`;
+    matchConsults.forEach(c => {
+      html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              ${serviceTag(c.service)}
+              ${consultStatusBadge(c.status || 'Pending')}
+            </div>
+            <div style="font-size:12px;color:var(--text3);">${c.reason || c.biz_type || c.biz_name || '—'}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">${fmtDate(c.created_at)}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm btn-orange" onclick="openConsultModal('${c.id}','${c.service}')">✏️ Status</button>
+            <button class="btn-sm btn-green" onclick="waNum('${c.mobile||''}')">💬</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  resultEl.innerHTML = html;
 }
 
 // ══════════════════════════════════════════
