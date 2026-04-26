@@ -1640,7 +1640,7 @@
               <div style="text-align:center;margin-bottom:12px;">
                 <img src="qr.jpeg" alt="UPI QR Code" 
                   style="width:160px;height:160px;border-radius:10px;border:2px solid var(--saffron);"
-                  onerror="this.outerHTML='<div style='width:160px;height:160px;border-radius:10px;border:2px dashed var(--saffron);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;color:var(--slate);text-align:center;padding:10px;'>📱 Scan QR<br/>Add qr.jpeg to project</div>'"/>
+                  onerror="this.style.display='none'"/>
                 <div style="font-size:12px;color:var(--saffron);font-weight:700;margin-top:6px;">Screenshot share karein WhatsApp pe</div>
               </div>
               <!-- Payment Done Button -->
@@ -2289,7 +2289,7 @@
 
 ` +
       `📦 Items:
-${items.map(i => `  • ${i.name} ×${i.qty} = ₹${(i.price*i.qty).toLocaleString('en-IN')}`).join('
+${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('
 ')}
 
 ` +
