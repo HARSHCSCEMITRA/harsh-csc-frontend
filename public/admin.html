@@ -538,7 +538,14 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="modal-head"><h3>Update Order Status</h3><button class="modal-close" onclick="closeModal('statusModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-row single"><div class="f-group"><label>Order Ref</label><input class="f-input" id="su_ref" readonly/></div></div>
-      <div class="form-row single"><div class="f-group"><label>Status</label><select class="f-select" id="su_status"><option>new</option><option>Processing</option><option>Printing</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div></div>
+      <div class="form-row single"><div class="f-group"><label>Status</label><select class="f-select" id="su_status">
+                <option value="new">New</option>
+                <option value="Processing">Processing</option>
+                <option value="Printing">Printing</option>
+                <option value="Dispatched">Dispatched</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select></div></div>
       <div class="form-row single"><div class="f-group"><label>Payment Status</label>
         <select class="f-select" id="su_payment_status">
           <option value="Payment Not Received">❌ Payment Not Received</option>
@@ -575,14 +582,14 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div class="form-row single">
         <div class="f-group"><label>Consultation Status</label>
           <select class="f-select" id="cm_status" onchange="onConsultStatusChange()">
-            <option value="Pending">⏳ Pending — Abhi kuch nahi hua</option>
-            <option value="Called-NoAnswer">📵 Called — Phone nahi utha</option>
-            <option value="Called-CallBack">📞 Called — Baad mein call karna</option>
-            <option value="FollowUp">🔁 Follow Up — Dobara contact karna hai</option>
-            <option value="Agreed">✅ Agreed — Customer agree kar gaya</option>
-            <option value="NotInterested">❌ Not Interested — Mana kar diya</option>
-            <option value="Converted">🎉 Converted — Order ban gaya</option>
-          </select>
+            <option value="Pending">⏳ Pending — Abhi baat nahi hui</option>
+          <option value="Called-NoAnswer">📵 Called — No Answer</option>
+          <option value="Called-CallBack">📞 Called — Call Back</option>
+          <option value="FollowUp">🔔 Follow Up</option>
+          <option value="Agreed">✅ Agreed — Customer agree kar gaya</option>
+          <option value="NotInterested">❌ Not Interested</option>
+          <option value="Converted">🎉 Converted — Order ban gaya</option>
+        </select>
         </div>
       </div>
       <div class="form-row single"><div class="f-group"><label>Admin Note</label><textarea class="f-textarea" id="cm_note" rows="2" placeholder="Optional note…"></textarea></div></div>
@@ -1123,6 +1130,7 @@ function renderPVCTable() {
         <td style="color:var(--gold);font-weight:700;">₹${Number(o.amount || 0).toLocaleString('en-IN')}</td>
         <td>${o.tracking_number ? `<span class="td-mono" style="color:var(--green);">${o.tracking_number}</span>` : '<span style="color:var(--text3);">—</span>'}</td>
         <td>${statusBadge(o.status)}</td>
+        <td>${paymentBadge(o.payment_status)}</td>
         <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
         <td><div style="display:flex;gap:5px;">
           <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','PVC')">👁</button>
@@ -1692,6 +1700,18 @@ function showToast(msg, type = 'info') {
 function statusBadge(s) {
   const map = { new: 'badge-new', Processing: 'badge-processing', Printing: 'badge-printing', Dispatched: 'badge-dispatched', Delivered: 'badge-delivered', completed: 'badge-completed', Pending: 'badge-pending', Cancelled: 'badge-cancelled', cancelled: 'badge-cancelled' };
   return `<span class="badge ${map[s] || 'badge-pending'}">${s || '—'}</span>`;
+}
+function paymentBadge(s) {
+  const map = {
+    'Payment Received':     'badge-delivered',
+    'Payment Not Received': 'badge-cancelled',
+    'Partial Payment':      'badge-processing',
+    'Refunded':             'badge-printing',
+    'pending':              'badge-cancelled',
+    'paid':                 'badge-delivered',
+    'utr_submitted':        'badge-processing'
+  };
+  return `<span class="badge ${map[s] || 'badge-cancelled'}">${s || 'Payment Not Received'}</span>`;
 }
 function consultStatusBadge(s) {
   const map = {
