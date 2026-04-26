@@ -572,12 +572,14 @@
     <div class="hero-visual fade-up delay-2">
       <div class="hero-card">
         <div class="hero-card-title">Available Assistance — Click to Add</div>
-        <div class="service-item" onclick="addToCart('gazette','Gazette Notification',5100,'📰')">
+        <div class="service-item" onclick="addToCart('gazette','Gazette Notification',5100,'📰')" 
+          data-price="5100" data-service="Gazette Notification Consultancy &amp; Assistance">
           <div class="service-icon">📰</div>
           <div class="service-info"><h4>Gazette Notification</h4><p>Official Rajasthan Gazette</p></div>
           <div class="service-price"><strong>₹5,100</strong><span style="text-decoration:line-through;font-size:10px;color:rgba(255,255,255,0.4);">₹10,200</span> <span style="background:#DC2626;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;">50% OFF</span></div>
         </div>
-        <div class="service-item" onclick="addToCart('bpr','Business Project Report',1499,'📊')">
+        <div class="service-item" onclick="addToCart('bpr','Business Project Report',1499,'📊')"
+          data-price="1499" data-service="Business Project Report">
           <div class="service-icon">📊</div>
           <div class="service-info"><h4>Business Project Report</h4><p>Loan & MSME Ready</p></div>
           <div class="service-price"><strong>₹1,499</strong><span style="text-decoration:line-through;font-size:10px;color:rgba(255,255,255,0.4);">₹2,998</span> <span style="background:#DC2626;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;">50% OFF</span></div>
@@ -659,6 +661,7 @@
           </div>
           <button class="btn-consult" onclick="openGazetteConsult()">📞 Book Primary Expert Advice</button>
           <button class="btn-add" id="btn-gazette" onclick="addToCart('gazette','Gazette Notification',5100,'📰')">🛒 Add to Cart</button>
+
         </div>
       </div>
 
@@ -698,6 +701,7 @@
           </div>
           <button class="btn-consult" onclick="openBPRConsult()">📞 Book Primary Expert Advice</button>
           <button class="btn-add" id="btn-bpr" onclick="addToCart('bpr','Business Project Report',1499,'📊')">🛒 Add to Cart</button>
+
         </div>
       </div>
 
@@ -1561,9 +1565,9 @@
     </div>
     <div class="modal-body">
       <div class="order-summary-mini" id="modalSummary"></div>
-      <div class="consult-notice">
-        <span style="font-size:20px">✅</span>
-        <p><strong>No payment needed now.</strong> Our team will call you for a primary expert advice. You pay only after you are fully satisfied and ready to proceed.</p>
+      <div class="consult-notice" style="background:rgba(232,103,26,0.08);border-color:rgba(232,103,26,0.2);">
+        <span style="font-size:20px">🔒</span>
+        <p><strong>Secure Payment —</strong> Fill details below, then choose Razorpay (card/UPI/netbanking) or Manual UPI/QR payment.</p>
       </div>
       <form id="orderForm" onsubmit="submitOrder(event)">
         <div class="form-group">
@@ -1590,7 +1594,79 @@
           <textarea class="form-input" id="f_notes" rows="2" placeholder="Anything specific you want us to know..." style="resize:vertical"></textarea>
         </div>
         <div id="formError" style="display:none;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:12px;color:var(--red);font-size:13px;margin-bottom:16px;"></div>
-        <button type="submit" class="btn-submit" id="submitBtn">✅ Confirm Order — Primary Expert Advice</button>
+        
+        <!-- Step 1: Confirm Details Button -->
+        <div id="payStep1">
+          <button type="submit" class="btn-submit" id="submitBtn">📋 Confirm Details & Choose Payment →</button>
+        </div>
+        
+        <!-- Step 2: Payment Options (shown after form submit) -->
+        <div id="payStep2" style="display:none;">
+          <div style="background:var(--light);border-radius:14px;padding:16px;margin-bottom:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">💰 Choose Payment Method</div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px;">Order Total: <span id="checkoutTotal" style="color:var(--saffron);">₹0</span></div>
+            <div style="font-size:12px;color:var(--slate);" id="checkoutRef"></div>
+          </div>
+          
+          <!-- Option 1: Razorpay -->
+          <button type="button" id="rzpPayBtn" class="btn-submit" 
+            style="margin-bottom:12px;background:linear-gradient(135deg,#072654,#1a4a8a);"
+            onclick="doRazorpayCheckout()">
+            💳 Pay via Razorpay — Card / UPI / Net Banking
+            <span style="display:block;font-size:11px;font-weight:400;opacity:0.8;margin-top:2px;">Automatic verification · Instant confirmation</span>
+          </button>
+          
+          <!-- Option 2: Manual UPI/QR -->
+          <button type="button" class="btn-submit" 
+            style="background:linear-gradient(135deg,#15803d,#16a34a);margin-bottom:12px;"
+            onclick="showManualPayment()">
+            📱 Pay via UPI / QR Code — Manual
+            <span style="display:block;font-size:11px;font-weight:400;opacity:0.8;margin-top:2px;">GPay · PhonePe · Paytm · BHIM · Bank Transfer</span>
+          </button>
+          
+          <!-- Manual Payment Details (hidden initially) -->
+          <div id="manualPaySection" style="display:none;">
+            <div style="background:var(--white);border:2px solid rgba(21,128,61,0.3);border-radius:14px;padding:16px;margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;margin-bottom:12px;">🏦 Payment Details</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:14px;">
+                <span style="color:var(--slate);">UPI ID</span><span style="font-weight:700;color:var(--navy);font-family:monospace;">7023029903@hdfcbank</span>
+                <span style="color:var(--slate);">Account Holder</span><span style="font-weight:700;color:var(--navy);">HARSH PALIWAL</span>
+                <span style="color:var(--slate);">Account No.</span><span style="font-weight:700;color:var(--navy);font-family:monospace;">50200042016669</span>
+                <span style="color:var(--slate);">IFSC</span><span style="font-weight:700;color:var(--navy);font-family:monospace;">HDFC0000985</span>
+                <span style="color:var(--slate);">Branch</span><span style="font-weight:700;color:var(--navy);">Rajsamand</span>
+                <span style="color:var(--slate);">WhatsApp</span><span style="font-weight:700;color:var(--navy);">+91 70230 29903</span>
+              </div>
+              <!-- QR Code -->
+              <div style="text-align:center;margin-bottom:12px;">
+                <img src="qr.jpeg" alt="UPI QR Code" 
+                  style="width:160px;height:160px;border-radius:10px;border:2px solid var(--saffron);"
+                  onerror="this.outerHTML='<div style='width:160px;height:160px;border-radius:10px;border:2px dashed var(--saffron);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;color:var(--slate);text-align:center;padding:10px;'>📱 Scan QR<br/>Add qr.jpeg to project</div>'"/>
+                <div style="font-size:12px;color:var(--saffron);font-weight:700;margin-top:6px;">Screenshot share karein WhatsApp pe</div>
+              </div>
+              <!-- Payment Done Button -->
+              <button type="button" class="btn-submit" 
+                style="background:var(--green);margin-bottom:10px;"
+                onclick="showUTRForm()">
+                ✅ Payment Done — Submit UTR Number
+              </button>
+              <!-- UTR Form -->
+              <div id="checkoutUTRForm" style="display:none;">
+                <input class="form-input" id="checkoutUTR" type="text" 
+                  placeholder="UPI UTR / Transaction ID (12 digits)" 
+                  style="margin-bottom:10px;"/>
+                <div id="checkoutUTRMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:10px;"></div>
+                <button type="button" class="btn-submit" onclick="submitCheckoutUTR()">
+                  📤 Submit UTR & Confirm Order
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <button type="button" onclick="resetToFormStep()" 
+            style="width:100%;background:none;border:1px solid rgba(11,31,75,0.15);padding:10px;border-radius:10px;font-size:13px;color:var(--slate);cursor:pointer;font-family:var(--font-body);">
+            ← Edit Details
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -1626,7 +1702,7 @@
     pvc:     { id:'pvc',     name:'Smart Card & PVC Print',  price:99,   emoji:'🪪' }
   };
 
-  const RAZORPAY_KEY = 'rzp_test_REPLACE_WITH_YOUR_KEY';
+  const RAZORPAY_KEY = 'rzp_live_ShL15WckCTU12U';
 
   // ── PVC ORDER STATE ────────────────────────────────────────────
   let pvcState = { step: 1, cardType: 'aadhaar', cardLabel: 'Aadhaar Card', pricePerCard: 99, qty: 1 };
@@ -1809,6 +1885,16 @@
       handler: async function(response) {
         await savePVCOrder(response.razorpay_payment_id);
         showPVCSuccess(response.razorpay_payment_id);
+        // Notify admin on WhatsApp
+        const waPVC = `✅ *PVC Payment Successful!*
+
+📋 Order Ref: *${pvcState.orderRef}*
+🪪 Card: ${pvcState.cardLabel} × ${pvcState.qty}
+💰 Amount: ₹${(pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty).toLocaleString('en-IN')}
+🏦 Payment ID: ${response.razorpay_payment_id}
+
+— Auto notification`;
+        setTimeout(() => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waPVC)}`, '_blank'), 500);
       },
       modal: {
         ondismiss: function() {
@@ -1849,10 +1935,11 @@
           quantity:        pvcState.qty,
           amount:          pvcState.totalPrice || pvcState.pricePerCard * pvcState.qty,
           address:         `${address}, PIN ${pin}, ${state}`,
-          payment_id:      paymentId === 'PENDING' ? null : paymentId,
-          payment_status:  paymentId === 'PENDING' ? 'pending' : (paymentId && paymentId.startsWith('UPI-') ? 'utr_submitted' : 'paid'),
-          utr_number:      paymentId && paymentId.startsWith('UPI-') ? paymentId.replace('UPI-','') : null,
-          status:          paymentId === 'PENDING' ? 'new' : 'Processing',
+          razorpay_payment_id: paymentId !== 'PENDING' ? paymentId : null,
+          payment_status:      paymentId === 'PENDING' ? 'Payment Not Received' : 'Payment Received',
+          payment_source:      paymentId === 'PENDING' ? 'Manual' : 'Razorpay',
+          utr_number:          null,
+          status:              paymentId === 'PENDING' ? 'new' : 'Processing',
           tracking_number: null,
           created_at:      new Date().toISOString()
         })
@@ -1976,7 +2063,7 @@
     }
     // Show UTR form if any order has pending payment
     const hasPendingPayment = merged.some(o => 
-      o.status === 'new' || o.payment_status === 'pending'
+      o.status === 'new' || o.payment_status === 'Payment Not Received'
     );
     const utrSec = document.getElementById('utrPaymentSection');
     if (utrSec) {
@@ -1990,17 +2077,22 @@
       const icon = o.type === 'Service' ? '📄' : '🪪';
       const statusClass = o.status?.toLowerCase() === 'dispatched' ? 'dispatched' 
                         : o.status?.toLowerCase() === 'delivered' ? 'delivered' : 'processing';
-      const sIcon = {Processing:'⏳',Printing:'🖨️',Dispatched:'📮',Delivered:'✅',new:'🆕'}[o.status] || '⏳';
+      const sIcon = {Processing:'⏳',Printing:'🖨️',Dispatched:'📮',Delivered:'✅',new:'🆕',Cancelled:'❌'}[o.status] || '⏳';
       const displayStatus = o.status === 'new' ? 'Pending' : (o.status || 'Processing');
 
       let paymentBadge = '';
-      if (o.payment_status === 'utr_submitted') {
+      if (o.payment_status === 'Payment Not Received' && o.utr_number) {
         paymentBadge = '<p style="font-size:12px;color:#d97706;margin-top:4px;">💰 UTR submitted — verification pending</p>';
-      } else if (o.payment_status === 'pending' || o.status === 'new') {
+      } else if (o.payment_status === 'Payment Not Received' || o.status === 'new') {
         paymentBadge = '<p style="font-size:12px;color:#dc2626;margin-top:4px;">⚠️ Payment pending</p>';
-      } else if (o.payment_status === 'paid') {
+      } else if (o.payment_status === 'Payment Received') {
         paymentBadge = '<p style="font-size:12px;color:#15803d;margin-top:4px;">✅ Payment confirmed</p>';
+      } else if (o.payment_status === 'Partial Payment') {
+        paymentBadge = '<p style="font-size:12px;color:#d97706;margin-top:4px;">⚠️ Partial payment received</p>';
+      } else if (o.payment_status === 'Refunded') {
+        paymentBadge = '<p style="font-size:12px;color:#6366f1;margin-top:4px;">↩️ Refunded</p>';
       }
+
 
       let trackingHtml = '';
       if (o.tracking) {
@@ -2128,6 +2220,9 @@
   }
 
   // ── ORDER SUBMIT ──────────────────────────────────────────────
+  // Store current checkout context
+  let checkoutContext = {};
+
   async function submitOrder(e) {
     e.preventDefault();
     const btn   = document.getElementById('submitBtn');
@@ -2140,82 +2235,214 @@
     const address = document.getElementById('f_address')?.value.trim();
     const notes   = document.getElementById('f_notes')?.value.trim();
 
-    if (!name)                                  { showErr('Please enter your full name.'); return; }
-    if (!/^[6-9]\d{9}$/.test(phone))     { showErr('Please enter a valid 10-digit Indian mobile number.'); return; }
-    if (!address)                               { showErr('Please enter your delivery address.'); return; }
+    if (!name)                             { showErr('Please enter your full name.'); return; }
+    if (!/^[6-9]\d{9}$/.test(phone))      { showErr('Please enter a valid 10-digit mobile number.'); return; }
+    if (!address)                          { showErr('Please enter your delivery address.'); return; }
 
-    if (btn) {
-      btn.textContent = '⏳ Placing Order...';
-      btn.disabled = true;
-    }
+    if (btn) { btn.textContent = '⏳ Saving...'; btn.disabled = true; }
 
     const items    = getCartItems();
     const total    = getTotal();
     const orderRef = 'HSC-' + Date.now().toString(36).toUpperCase().slice(-6);
-    const orderData = {
-      order_ref:        orderRef,
-      customer_name:    name,
-      customer_phone:   phone,
-      customer_email:   email || null,
-      delivery_address: address,
-      notes:            notes || null,
-      items:            JSON.stringify(items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty }))),
-      total_amount:     total,
-      payment_status:   'pending',
-      status:           'new',
-      created_at:       new Date().toISOString()
+
+    // Save to Supabase
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer':        'return=minimal'
+        },
+        body: JSON.stringify({
+          order_ref:        orderRef,
+          customer_name:    name,
+          customer_phone:   phone,
+          customer_email:   email || null,
+          delivery_address: address || 'N/A',
+          notes:            notes || null,
+          items:            JSON.stringify(items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty }))),
+          total_amount:     total,
+          payment_status:   'Payment Not Received',
+          payment_source:   'Manual',
+          status:           'new'
+        })
+      });
+    } catch(err) { console.error('Order save error:', err); }
+
+    // Store context for payment steps
+    checkoutContext = { name, phone, email, address, notes, items, total, orderRef };
+    upiOrderContext = { amount: total, orderRef, isCart: true };
+
+    // Send WhatsApp notification to admin
+    const waText = encodeURIComponent(
+      `🆕 NEW ORDER — ${orderRef}
+
+` +
+      `👤 Name: ${name}
+📞 Phone: ${phone}
+` +
+      (email ? `✉️ Email: ${email}
+` : '') +
+      `📍 Address: ${address}
+
+` +
+      `📦 Items:
+${items.map(i => `  • ${i.name} ×${i.qty} = ₹${(i.price*i.qty).toLocaleString('en-IN')}`).join('
+')}
+
+` +
+      `💰 Total: ₹${total.toLocaleString('en-IN')}
+` +
+      (notes ? `📝 Notes: ${notes}
+` : '') +
+      `
+⏰ ${new Date().toLocaleString('en-IN')}`
+    );
+    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
+
+    // Show payment options
+    if (btn) { btn.textContent = '📋 Confirm Details & Choose Payment →'; btn.disabled = false; }
+    document.getElementById('checkoutTotal').textContent = '₹' + total.toLocaleString('en-IN');
+    document.getElementById('checkoutRef').textContent   = 'Order Ref: ' + orderRef;
+    document.getElementById('payStep1').style.display = 'none';
+    document.getElementById('payStep2').style.display = 'block';
+    clearCart();
+  }
+
+  function resetToFormStep() {
+    document.getElementById('payStep1').style.display = 'block';
+    document.getElementById('payStep2').style.display = 'none';
+    document.getElementById('manualPaySection').style.display = 'none';
+    document.getElementById('checkoutUTRForm').style.display = 'none';
+  }
+
+  function showManualPayment() {
+    document.getElementById('manualPaySection').style.display = 'block';
+  }
+
+  function showUTRForm() {
+    document.getElementById('checkoutUTRForm').style.display = 'block';
+    document.getElementById('checkoutUTR').focus();
+  }
+
+  async function submitCheckoutUTR() {
+    const utr    = document.getElementById('checkoutUTR')?.value.trim() || '';
+    const msgEl  = document.getElementById('checkoutUTRMsg');
+    const btn    = document.querySelector('#checkoutUTRForm button');
+    const ref    = checkoutContext.orderRef || '';
+    const phone  = checkoutContext.phone || '';
+
+    const showM = (msg, ok) => {
+      if (!msgEl) return;
+      msgEl.style.display = 'block';
+      msgEl.style.background = ok ? 'rgba(22,163,74,0.1)' : 'rgba(239,68,68,0.1)';
+      msgEl.style.color = ok ? '#15803d' : '#dc2626';
+      msgEl.style.border = ok ? '1px solid rgba(22,163,74,0.3)' : '1px solid rgba(239,68,68,0.3)';
+      msgEl.textContent = msg;
     };
 
+    if (!utr || utr.length < 6) { showM('⚠️ Valid UTR number darj karein', false); return; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Submitting...'; }
+
     try {
-      {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({
-            order_ref:        orderData.order_ref,
-            customer_name:    orderData.customer_name,
-            customer_phone:   orderData.customer_phone,
-            customer_email:   orderData.customer_email,
-            delivery_address: orderData.delivery_address,
-            notes:            orderData.notes,
-            items:            orderData.items,
-            total_amount:     orderData.total_amount,
-            status:           'new'
-          })
-        });
-      }
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?order_ref=eq.${ref}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type':  'application/json',
+          'Prefer':        'return=minimal'
+        },
+        body: JSON.stringify({ utr_number: utr, payment_status: 'Payment Not Received' })
+      });
+    } catch(err) { console.error('UTR save error:', err); }
 
-      const waText = encodeURIComponent(
-        `🆕 NEW ORDER — ${orderRef}\n\n` +
-        `👤 Name: ${name}\n📞 Phone: ${phone}\n` +
-        (email ? `✉️ Email: ${email}\n` : '') +
-        `📍 Address: ${address}\n\n` +
-        `📦 Items:\n${items.map(i => `  • ${i.name} ×${i.qty} = ₹${(i.price*i.qty).toLocaleString('en-IN')}`).join('\n')}\n\n` +
-        `💰 Total: ₹${total.toLocaleString('en-IN')}\n` +
-        (notes ? `📝 Notes: ${notes}\n` : '') +
-        `\n⏰ ${new Date().toLocaleString('en-IN')}`
-      );
-      window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
+    // WhatsApp to admin
+    const waMsg = `💰 *UTR Submitted — ${ref}*
 
-      if (btn) { btn.textContent = '✅ Confirm Order'; btn.disabled = false; }
+👤 ${checkoutContext.name}
+📱 ${phone}
+🏦 UTR: *${utr}*
+💰 Amount: ₹${checkoutContext.total?.toLocaleString('en-IN')}
+
+Please verify & confirm.`;
+    setTimeout(() => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank'), 300);
+
+    showM('✅ UTR received! हम verify करके WhatsApp pe confirm करेंगे।', true);
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Submit UTR & Confirm Order'; }
+
+    // Show success after 2 sec
+    setTimeout(() => {
       closeCheckout();
-      clearCart();
-      // Open UPI Payment modal for cart order
-      upiOrderContext = { amount: total, orderRef: orderRef, isCart: true };
-      openUPIModal(total, orderRef, true);
+      const successRef = document.getElementById('successRef');
+      if (successRef) successRef.textContent = ref;
+      const successModal = document.getElementById('successModal');
+      if (successModal) successModal.classList.add('open');
+    }, 2000);
+  }
 
-    } catch (err) {
-      showErr('Something went wrong. Please try again or contact us on WhatsApp.');
-      if (btn) {
-        btn.textContent = '✅ Confirm Order — Primary Expert Advice';
-        btn.disabled = false;
-      }
+  // Razorpay from checkout
+  function doRazorpayCheckout() {
+    if (!RAZORPAY_KEY || typeof Razorpay === 'undefined') {
+      alert('Payment gateway load nahi hua. UPI option use karein ya WhatsApp pe contact karein.');
+      return;
     }
+    const { name, phone, email, total, orderRef, items } = checkoutContext;
+    const options = {
+      key:         RAZORPAY_KEY,
+      amount:      total * 100,
+      currency:    'INR',
+      name:        'Harsh CSC eMitra',
+      description: items?.map(i => i.name).join(', ') || 'Order',
+      image:       'logo.png',
+      prefill:     { name, contact: phone, email: email || '' },
+      notes:       { order_ref: orderRef },
+      theme:       { color: '#E8671A' },
+      handler: async function(response) {
+        let verified = false;
+        try {
+          const edgeRes = await fetch(
+            'https://qhqvmzrdncxddzlfrgrn.supabase.co/functions/v1/verify-razorpay-payment',
+            {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+              body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id   || '',
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature  || '',
+                order_ref:           orderRef,
+                table_name:          'orders'
+              })
+            }
+          );
+          const d = await edgeRes.json();
+          if (d.success) verified = true;
+        } catch(e) { console.warn('Edge fn fallback:', e); }
+        if (!verified) {
+          await fetch(`${SUPABASE_URL}/rest/v1/orders?order_ref=eq.${orderRef}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id:   response.razorpay_order_id || '',
+              payment_status:      'Payment Received',
+              payment_source:      'Razorpay',
+              status:              'Processing'
+            })
+          });
+        }
+        closeCheckout();
+        const successRef = document.getElementById('successRef');
+        if (successRef) successRef.textContent = orderRef;
+        const successModal = document.getElementById('successModal');
+        if (successModal) successModal.classList.add('open');
+      },
+      modal: { ondismiss: function() { showManualPayment(); } }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
   }
 
   function showErr(msg) {
@@ -2530,7 +2757,7 @@
     // Show/hide Razorpay button based on key availability
     const rzpBtn = document.getElementById('razorpayFallbackBtn');
     const rzpNote = document.getElementById('rzpBtnNote');
-    if (RAZORPAY_KEY === 'rzp_test_REPLACE_WITH_YOUR_KEY' || !RAZORPAY_KEY) {
+    if (!RAZORPAY_KEY || typeof Razorpay === 'undefined') {
       if (rzpBtn) rzpBtn.classList.add('disabled');
       if (rzpNote) rzpNote.textContent = '(Coming Soon)';
     } else {
@@ -2562,7 +2789,7 @@
         await fetch(`${SUPABASE_URL}/rest/v1/${table}?order_ref=eq.${orderRef}`, {
           method: 'PATCH',
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ utr_number: utrNum, payment_status: 'utr_submitted' })
+          body: JSON.stringify({ utr_number: utrNum, payment_status: 'Payment Not Received' })
         });
       } catch(e) {}
     }
@@ -2627,15 +2854,71 @@ Payment receive ho gaya! 🙏
     }
   }
 
-  // Override proceedToPayment to check if Razorpay is available
-  const _originalProceedToPayment = typeof proceedToPayment === 'function' ? proceedToPayment : null;
-  function proceedToPayment() {
-    if (RAZORPAY_KEY === 'rzp_test_REPLACE_WITH_YOUR_KEY' || !RAZORPAY_KEY || typeof Razorpay === 'undefined') {
-      alert('Card/Net Banking payment abhi available nahi hai. Kripya UPI se payment karein ya WhatsApp pe contact karein.');
+
+  // ── Razorpay from UPI Modal ────────────────────────────────────
+  function rzpFromUPIModal() {
+    if (!RAZORPAY_KEY || typeof Razorpay === 'undefined') {
+      alert('Card payment gateway not loaded. Please use UPI/QR option.');
       return;
     }
-    if (_originalProceedToPayment) _originalProceedToPayment();
+    const price       = upiOrderContext?.amount || 0;
+    const orderRef    = upiOrderContext?.orderRef || '';
+    const serviceName = upiOrderContext?.serviceName || 'Service';
+    const name        = currentUser?.name   || '';
+    const mobile      = currentUser?.mobile || '';
+    const email       = currentUser?.email  || '';
+
+    closeUPIModal();
+
+    const options = {
+      key:         RAZORPAY_KEY,
+      amount:      price * 100,
+      currency:    'INR',
+      name:        'Harsh CSC eMitra',
+      description: serviceName || orderRef,
+      image:       'logo.png',
+      prefill:     { name, contact: mobile, email },
+      notes:       { order_ref: orderRef },
+      theme:       { color: '#E8671A' },
+      handler: async function(response) {
+        // Update Supabase with payment_id
+        const table = orderRef.startsWith('PVC-') ? 'pvc_orders' : 'orders';
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/${table}?order_ref=eq.${orderRef}`, {
+            method:  'PATCH',
+            headers: {
+              'apikey':        SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type':  'application/json',
+              'Prefer':        'return=minimal'
+            },
+            body: JSON.stringify({
+              payment_id:     response.razorpay_payment_id,
+              payment_status: 'Payment Received',
+              status:         'Processing'
+            })
+          });
+        } catch(e) { console.error('Supabase update error:', e); }
+
+        const waMsg = `✅ *Payment Successful!*
+
+📋 Order Ref: *${orderRef}*
+💰 Amount: ₹${price.toLocaleString('en-IN')}
+🏦 Payment ID: ${response.razorpay_payment_id}
+
+— Harsh CSC eMitra`;
+        window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+        alert(`✅ Payment successful! ID: ${response.razorpay_payment_id}`);
+      },
+      modal: {
+        ondismiss: () => openUPIModal()
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
   }
+
+  // Razorpay proceedToPayment is handled by original function above
 
 
   // ── UTR SUBMISSION (Standalone form in My Orders) ────────────
@@ -2662,7 +2945,7 @@ Payment receive ho gaya! 🙏
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Submit ho raha hai...'; }
     showMsg('⏳ Verifying...', true);
 
-    const payload = { utr_number: utr, payment_status: 'utr_submitted' };
+    const payload = { utr_number: utr, payment_status: 'Payment Not Received' };
     const headers = {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -2721,6 +3004,99 @@ Kripya verify karke confirm karein. 🙏`;
     } else {
       showMsg('❌ Order Ref ya Mobile number match nahi kiya. Apna registered mobile number check karein.', false);
     }
+  }
+
+
+  // ── RAZORPAY DYNAMIC PAYMENT (data-price attribute based) ─────
+  async function initiatePayment(element) {
+    const price       = parseInt(element?.dataset?.price || 0);
+    const serviceName = element?.dataset?.service || 'Service';
+    const orderRef    = 'HSC-' + Date.now().toString(36).toUpperCase().slice(-6);
+
+    if (!price || price <= 0) {
+      alert('Invalid price. Please contact us on WhatsApp.');
+      return;
+    }
+
+    // If Razorpay not loaded, open UPI modal instead
+    if (!RAZORPAY_KEY || typeof Razorpay === 'undefined') {
+      upiOrderContext = { amount: price, orderRef: orderRef, isCart: true, serviceName };
+      openUPIModal(price, orderRef, true);
+      return;
+    }
+
+    const name   = currentUser?.name   || '';
+    const mobile = currentUser?.mobile || '';
+    const email  = currentUser?.email  || '';
+
+    const options = {
+      key:         RAZORPAY_KEY,
+      amount:      price * 100,        // paise mein
+      currency:    'INR',
+      name:        'Harsh CSC eMitra',
+      description: serviceName,
+      image:       'logo.png',
+      prefill:     { name, contact: mobile, email },
+      notes:       { order_ref: orderRef, service: serviceName },
+      theme:       { color: '#E8671A' },
+      handler: async function(response) {
+        // Save to Supabase orders table
+        try {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          const ref   = 'HSC-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+          await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+            method:  'POST',
+            headers: {
+              'Content-Type':  'application/json',
+              'apikey':        SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Prefer':        'return=minimal'
+            },
+            body: JSON.stringify({
+              order_ref:      ref,
+              customer_name:  name   || 'Customer',
+              customer_phone: mobile || '',
+              customer_email: email  || '',
+              items:          JSON.stringify([{ name: serviceName, price: price, qty: 1 }]),
+              total_amount:   price,
+              payment_id:     response.razorpay_payment_id,
+              payment_status: 'Payment Received',
+              status:         'Processing',
+              service_type:   serviceName
+            })
+          });
+        } catch(e) { console.error('Supabase sync error:', e); }
+
+        // WhatsApp notification
+        const waMsg = `✅ *Payment Successful!*
+
+📋 Service: *${serviceName}*
+💰 Amount: ₹${price.toLocaleString('en-IN')}
+🏦 Payment ID: ${response.razorpay_payment_id}
+
+Hum jald hi aapse contact karenge. 🙏
+
+— Harsh CSC eMitra`;
+        window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+
+        // Show success
+        alert(`✅ Payment successful!
+Payment ID: ${response.razorpay_payment_id}
+Hum jald hi contact karenge.`);
+      },
+      modal: {
+        ondismiss: function() {
+          // On dismiss offer UPI option
+          if (confirm('Payment cancel ho gaya. Kya aap UPI/QR se pay karna chahte hain?')) {
+            upiOrderContext = { amount: price, orderRef: orderRef, isCart: true, serviceName };
+            openUPIModal(price, orderRef, true);
+          }
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
   }
 
   // ── AUTH SYSTEM ─────────────────────────────────────────────
@@ -2988,9 +3364,9 @@ Kripya verify karke confirm karein. 🙏`;
 
       <div class="upi-or-divider">ya card / net banking se pay karein</div>
 
-      <button class="btn-razorpay" id="razorpayFallbackBtn" onclick="proceedToPayment()">
+      <button class="btn-razorpay" id="razorpayFallbackBtn" onclick="rzpFromUPIModal()">
         💳 Pay via Card / Net Banking
-        <span id="rzpBtnNote" style="font-size:11px;opacity:0.7;">(Coming Soon)</span>
+        <span id="rzpBtnNote" style="font-size:11px;opacity:0.7;"></span>
       </button>
     </div>
   </div>
