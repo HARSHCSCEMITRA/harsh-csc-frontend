@@ -121,3 +121,150 @@ export async function trackOrder(order_ref: string): Promise<OrderTrackingRespon
   if (USE_MOCK) return { ...MOCK_ORDER_TRACKING, order_ref };
   return apiFetch<OrderTrackingResponse>(`/api/orders/${encodeURIComponent(order_ref)}`);
 }
+
+// ── Admin Product Management ──────────────────────────────────
+// Note: These endpoints need to be created on the backend
+// For now, we use localStorage as fallback
+
+const ADMIN_TOKEN_KEY = 'admin_token';
+
+function getAdminHeaders(): HeadersInit {
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+}
+
+export interface AdminProductPayload {
+  id?: string;
+  name: string;
+  nameHi: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  emoji: string;
+  imageUrl?: string;
+  description: string;
+  descriptionHi: string;
+  documents: string[];
+  documentsHi: string[];
+  badge?: string;
+  turnaround?: string;
+  turnaroundHi?: string;
+  isActive?: boolean;
+}
+
+export async function fetchAdminProducts(): Promise<{ products: AdminProductPayload[]; success: boolean }> {
+  // Try API first, fallback to mock
+  try {
+    return await apiFetch('/api/admin/products', {
+      headers: getAdminHeaders(),
+    });
+  } catch (error) {
+    // Return empty array - products will be loaded from localStorage
+    console.warn('Admin products API not available, using localStorage fallback');
+    return { products: [], success: false };
+  }
+}
+
+export async function createAdminProduct(product: AdminProductPayload): Promise<{ product: AdminProductPayload; success: boolean; message: string }> {
+  try {
+    return await apiFetch('/api/admin/products', {
+      method: 'POST',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(product),
+    });
+  } catch (error) {
+    // LocalStorage fallback - will be handled by the store
+    throw new Error('Product created in local storage. Sync with backend when available.');
+  }
+}
+
+export async function updateAdminProduct(id: string, product: Partial<AdminProductPayload>): Promise<{ product: AdminProductPayload; success: boolean; message: string }> {
+  try {
+    return await apiFetch(`/api/admin/products/${id}`, {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(product),
+    });
+  } catch (error) {
+    throw new Error('Product updated in local storage. Sync with backend when available.');
+  }
+}
+
+export async function deleteAdminProduct(id: string): Promise<{ success: boolean; message: string }> {
+  try {
+    return await apiFetch(`/api/admin/products/${id}`, {
+      method: 'DELETE',
+      headers: getAdminHeaders(),
+    });
+  } catch (error) {
+    throw new Error('Product deleted from local storage. Sync with backend when available.');
+  }
+}
+
+// ── Admin Form Fields Management ───────────────────────────────
+
+export interface AdminFormFieldPayload {
+  id?: string;
+  productId: string;
+  fieldName: string;
+  fieldNameHi: string;
+  label: string;
+  labelHi: string;
+  type: string;
+  required: boolean;
+  placeholder?: string;
+  placeholderHi?: string;
+  options?: string[];
+  optionsHi?: string[];
+  helpText?: string;
+  helpTextHi?: string;
+  order: number;
+}
+
+export async function fetchAdminFormFields(): Promise<{ fields: AdminFormFieldPayload[]; success: boolean }> {
+  try {
+    return await apiFetch('/api/admin/form-fields', {
+      headers: getAdminHeaders(),
+    });
+  } catch (error) {
+    return { fields: [], success: false };
+  }
+}
+
+export async function createAdminFormField(field: AdminFormFieldPayload): Promise<{ field: AdminFormFieldPayload; success: boolean }> {
+  try {
+    return await apiFetch('/api/admin/form-fields', {
+      method: 'POST',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(field),
+    });
+  } catch (error) {
+    throw new Error('Form field created in local storage.');
+  }
+}
+
+export async function updateAdminFormField(id: string, field: Partial<AdminFormFieldPayload>): Promise<{ field: AdminFormFieldPayload; success: boolean }> {
+  try {
+    return await apiFetch(`/api/admin/form-fields/${id}`, {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(field),
+    });
+  } catch (error) {
+    throw new Error('Form field updated in local storage.');
+  }
+}
+
+export async function deleteAdminFormField(id: string): Promise<{ success: boolean }> {
+  try {
+    return await apiFetch(`/api/admin/form-fields/${id}`, {
+      method: 'DELETE',
+      headers: getAdminHeaders(),
+    });
+  } catch (error) {
+    throw new Error('Form field deleted from local storage.');
+  }
+}

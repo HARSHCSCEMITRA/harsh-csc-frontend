@@ -1,5 +1,8 @@
 // src/admin/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
+import ProductList from './ProductList';
+import FormBuilder from './FormBuilder';
+import { downloadAsCSV, exportToGoogleSheetsFormat } from '../store/productStore';
 
 interface Order {
   order_ref: string;
@@ -15,6 +18,8 @@ interface Order {
 interface Summary {
   summary_text?: string;
 }
+
+type AdminTab = 'orders' | 'products' | 'formBuilder';
 
 const BACKEND_URL = "https://emitra-worker.harshcscemitra.workers.dev";
 
@@ -37,6 +42,7 @@ const AdminDashboard = () => {
   const [error, setError]     = useState('');
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState('all');
+  const [activeTab, setActiveTab] = useState<AdminTab>('orders');
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -124,6 +130,10 @@ const AdminDashboard = () => {
     title:      { fontSize: '22px', fontWeight: 800, color: '#60a5fa', letterSpacing: '-0.02em', lineHeight: '1.2' },
     subtitle:   { fontSize: '12px', color: '#64748b', marginTop: '2px', fontWeight: 500 },
     badge:      { background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600 },
+    tabContainer:{ display: 'flex', gap: '8px', marginBottom: '24px' },
+    tab:        { padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'all 0.2s' },
+    tabActive:  { background: '#2563eb', color: '#fff' },
+    tabInactive:{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' },
     grid3:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' },
     card:       { background: '#0f1729', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' },
     cardBlue:   { background: '#0f1729', border: '1px solid rgba(37,99,235,0.3)', borderRadius: '12px', padding: '20px' },
@@ -155,10 +165,48 @@ const AdminDashboard = () => {
             <div style={s.subtitle}>Digital Documentation Services and Consultancy</div>
           </div>
         </div>
-        <div style={s.badge}>● Live</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={s.badge}>● Live</div>
+          {/* Export to Google Sheets Buttons */}
+          <button
+            style={{ ...s.actionBtn, background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}
+            onClick={() => {
+              const data = exportToGoogleSheetsFormat(orders, []);
+              downloadAsCSV(data.orders, 'orders_export');
+            }}
+            title="Export Orders to CSV for Google Sheets"
+          >
+            📊 Export Orders
+          </button>
+        </div>
       </div>
 
       {error && <div style={s.errorBox}>⚠️ {error}</div>}
+
+      {/* Tab Navigation */}
+      <div style={s.tabContainer}>
+        <button
+          style={{ ...s.tab, ...(activeTab === 'orders' ? s.tabActive : s.tabInactive) }}
+          onClick={() => setActiveTab('orders')}
+        >
+          📋 Orders
+        </button>
+        <button
+          style={{ ...s.tab, ...(activeTab === 'products' ? s.tabActive : s.tabInactive) }}
+          onClick={() => setActiveTab('products')}
+        >
+          🏷️ Products
+        </button>
+        <button
+          style={{ ...s.tab, ...(activeTab === 'formBuilder' ? s.tabActive : s.tabInactive) }}
+          onClick={() => setActiveTab('formBuilder')}
+        >
+          📝 Form Builder
+        </button>
+      </div>
+
+      {/* Orders Tab Content */}
+      {activeTab === 'orders' && (
 
       <div style={s.grid3}>
         <div style={s.cardBlue}>
@@ -273,6 +321,17 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+      )}
+
+      {/* Products Tab Content */}
+      {activeTab === 'products' && (
+        <ProductList />
+      )}
+
+      {/* Form Builder Tab Content */}
+      {activeTab === 'formBuilder' && (
+        <FormBuilder />
+      )}
     </div>
   );
 };
