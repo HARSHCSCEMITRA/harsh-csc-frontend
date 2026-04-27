@@ -34,13 +34,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
     badge: product?.badge || '',
     turnaround: product?.turnaround || '',
     turnaroundHi: product?.turnaroundHi || '',
+    expertAdviceIncluded: product?.expertAdviceIncluded || false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'originalPrice' ? Number(value) : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+              name === 'price' || name === 'originalPrice' ? Number(value) : value
     }));
   };
 
@@ -61,6 +63,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
       badge: formData.badge || undefined,
       turnaround: formData.turnaround || undefined,
       turnaroundHi: formData.turnaroundHi || undefined,
+      expertAdviceIncluded: formData.expertAdviceIncluded,
     };
     onSave(submitData);
   };
@@ -293,6 +296,48 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
               onChange={handleChange}
               placeholder="e.g., 2-3 दिन"
             />
+          </div>
+
+          {/* Expert Advice Option */}
+          <div style={{ ...s.sectionTitle, marginTop: '24px' }}>
+            👨‍💼 Expert Primary Advice
+          </div>
+          
+          <div style={{ 
+            background: 'rgba(37,99,235,0.1)', 
+            border: '1px solid rgba(37,99,235,0.3)', 
+            borderRadius: '8px', 
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px'
+          }}>
+            <input
+              type="checkbox"
+              id="expertAdviceIncluded"
+              name="expertAdviceIncluded"
+              checked={formData.expertAdviceIncluded}
+              onChange={handleChange}
+              style={{ width: '20px', height: '20px', marginTop: '2px', cursor: 'pointer' }}
+            />
+            <div>
+              <label 
+                htmlFor="expertAdviceIncluded" 
+                style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 600, 
+                  color: '#e2e8f0', 
+                  cursor: 'pointer',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}
+              >
+                Auto-add Expert Primary Advice
+              </label>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                When customer adds this product to cart, Expert Primary Advice (Free) will be automatically added to their cart.
+              </p>
+            </div>
           </div>
 
           {/* Actions */}

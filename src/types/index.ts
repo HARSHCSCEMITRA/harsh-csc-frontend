@@ -25,6 +25,7 @@ export interface Product {
   turnaroundHi?: string;
   isActive?: boolean; // Enable/disable product
   formFields?: ProductFormField[]; // Custom form fields for this service
+  expertAdviceIncluded?: boolean; // Auto-add Expert Primary Advice with this product
 }
 
 export interface CatalogResponse {

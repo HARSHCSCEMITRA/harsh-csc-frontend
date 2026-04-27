@@ -46,7 +46,22 @@ export const useCartStore = create<CartState>()(
               ),
             };
           }
-          return { items: [...state.items, { product, quantity: 1 }] };
+          
+          // Auto-add Expert Primary Advice if product has expertAdviceIncluded
+          let newItems = [...state.items, { product, quantity: 1 }];
+          let newExpertAdviceAdded = state.expertAdviceAdded;
+          
+          if (product.expertAdviceIncluded && !state.expertAdviceAdded) {
+            const expertProduct = getExpertAdviceProduct();
+            // Check if expert advice not already in cart
+            const hasExpert = state.items.some(i => i.product.id === EXPERT_ADVICE_PRODUCT_ID);
+            if (!hasExpert) {
+              newItems = [...newItems, { product: expertProduct, quantity: 1 }];
+              newExpertAdviceAdded = true;
+            }
+          }
+          
+          return { items: newItems, expertAdviceAdded: newExpertAdviceAdded };
         });
       },
 
