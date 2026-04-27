@@ -252,9 +252,9 @@
   .cart-note{font-size:12px;color:var(--slate);text-align:center;margin-top:10px;line-height:1.5;}
 
   /* ── CHECKOUT MODAL ── */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity 0.3s;}
   .modal-overlay.open{opacity:1;pointer-events:all;}
-  .modal-box{background:var(--white);border-radius:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.3);animation:slideUp 0.3s ease both;}
+  .modal-box{background:var(--white);border-radius:24px;width:100%;max-width:520px;max-height:calc(100vh - 40px);overflow-y:auto;overflow-x:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.3);animation:slideUp 0.3s ease both;margin:20px auto;-webkit-overflow-scrolling:touch;}
   @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   .modal-head{padding:28px 28px 20px;border-bottom:1px solid rgba(11,31,75,0.08);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--white);z-index:1;border-radius:24px 24px 0 0;}
   .modal-head h2{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--navy);}
@@ -470,9 +470,9 @@
   }
 
   /* ── UPI QR PAYMENT MODAL ── */
-  .upi-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:450;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+  .upi-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:450;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity 0.3s;}
   .upi-modal-overlay.open{opacity:1;pointer-events:all;}
-  .upi-modal-box{background:var(--white);border-radius:24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,0.3);animation:slideUp 0.3s ease both;overflow:hidden;}
+  .upi-modal-box{background:var(--white);border-radius:24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,0.35);overflow-y:auto;overflow-x:hidden;max-height:calc(100vh - 40px);margin:20px auto;-webkit-overflow-scrolling:touch;}
   .upi-modal-head{background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;}
   .upi-modal-head h2{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--white);}
   .upi-modal-head p{font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;}
@@ -511,7 +511,7 @@
 <nav>
   <div class="nav-inner">
     <a href="#" class="nav-brand">
-      <img src="logo.png" alt="Harsh CSC eMitra" class="nav-logo" onerror="this.style.display='none'"/>
+      <img src="logo.png" alt="Harsh CSC eMitra" class="nav-logo" onerror="this.outerHTML='<div style=\'width:160px;height:160px;border-radius:10px;border:2px dashed var(--saffron);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;background:rgba(232,103,26,0.05);\'>📱<div style=\'font-size:12px;color:var(--saffron);font-weight:700;margin-top:8px;\'>Scan UPI ID<\/div><div style=\'font-size:11px;color:var(--slate);margin-top:4px;\'>7023029903@hdfcbank<\/div><\/div>'"/>
       <div class="nav-name">Harsh CSC eMitra<span>Digital Experts & Documentation · Est. 2017</span></div>
     </a>
     <div class="nav-links">
@@ -1338,7 +1338,7 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <img src="logo.png" alt="Logo" class="nav-logo" onerror="this.style.display='none'"/>
+        <img src="logo.png" alt="Logo" class="nav-logo" onerror="this.outerHTML='<div style=\'width:160px;height:160px;border-radius:10px;border:2px dashed var(--saffron);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;background:rgba(232,103,26,0.05);\'>📱<div style=\'font-size:12px;color:var(--saffron);font-weight:700;margin-top:8px;\'>Scan UPI ID<\/div><div style=\'font-size:11px;color:var(--slate);margin-top:4px;\'>7023029903@hdfcbank<\/div><\/div>'"/>
         <p>Harsh CSC eMitra — Your trusted independent documentation consultancy and premium printing hub since 2017. We specialize in private expert guidance for all your documentation and professional printing needs across Rajasthan.</p>
       </div>
       <div class="footer-col">
@@ -1640,7 +1640,7 @@
               <div style="text-align:center;margin-bottom:12px;">
                 <img src="qr.jpeg" alt="UPI QR Code" 
                   style="width:160px;height:160px;border-radius:10px;border:2px solid var(--saffron);"
-                  onerror="this.style.display='none'"/>
+                  onerror="this.outerHTML='<div style=\'width:160px;height:160px;border-radius:10px;border:2px dashed var(--saffron);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;background:rgba(232,103,26,0.05);\'>📱<div style=\'font-size:12px;color:var(--saffron);font-weight:700;margin-top:8px;\'>Scan UPI ID<\/div><div style=\'font-size:11px;color:var(--slate);margin-top:4px;\'>7023029903@hdfcbank<\/div><\/div>'"/>
                 <div style="font-size:12px;color:var(--saffron);font-weight:700;margin-top:6px;">Screenshot share karein WhatsApp pe</div>
               </div>
               <!-- Payment Done Button -->
@@ -2289,8 +2289,7 @@
 
 ` +
       `📦 Items:
-${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('
-')}
+${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('\n')}
 
 ` +
       `💰 Total: ₹${total.toLocaleString('en-IN')}
