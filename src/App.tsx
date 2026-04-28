@@ -93,18 +93,6 @@ export default function App() {
                   <Route path="/track"       element={<OrderTracking />} />
                   <Route path="/track/:ref"  element={<OrderTracking />} />
 
-                  {/* Customer Auth Routes */}
-                  <Route path="/login" element={
-                    <Suspense fallback={<PageLoader />}>
-                      {React.createElement(require('./pages/CustomerAuth').default, { mode: 'login' })}
-                    </Suspense>
-                  } />
-                  <Route path="/signup" element={
-                    <Suspense fallback={<PageLoader />}>
-                      {React.createElement(require('./pages/CustomerAuth').default, { mode: 'signup' })}
-                    </Suspense>
-                  } />
-
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

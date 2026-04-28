@@ -23,7 +23,7 @@ function validateForm(info: CustomerInfo): FormErrors {
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart, addExpertAdvice, removeExpertAdvice, hasExpertAdvice } = useCartStore();
+  const { items, totalPrice, clearCart } = useCartStore();
   const { lang } = useLanguageStore();
   const t = createT(lang);
 
@@ -34,7 +34,6 @@ export default function Checkout() {
   const [apiError, setApiError] = useState('');
 
   const total = totalPrice();
-  const expertInCart = hasExpertAdvice();
 
   // Redirect if cart is empty
   if (items.length === 0) {
@@ -154,39 +153,6 @@ export default function Checkout() {
               }}>
                 {total === 0 ? t('card.free') : `₹${total}`}
               </span>
-            </div>
-
-            {/* Expert Advice Toggle */}
-            <div style={{
-              marginTop: '16px', padding: '14px',
-              background: expertInCart ? 'rgba(52,211,153,0.1)' : 'rgba(251,191,36,0.1)',
-              border: `1px solid ${expertInCart ? 'var(--green)' : 'var(--amber)'}`,
-              borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '24px' }}>👨‍💼</span>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: '13px', color: expertInCart ? 'var(--green)' : 'var(--amber)' }}>
-                    {lang === 'hi' ? 'विशेषज्ञ सलाह (Free)' : 'Expert Advice (Free)'}
-                  </p>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                    {lang === 'hi' ? 'ऑर्डर के साथ मुफ्त परामर्श' : 'Free consultation with your order'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => expertInCart ? removeExpertAdvice() : addExpertAdvice()}
-                style={{
-                  padding: '8px 16px', borderRadius: '20px', border: 'none',
-                  fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                  background: expertInCart ? 'var(--green)' : 'var(--amber)',
-                  color: expertInCart ? '#fff' : '#000',
-                }}
-              >
-                {expertInCart ? (lang === 'hi' ? '✓ जोड़ा गया' : '✓ Added') : (lang === 'hi' ? '+ जोड़ें' : '+ Add')}
-              </button>
             </div>
           </div>
 

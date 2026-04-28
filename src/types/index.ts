@@ -15,7 +15,6 @@ export interface Product {
   originalPrice?: number;
   category: Category;
   emoji: string;
-  imageUrl?: string; // Cloud Storage URL
   description: string;
   descriptionHi: string;
   documents: string[];
@@ -23,9 +22,6 @@ export interface Product {
   badge?: string;
   turnaround?: string;
   turnaroundHi?: string;
-  isActive?: boolean; // Enable/disable product
-  formFields?: ProductFormField[]; // Custom form fields for this service
-  expertAdviceIncluded?: boolean; // Auto-add Expert Primary Advice with this product
 }
 
 export interface CatalogResponse {
@@ -36,28 +32,6 @@ export interface CatalogResponse {
 export interface ProductDetailResponse {
   product: Product;
   related: Product[];
-}
-
-// ─── Product Form Builder ───────────────────────────────────────────────────
-
-export type FormFieldType = 'text' | 'number' | 'select' | 'checkbox' | 'date' | 'textarea' | 'email' | 'phone';
-
-export interface ProductFormField {
-  id: string;
-  productId: string;
-  fieldName: string; // Field key (e.g., "aadhaar_number")
-  fieldNameHi: string; // Hindi label
-  label: string; // Display label English
-  labelHi: string; // Display label Hindi
-  type: FormFieldType;
-  required: boolean;
-  placeholder?: string;
-  placeholderHi?: string;
-  options?: string[]; // For select type
-  optionsHi?: string[]; // For select type Hindi
-  helpText?: string;
-  helpTextHi?: string;
-  order: number; // Display order
 }
 
 // ─── Cart ────────────────────────────────────────────────────────────────────

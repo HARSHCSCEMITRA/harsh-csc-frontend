@@ -148,31 +148,9 @@ export const CartDrawer: React.FC = () => {
 
                   {/* Right */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px' }}>
-                        {item.product.price === 0 ? t('card.free') : `₹${item.product.price * item.quantity}`}
-                      </span>
-                      {/* Delete button for each item */}
-                      <button
-                        onClick={() => removeItem(item.product.id)}
-                        style={{
-                          background: 'rgba(239,68,68,0.1)',
-                          border: 'none',
-                          borderRadius: '6px',
-                          padding: '6px 10px',
-                          color: 'var(--red)',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          transition: 'all var(--transition)',
-                        }}
-                        title={t('cart.removeItem') || 'Remove item'}
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px' }}>
+                      {item.product.price === 0 ? t('card.free') : `₹${item.product.price * item.quantity}`}
+                    </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <QuantityStepper
                         value={item.quantity}

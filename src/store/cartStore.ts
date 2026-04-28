@@ -1,12 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CartItem, Product } from '../types';
-import { EXPERT_ADVICE_PRODUCT_ID, getExpertAdviceProduct } from './productStore';
 
 interface CartState {
   items: CartItem[];
   isOpen: boolean;
-  expertAdviceAdded: boolean; // Track if expert advice was auto-added
 
   // Actions
   addItem: (product: Product) => void;
@@ -16,11 +14,6 @@ interface CartState {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  
-  // Expert Advice auto-add
-  addExpertAdvice: () => void;
-  removeExpertAdvice: () => void;
-  hasExpertAdvice: () => boolean;
 
   // Computed
   totalItems: () => number;
@@ -32,7 +25,6 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      expertAdviceAdded: false,
 
       addItem: (product) => {
         set(state => {
@@ -46,22 +38,7 @@ export const useCartStore = create<CartState>()(
               ),
             };
           }
-          
-          // Auto-add Expert Primary Advice if product has expertAdviceIncluded
-          let newItems = [...state.items, { product, quantity: 1 }];
-          let newExpertAdviceAdded = state.expertAdviceAdded;
-          
-          if (product.expertAdviceIncluded && !state.expertAdviceAdded) {
-            const expertProduct = getExpertAdviceProduct();
-            // Check if expert advice not already in cart
-            const hasExpert = state.items.some(i => i.product.id === EXPERT_ADVICE_PRODUCT_ID);
-            if (!hasExpert) {
-              newItems = [...newItems, { product: expertProduct, quantity: 1 }];
-              newExpertAdviceAdded = true;
-            }
-          }
-          
-          return { items: newItems, expertAdviceAdded: newExpertAdviceAdded };
+          return { items: [...state.items, { product, quantity: 1 }] };
         });
       },
 
@@ -83,35 +60,11 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [], expertAdviceAdded: false }),
+      clearCart: () => set({ items: [] }),
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set(state => ({ isOpen: !state.isOpen })),
-
-      // Expert Advice functions
-      addExpertAdvice: () => {
-        const expertProduct = getExpertAdviceProduct();
-        set(state => {
-          const alreadyHas = state.items.some(i => i.product.id === EXPERT_ADVICE_PRODUCT_ID);
-          if (alreadyHas) return state;
-          return {
-            items: [...state.items, { product: expertProduct, quantity: 1 }],
-            expertAdviceAdded: true
-          };
-        });
-      },
-
-      removeExpertAdvice: () => {
-        set(state => ({
-          items: state.items.filter(i => i.product.id !== EXPERT_ADVICE_PRODUCT_ID),
-          expertAdviceAdded: false
-        }));
-      },
-
-      hasExpertAdvice: () => {
-        return get().items.some(i => i.product.id === EXPERT_ADVICE_PRODUCT_ID);
-      },
 
       totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
       totalPrice: () => get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
@@ -119,7 +72,7 @@ export const useCartStore = create<CartState>()(
     {
       name: 'csc-emitra-cart',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items, expertAdviceAdded: state.expertAdviceAdded }),
+      partialize: (state) => ({ items: state.items }),
     }
   )
 );
