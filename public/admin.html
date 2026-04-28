@@ -209,35 +209,62 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;margin-right:12px;}
 .overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49;display:none;}
 .overlay-bg.show{display:block;}
-/* PRODUCT CARDS */
+/* ANALYTICS */
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:160px;padding:8px 0;}
+.chart-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--saffron),var(--gold));min-height:4px;transition:height 0.4s;}
+.chart-bar-label{font-size:9px;color:var(--text3);text-align:center;}
+.chart-bar-val{font-size:9px;color:var(--text2);font-weight:700;}
+/* COUPON */
+.coupon-card{background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;}
+.coupon-code{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--saffron);letter-spacing:2px;background:rgba(232,103,26,0.1);padding:6px 14px;border-radius:8px;}
+.coupon-info{flex:1;}
+.coupon-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.coupon-meta{font-size:11px;color:var(--text3);}
+/* STAFF */
+.staff-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;}
+.staff-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;}
+.staff-info{flex:1;}
+.staff-name{font-size:14px;font-weight:600;}
+.staff-role{font-size:11px;color:var(--text3);}
+.perm-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(232,103,26,0.12);color:var(--saffron);margin:2px;}
+/* DOCS */
+.doc-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.doc-row:hover{background:var(--surface2);}
+.doc-icon{font-size:22px;flex-shrink:0;}
+.doc-info{flex:1;min-width:0;}
+.doc-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-meta{font-size:11px;color:var(--text3);}
+
 .product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.2s,transform 0.15s;position:relative;}
 .product-card:hover{border-color:var(--border2);transform:translateY(-2px);}
-.product-card.inactive{opacity:0.6;}
-.product-card-img{width:100%;height:140px;object-fit:cover;background:var(--surface2);}
-.product-card-img-placeholder{width:100%;height:140px;background:linear-gradient(135deg,var(--surface2),var(--surface3));display:flex;align-items:center;justify-content:center;font-size:36px;}
+.product-card.inactive{opacity:0.55;}
+.product-card-img{width:100%;height:130px;object-fit:cover;background:var(--surface2);}
+.product-card-img-placeholder{width:100%;height:130px;background:linear-gradient(135deg,var(--surface2),var(--surface3));display:flex;align-items:center;justify-content:center;font-size:34px;}
 .product-card-body{padding:14px;}
-.product-card-title{font-size:15px;font-weight:700;margin-bottom:4px;}
-.product-card-desc{font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5;}
-.product-price-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.product-price{font-size:18px;font-weight:700;color:var(--gold);font-family:var(--mono);}
-.product-mrp{font-size:12px;color:var(--text3);text-decoration:line-through;}
-.product-badge{position:absolute;top:10px;right:10px;background:var(--saffron);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
-.product-status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;}
-.product-status-active{background:rgba(34,197,94,0.15);color:var(--green);}
-.product-status-inactive{background:rgba(239,68,68,0.15);color:var(--red);}
-.product-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
-
+.product-card-title{font-size:14px;font-weight:700;margin-bottom:3px;line-height:1.3;}
+.product-card-desc{font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5;}
+.product-price-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.product-price{font-size:17px;font-weight:700;color:var(--gold);font-family:var(--mono);}
+.product-mrp{font-size:11px;color:var(--text3);text-decoration:line-through;}
+.product-offer-badge{position:absolute;top:8px;right:8px;background:var(--saffron);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
+.product-status-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.psp-active{background:rgba(34,197,94,0.15);color:var(--green);}
+.psp-inactive{background:rgba(239,68,68,0.15);color:var(--red);}
 /* FORM BUILDER */
-.fb-field-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:grab;}
-.fb-field-item:active{cursor:grabbing;}
-.fb-field-handle{color:var(--text3);font-size:16px;flex-shrink:0;}
-.fb-field-info{flex:1;}
-.fb-field-label{font-size:13px;font-weight:600;margin-bottom:2px;}
-.fb-field-type{font-size:11px;color:var(--text3);}
-.fb-field-actions{display:flex;gap:5px;}
-.fb-product-item{padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;margin-bottom:2px;transition:all 0.15s;border:1px solid transparent;}
-.fb-product-item:hover{background:var(--surface2);}
-.fb-product-item.active{background:rgba(232,103,26,0.12);color:var(--saffron);border-color:rgba(232,103,26,0.3);font-weight:600;}
+.fb-field-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:grab;user-select:none;}
+.fb-field-item:hover{border-color:var(--border2);}
+.fb-field-handle{color:var(--text3);font-size:15px;flex-shrink:0;}
+.fb-field-info{flex:1;min-width:0;}
+.fb-field-label{font-size:13px;font-weight:600;margin-bottom:1px;}
+.fb-field-meta{font-size:11px;color:var(--text3);}
+.fb-prod-item{padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;margin-bottom:2px;transition:all 0.15s;border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;}
+.fb-prod-item:hover{background:var(--surface2);}
+.fb-prod-item.active{background:rgba(232,103,26,0.12);color:var(--saffron);border-color:rgba(232,103,26,0.3);font-weight:600;}
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -281,6 +308,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div class="nav-section">Products & Services</div>
       <button class="nav-item" id="nav-products" onclick="showPage('products',this)"><span class="nav-icon">🛍️</span>Manage Products</button>
       <button class="nav-item" id="nav-formbuilder" onclick="showPage('formbuilder',this)"><span class="nav-icon">📝</span>Form Builder</button>
+      <div class="nav-section">Tools</div>
+      <button class="nav-item" id="nav-analytics" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span>Analytics</button>
+      <button class="nav-item" id="nav-coupons" onclick="showPage('coupons',this)"><span class="nav-icon">🏷️</span>Coupons</button>
+      <button class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="nav-icon">👥</span>Staff Access</button>
+      <button class="nav-item" id="nav-docs" onclick="showPage('docs',this)"><span class="nav-icon">📁</span>Documents</button>
       <div class="nav-section">Manage</div>
       <button class="nav-item" id="nav-tracking" onclick="showPage('tracking',this)"><span class="nav-icon">📮</span>Add Tracking</button>
       <button class="nav-item" id="nav-messages" onclick="showPage('messages',this)"><span class="nav-icon"><img class="wa-icon-nav" src="" alt="WA" style="width:16px;height:16px;vertical-align:middle;border-radius:4px;"></span>Send WhatsApp</button>
@@ -542,111 +574,306 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
 
-      <!-- PRODUCTS PAGE -->
-      <div class="page" id="page-products">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <div>
-            <h2 style="font-size:20px;font-weight:700;">🛍️ Manage Products & Services</h2>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;">Website pe jo services dikhti hain, unhe yahan se manage karo</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PRODUCTS PAGE                          -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="page-products" style="display:none;padding:28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:700;margin:0;">🛍️ Manage Products & Services</h2>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Website pe jo services dikhti hain unhe yahan se manage karo — add, edit, price, offer, image sab kuch</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-sm btn-secondary" onclick="exportProductsCSV()">📥 Export CSV</button>
+      <button class="btn-sm btn-primary" onclick="openProductModal(null)">➕ Add New Product</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
+    <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="ps_total">0</div><div class="stat-icon">🛍️</div></div>
+    <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="ps_active">0</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card red"><div class="stat-label">Inactive</div><div class="stat-value" id="ps_inactive">0</div><div class="stat-icon">❌</div></div>
+    <div class="stat-card blue"><div class="stat-label">With Offers</div><div class="stat-value" id="ps_offers">0</div><div class="stat-icon">🏷️</div></div>
+    <div class="stat-card purple"><div class="stat-label">Featured</div><div class="stat-value" id="ps_featured">0</div><div class="stat-icon">⭐</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <input class="search-box" id="prod_search" placeholder="Search products..." oninput="renderProductsPage()" style="width:200px;"/>
+    <select class="filter-select" id="prod_filter_status" onchange="renderProductsPage()">
+      <option value="">All Status</option>
+      <option value="active">Active Only</option>
+      <option value="inactive">Inactive Only</option>
+    </select>
+    <select class="filter-select" id="prod_filter_cat" onchange="renderProductsPage()">
+      <option value="">All Categories</option>
+      <option>Gazette</option><option>BPR</option><option>PVC</option>
+      <option>Government</option><option>Digital Services</option><option>Other</option>
+    </select>
+  </div>
+  <div id="productsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- FORM BUILDER PAGE                      -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="page-formbuilder" style="display:none;padding:28px;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin:0;">📝 Form Builder</h2>
+    <div style="font-size:12px;color:var(--text3);margin-top:3px;">Har service ke liye custom form fields banao — customer se data collect karne ke liye</div>
+  </div>
+  <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;">
+    <div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">📦 Services</div></div>
+        <div style="padding:10px;" id="fb_prod_list"><div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Loading...</div></div>
+      </div>
+      <div class="card" style="margin-top:12px;" id="fb_add_panel_card">
+        <div class="card-head"><div class="card-title">➕ Add Field</div></div>
+        <div style="padding:12px;" id="fb_add_panel"><div style="font-size:12px;color:var(--text3);text-align:center;padding:10px;">Service pehle select karo</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="fb_title">← Service select karo</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm btn-secondary" id="fb_preview_btn" onclick="fbPreviewForm()" style="display:none;">👁 Preview</button>
+            <button class="btn-sm btn-primary" id="fb_save_btn" onclick="fbSaveConfirm()" style="display:none;">💾 Save</button>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-sm btn-secondary" onclick="exportProductsCSV()">📥 Export CSV</button>
-            <button class="btn-sm btn-primary" onclick="openProductModal()">➕ Add New Product</button>
-          </div>
         </div>
-
-        <!-- Stats Row -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;" id="prodStatsRow">
-          <div class="stat-card orange"><div class="stat-label">Total Products</div><div class="stat-value" id="prodStatTotal">0</div><div class="stat-icon">🛍️</div></div>
-          <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="prodStatActive">0</div><div class="stat-icon">✅</div></div>
-          <div class="stat-card red"><div class="stat-label">Inactive</div><div class="stat-value" id="prodStatInactive">0</div><div class="stat-icon">❌</div></div>
-          <div class="stat-card blue"><div class="stat-label">With Offers</div><div class="stat-value" id="prodStatOffers">0</div><div class="stat-icon">🏷️</div></div>
-        </div>
-
-        <!-- Filter Bar -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-          <input class="search-box" id="searchProducts" placeholder="Search products..." oninput="renderProductsPage()" style="width:220px;"/>
-          <select class="filter-select" id="filterProductStatus" onchange="renderProductsPage()">
-            <option value="">All Status</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
-          </select>
-          <select class="filter-select" id="filterProductCategory" onchange="renderProductsPage()">
-            <option value="">All Categories</option>
-            <option value="Gazette">Gazette</option>
-            <option value="BPR">Project Report</option>
-            <option value="PVC">PVC Cards</option>
-            <option value="Government">Government</option>
-            <option value="Digital">Digital Services</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <!-- Products Grid -->
-        <div id="productsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
-          <div style="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1;"><div class="spinner"></div><div style="margin-top:10px;">Loading products...</div></div>
+        <div id="fb_fields" style="padding:16px;min-height:260px;">
+          <div style="text-align:center;padding:40px;color:var(--text3);"><div style="font-size:36px;opacity:0.25;margin-bottom:10px;">📝</div>Left se service select karo</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
 
-      <!-- FORM BUILDER PAGE -->
-      <div class="page" id="page-formbuilder">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <div>
-            <h2 style="font-size:20px;font-weight:700;">📝 Form Builder</h2>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;">Har service ke liye custom form fields banao — customer se data collect karne ke liye</div>
+<!-- ═══════════════════════ ANALYTICS PAGE ═══════════════════════ -->
+<div class="page" id="page-analytics" style="display:none;padding:28px;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin:0;">📈 Analytics</h2>
+    <div style="font-size:12px;color:var(--text3);margin-top:3px;">Orders, revenue aur services ka performance dekho</div>
+  </div>
+  <!-- Top Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;" id="an_stats"></div>
+  <!-- Charts Row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">📅 Monthly Revenue (₹)</div></div>
+      <div style="padding:16px;">
+        <div class="chart-bar-wrap" id="an_rev_chart"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📦 Monthly Orders</div></div>
+      <div style="padding:16px;">
+        <div class="chart-bar-wrap" id="an_ord_chart"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Service breakdown -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">🏆 Top Services</div></div>
+      <div id="an_top_services" style="padding:0 4px 8px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📊 Order Status Breakdown</div></div>
+      <div id="an_status_break" style="padding:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ COUPONS PAGE ═══════════════════════ -->
+<div class="page" id="page-coupons" style="display:none;padding:28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:700;margin:0;">🏷️ Coupon Codes</h2>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Discount codes banao aur manage karo</div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="openCouponModal(null)">➕ New Coupon</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
+    <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="cp_total">0</div><div class="stat-icon">🏷️</div></div>
+    <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="cp_active">0</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card blue"><div class="stat-label">Used</div><div class="stat-value" id="cp_used">0</div><div class="stat-icon">🔢</div></div>
+    <div class="stat-card purple"><div class="stat-label">Total Savings</div><div class="stat-value" id="cp_saved">₹0</div><div class="stat-icon">💰</div></div>
+  </div>
+  <div id="coupons_list" style="display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<!-- ═══════════════════════ STAFF PAGE ═══════════════════════ -->
+<div class="page" id="page-staff" style="display:none;padding:28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:700;margin:0;">👥 Staff Access</h2>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Staff accounts aur unke permissions manage karo</div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="openStaffModal(null)">➕ Add Staff</button>
+  </div>
+  <div style="margin-bottom:16px;padding:14px 16px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);border-radius:var(--radius);font-size:13px;color:var(--gold);">
+    ⚠️ Staff members admin panel ka limited version dekhenge — sirf unhe assign ki gayi pages dikhegi
+  </div>
+  <div id="staff_list" style="display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<!-- ═══════════════════════ DOCUMENTS PAGE ═══════════════════════ -->
+<div class="page" id="page-docs" style="display:none;padding:28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:700;margin:0;">📁 Document Manager</h2>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Customers ke documents ek jagah — upload, view, download</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <input class="search-box" id="doc_search" placeholder="Search by name, order..." oninput="renderDocs()" style="width:200px;"/>
+      <button class="btn-sm btn-primary" onclick="openDocUploadModal()">📤 Upload Doc</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
+    <div class="stat-card blue"><div class="stat-label">Total Docs</div><div class="stat-value" id="doc_total">0</div><div class="stat-icon">📁</div></div>
+    <div class="stat-card orange"><div class="stat-label">Pending Review</div><div class="stat-value" id="doc_pending">0</div><div class="stat-icon">⏳</div></div>
+    <div class="stat-card green"><div class="stat-label">Approved</div><div class="stat-value" id="doc_approved">0</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card red"><div class="stat-label">Rejected</div><div class="stat-value" id="doc_rejected">0</div><div class="stat-icon">❌</div></div>
+  </div>
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+    <button class="btn-sm btn-primary" id="docTab_all" onclick="setDocTab('all',this)">All</button>
+    <button class="btn-sm btn-secondary" id="docTab_pending" onclick="setDocTab('pending',this)">⏳ Pending</button>
+    <button class="btn-sm btn-secondary" id="docTab_approved" onclick="setDocTab('approved',this)">✅ Approved</button>
+    <button class="btn-sm btn-secondary" id="docTab_rejected" onclick="setDocTab('rejected',this)">❌ Rejected</button>
+  </div>
+  <div class="card">
+    <div id="docs_table"></div>
+  </div>
+</div>
+
+<!-- COUPON MODAL -->
+<div class="modal-bg" id="couponModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head"><h3 id="cp_modal_title">➕ New Coupon</h3><button class="modal-close" onclick="closeModal('couponModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="cp_id"/>
+      <div class="form-row">
+        <div class="f-group">
+          <label>Coupon Code *</label>
+          <div style="display:flex;gap:8px;">
+            <input class="f-input" id="cp_code" placeholder="e.g. HARSH10" style="text-transform:uppercase;flex:1;" oninput="this.value=this.value.toUpperCase()"/>
+            <button class="btn-sm btn-secondary" onclick="genCouponCode()">🎲 Generate</button>
           </div>
         </div>
-
-        <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;" id="formBuilderLayout">
-          <!-- Left: Product Selector -->
-          <div>
-            <div class="card">
-              <div class="card-head"><div class="card-title">📦 Select Service</div></div>
-              <div style="padding:12px;" id="fbProductList">
-                <div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">Loading services...</div>
-              </div>
-            </div>
-            <div class="card" style="margin-top:12px;">
-              <div class="card-head"><div class="card-title">➕ Add Field</div></div>
-              <div style="padding:14px;" id="fbAddFieldPanel">
-                <div style="font-size:12px;color:var(--text3);text-align:center;padding:16px;">Select a service first</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Form Preview & Fields -->
-          <div>
-            <div class="card">
-              <div class="card-head">
-                <div class="card-title" id="fbSelectedProductTitle">Select a service to edit its form</div>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn-sm btn-secondary" onclick="fbPreviewForm()" id="fbPreviewBtn" style="display:none;">👁 Preview</button>
-                  <button class="btn-sm btn-primary" onclick="fbSaveFields()" id="fbSaveBtn" style="display:none;">💾 Save Fields</button>
-                </div>
-              </div>
-              <div id="fbFieldsContainer" style="padding:16px;min-height:300px;">
-                <div style="text-align:center;padding:40px;color:var(--text3);">
-                  <div style="font-size:32px;opacity:0.3;margin-bottom:10px;">📝</div>
-                  <div>Left se koi service select karo</div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="f-group">
+          <label>Discount Type</label>
+          <select class="f-select" id="cp_type" onchange="updateCouponPreview()">
+            <option value="percent">Percentage (%) OFF</option>
+            <option value="flat">Flat Amount (₹) OFF</option>
+            <option value="free">Free Service</option>
+          </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="f-group"><label>Discount Value</label><input class="f-input" id="cp_value" type="number" placeholder="10 for 10% or ₹10" oninput="updateCouponPreview()"/></div>
+        <div class="f-group"><label>Min Order Amount (₹)</label><input class="f-input" id="cp_min" type="number" placeholder="0 = no minimum"/></div>
+      </div>
+      <div id="cp_preview_box" style="display:none;background:rgba(232,103,26,0.1);border:1px dashed rgba(232,103,26,0.4);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--saffron);font-weight:600;text-align:center;"></div>
+      <div class="form-row">
+        <div class="f-group"><label>Max Uses (0 = unlimited)</label><input class="f-input" id="cp_max_use" type="number" placeholder="0" value="0"/></div>
+        <div class="f-group"><label>Expiry Date (optional)</label><input class="f-input" id="cp_expiry" type="date"/></div>
+      </div>
+      <div class="form-row single"><div class="f-group"><label>Description / Note</label><input class="f-input" id="cp_desc" placeholder="e.g. Diwali Offer, First Order Discount"/></div></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+        <div class="toggle on" id="cp_active_toggle" onclick="this.classList.toggle('on')"></div>
+        <span style="font-size:13px;">Active (customers use kar sakte hain)</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveCoupon()">💾 Save Coupon</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal('couponModal')">Cancel</button>
+    </div>
+  </div>
+</div>
 
+<!-- STAFF MODAL -->
+<div class="modal-bg" id="staffModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-head"><h3 id="staff_modal_title">➕ Add Staff Member</h3><button class="modal-close" onclick="closeModal('staffModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="st_id"/>
+      <div class="form-row">
+        <div class="f-group"><label>Full Name *</label><input class="f-input" id="st_name" placeholder="Staff ka naam"/></div>
+        <div class="f-group"><label>Role</label>
+          <select class="f-select" id="st_role">
+            <option value="manager">Manager</option>
+            <option value="operator">Operator</option>
+            <option value="viewer">Viewer (Read Only)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="f-group"><label>Username *</label><input class="f-input" id="st_user" placeholder="login ke liye username"/></div>
+        <div class="f-group"><label>Password *</label><input class="f-input" id="st_pass" type="password" placeholder="strong password"/></div>
+      </div>
+      <div style="margin-top:4px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;">📋 Page Permissions (kya kya dekh sakta hai)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="st_perms">
+          ${['dashboard','orders','consultations','gazette','bpr','pvc','products','formbuilder','analytics','coupons','tracking','messages','settings'].map(p=>`
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" class="st_perm_cb" value="${p}" ${['dashboard','orders'].includes(p)?'checked':''}/> ${p.charAt(0).toUpperCase()+p.slice(1)}
+          </label>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="toggle on" id="st_active_toggle" onclick="this.classList.toggle('on')"></div>
+        <span style="font-size:13px;">Account Active</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveStaff()">💾 Save Staff</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal('staffModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOC UPLOAD MODAL -->
+<div class="modal-bg" id="docUploadModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head"><h3>📤 Upload Document</h3><button class="modal-close" onclick="closeModal('docUploadModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="f-group"><label>Customer Name *</label><input class="f-input" id="du_name" placeholder="Customer ka naam"/></div>
+        <div class="f-group"><label>Order Ref</label><input class="f-input" id="du_order" placeholder="e.g. ORD-1234"/></div>
+      </div>
+      <div class="form-row single"><div class="f-group"><label>Document Type *</label>
+        <select class="f-select" id="du_type">
+          <option>Aadhaar Card</option><option>PAN Card</option><option>Passport Photo</option>
+          <option>Address Proof</option><option>Income Certificate</option><option>Birth Certificate</option>
+          <option>Caste Certificate</option><option>Other</option>
+        </select>
+      </div></div>
+      <div class="form-row single"><div class="f-group">
+        <label>Document URL / Link *</label>
+        <input class="f-input" id="du_url" placeholder="Google Drive link, Cloudinary URL, ya koi bhi link"/>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;">Google Drive mein upload karo aur shareable link paste karo</div>
+      </div></div>
+      <div class="form-row single"><div class="f-group"><label>Note / Remarks</label><input class="f-input" id="du_note" placeholder="Koi additional info"/></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveDoc()">💾 Save Document</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal('docUploadModal')">Cancel</button>
     </div>
   </div>
 </div>
 
 <!-- PRODUCT ADD/EDIT MODAL -->
 <div class="modal-bg" id="productModal">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-head"><h3 id="productModalTitle">➕ Add New Product</h3><button class="modal-close" onclick="closeModal('productModal')">✕</button></div>
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-head"><h3 id="pm_title">➕ Add New Product</h3><button class="modal-close" onclick="closeModal('productModal')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="pm_id"/>
       <div class="form-row">
-        <div class="f-group"><label>Product / Service Name *</label><input class="f-input" id="pm_name" placeholder="e.g. Gazette Notification"/></div>
+        <div class="f-group"><label>Service / Product Name *</label><input class="f-input" id="pm_name" placeholder="e.g. Gazette Notification"/></div>
         <div class="f-group"><label>Category</label>
           <select class="f-select" id="pm_category">
             <option>Gazette</option><option>BPR</option><option>PVC</option>
@@ -655,68 +882,40 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
       <div class="form-row">
-        <div class="f-group"><label>Selling Price (₹) *</label><input class="f-input" id="pm_price" type="number" placeholder="5100" oninput="calcDiscount()"/></div>
-        <div class="f-group"><label>Original / MRP Price (₹)</label><input class="f-input" id="pm_mrp" type="number" placeholder="6000" oninput="calcDiscount()"/></div>
+        <div class="f-group"><label>Selling Price (₹) *</label><input class="f-input" id="pm_price" type="number" placeholder="5100" oninput="pmCalcDiscount()"/></div>
+        <div class="f-group"><label>MRP / Original Price (₹)</label><input class="f-input" id="pm_mrp" type="number" placeholder="6000 (optional)" oninput="pmCalcDiscount()"/></div>
       </div>
+      <div id="pm_discount_row" style="display:none;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--gold);font-weight:600;"></div>
       <div class="form-row">
-        <div class="f-group"><label>Offer / Badge Text</label><input class="f-input" id="pm_offer" placeholder="e.g. 15% OFF | Best Seller | New"/></div>
+        <div class="f-group"><label>Offer Badge Text</label><input class="f-input" id="pm_offer" placeholder="e.g. 15% OFF | Best Seller | Limited Time"/></div>
         <div class="f-group"><label>Delivery Time</label><input class="f-input" id="pm_delivery" placeholder="e.g. 7-10 Working Days"/></div>
       </div>
-      <div style="background:rgba(245,200,66,0.12);border:1px solid rgba(245,200,66,0.3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:8px;" id="discountPreview" style="display:none;">
-        <span style="color:var(--gold);">🏷️</span> <span id="discountText" style="color:var(--gold);font-weight:600;"></span>
-      </div>
       <div class="form-row single">
-        <div class="f-group"><label>Product Image URL</label>
-          <input class="f-input" id="pm_image" placeholder="https://i.imgur.com/abc.jpg or Cloudinary URL" oninput="previewImage()"/>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Cloudinary, Imgur, Google Drive Direct Link ya koi bhi image URL daalein</div>
-          <div id="imgPreviewBox" style="display:none;margin-top:8px;">
-            <img id="imgPreview" src="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.parentElement.style.display='none'"/>
-          </div>
-        </div>
-      </div>
-      <div class="form-row single">
-        <div class="f-group"><label>Short Description</label>
-          <input class="f-input" id="pm_short_desc" placeholder="1-2 line mein service describe karo"/>
-        </div>
-      </div>
-      <div class="form-row single">
-        <div class="f-group"><label>Full Description / Details</label>
-          <textarea class="f-textarea" id="pm_description" rows="3" placeholder="Service ki poori details, kya kya milega, process kya hai..."></textarea>
-        </div>
-      </div>
-      <div class="form-row single">
-        <div class="f-group"><label>Documents Required (ek line mein alag alag)</label>
-          <textarea class="f-textarea" id="pm_documents" rows="2" placeholder="Aadhaar Card, PAN Card, Photo, Address Proof"></textarea>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
         <div class="f-group">
-          <label>Status</label>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-            <div class="toggle on" id="pm_active_toggle" onclick="this.classList.toggle('on')"></div>
-            <span style="font-size:13px;color:var(--text2);">Active (Website pe dikhega)</span>
-          </div>
+          <label>Product Image URL</label>
+          <input class="f-input" id="pm_image" placeholder="https://i.imgur.com/xxx.jpg  ya  Cloudinary URL" oninput="pmPreviewImg()"/>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">Cloudinary / Imgur / Google Drive direct link — koi bhi image URL</div>
+          <img id="pm_img_preview" src="" style="display:none;width:72px;height:72px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border);" onerror="this.style.display='none'"/>
+        </div>
+      </div>
+      <div class="form-row single"><div class="f-group"><label>Short Description (1-2 lines)</label><input class="f-input" id="pm_short" placeholder="Service ki summary"/></div></div>
+      <div class="form-row single"><div class="f-group"><label>Full Description / Details</label><textarea class="f-textarea" id="pm_desc" rows="3" placeholder="Poori details, process, kya milega..."></textarea></div></div>
+      <div class="form-row single"><div class="f-group"><label>Documents Required (comma se separate)</label><input class="f-input" id="pm_docs" placeholder="Aadhaar Card, PAN Card, Photo, Address Proof"/></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0;">
+        <div class="f-group">
+          <label style="display:block;margin-bottom:6px;">Status</label>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="toggle on" id="pm_active" onclick="this.classList.toggle('on')"></div><span style="font-size:12px;">Active</span></div>
         </div>
         <div class="f-group">
-          <label>Featured / Popular</label>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-            <div class="toggle" id="pm_featured_toggle" onclick="this.classList.toggle('on')"></div>
-            <span style="font-size:13px;color:var(--text2);">Mark as Featured</span>
-          </div>
+          <label style="display:block;margin-bottom:6px;">Featured</label>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="toggle" id="pm_featured" onclick="this.classList.toggle('on')"></div><span style="font-size:12px;">Mark Featured</span></div>
         </div>
         <div class="f-group">
-          <label>Auto-add Expert Advice</label>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-            <div class="toggle" id="pm_expert_toggle" onclick="this.classList.toggle('on')"></div>
-            <span style="font-size:13px;color:var(--text2);">Expert Advice ke saath</span>
-          </div>
+          <label style="display:block;margin-bottom:6px;">Expert Advice</label>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="toggle" id="pm_expert" onclick="this.classList.toggle('on')"></div><span style="font-size:12px;">Auto-add</span></div>
         </div>
       </div>
-      <div class="form-row single">
-        <div class="f-group"><label>Sort Order (lower = pehle dikhega)</label>
-          <input class="f-input" id="pm_sort" type="number" placeholder="1" value="99"/>
-        </div>
-      </div>
+      <div class="form-row single"><div class="f-group"><label>Sort Order (1 = pehle dikhega)</label><input class="f-input" id="pm_sort" type="number" value="99"/></div></div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveProduct()">💾 Save Product</button>
@@ -727,9 +926,9 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
 <!-- FORM PREVIEW MODAL -->
 <div class="modal-bg" id="fbPreviewModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-head"><h3 id="fbPreviewTitle">Form Preview</h3><button class="modal-close" onclick="closeModal('fbPreviewModal')">✕</button></div>
-    <div class="modal-body" id="fbPreviewBody"></div>
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head"><h3 id="fb_preview_title">Form Preview</h3><button class="modal-close" onclick="closeModal('fbPreviewModal')">✕</button></div>
+    <div class="modal-body" id="fb_preview_body"></div>
     <div class="modal-footer"><button class="btn-sm btn-secondary" onclick="closeModal('fbPreviewModal')">Close</button></div>
   </div>
 </div>
@@ -1893,15 +2092,30 @@ function closeConfirm() { document.getElementById('confirmBg').classList.remove(
 //  UI HELPERS
 // ══════════════════════════════════════════
 function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    if (NEW_PAGES.includes(p.id.replace('page-',''))) p.style.display = 'none';
+  });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
   const page = document.getElementById('page-' + name);
-  if (page) page.classList.add('active');
+  if (page) {
+    if (NEW_PAGES.includes(name)) page.style.display = 'block';
+    else page.classList.add('active');
+  }
   if (btn) btn.classList.add('active');
-  const titles = { dashboard: 'Dashboard', orders: 'All Orders', consultations: 'Consultations', gazette: 'Gazette Orders', bpr: 'Project Reports', pvc: 'PVC Cards', tracking: 'Add Tracking', messages: 'Send WhatsApp', settings: 'Settings', products: '🛍️ Manage Products', formbuilder: '📝 Form Builder' };
+
+  const NEW_PAGES = ['products','formbuilder','analytics','coupons','staff','docs'];
+  const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents' };
   document.getElementById('pageTitle').textContent = titles[name] || name;
-  if (name === 'products') renderProductsPage();
-  if (name === 'formbuilder') { renderFBProductList(); renderFBAddPanel(); }
+
+  if (name === 'products')   renderProductsPage();
+  if (name === 'formbuilder'){ fbRenderProductList(); fbRenderAddPanel(); }
+  if (name === 'analytics')  renderAnalytics();
+  if (name === 'coupons')    renderCoupons();
+  if (name === 'staff')      renderStaff();
+  if (name === 'docs')       renderDocs();
   closeSidebar();
 }
 function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
@@ -2479,72 +2693,70 @@ function generateInvoice(ref, service) {
   }, 600);
 }
 
-
 // ══════════════════════════════════════════
 //  PRODUCTS MANAGEMENT
 // ══════════════════════════════════════════
-const PRODUCTS_KEY = 'hsc_products_v2';
+const PROD_KEY = 'hsc_products_v3';
 
 function getProducts() {
-  try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(PROD_KEY) || '[]'); } catch(e) { return []; }
 }
-function saveProducts(prods) {
-  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(prods));
-}
+function setProducts(arr) { localStorage.setItem(PROD_KEY, JSON.stringify(arr)); }
 
 function renderProductsPage() {
-  const prods = getProducts();
-  const search = (document.getElementById('searchProducts')?.value || '').toLowerCase();
-  const fStatus = document.getElementById('filterProductStatus')?.value || '';
-  const fCat = document.getElementById('filterProductCategory')?.value || '';
+  const all = getProducts();
+  const q   = (document.getElementById('prod_search')?.value || '').toLowerCase();
+  const fs  = document.getElementById('prod_filter_status')?.value || '';
+  const fc  = document.getElementById('prod_filter_cat')?.value || '';
 
-  const active = prods.filter(p => p.isActive !== false);
-  const inactive = prods.filter(p => p.isActive === false);
-  const withOffers = prods.filter(p => p.offerText || (p.mrp && p.mrp > p.price));
+  // Stats
+  document.getElementById('ps_total').textContent    = all.length;
+  document.getElementById('ps_active').textContent   = all.filter(p => p.active !== false).length;
+  document.getElementById('ps_inactive').textContent = all.filter(p => p.active === false).length;
+  document.getElementById('ps_offers').textContent   = all.filter(p => p.offer || (p.mrp > p.price)).length;
+  document.getElementById('ps_featured').textContent = all.filter(p => p.featured).length;
 
-  document.getElementById('prodStatTotal').textContent = prods.length;
-  document.getElementById('prodStatActive').textContent = active.length;
-  document.getElementById('prodStatInactive').textContent = inactive.length;
-  document.getElementById('prodStatOffers').textContent = withOffers.length;
-
-  const filtered = prods.filter(p => {
-    const txt = `${p.name || ''} ${p.description || ''} ${p.category || ''}`.toLowerCase();
-    const statusOk = !fStatus || (fStatus === 'active' ? p.isActive !== false : p.isActive === false);
-    const catOk = !fCat || p.category === fCat;
-    return (!search || txt.includes(search)) && statusOk && catOk;
-  }).sort((a,b) => (a.sortOrder||99) - (b.sortOrder||99));
+  const list = all
+    .filter(p => {
+      const txt = (p.name+' '+(p.shortDesc||'')+(p.category||'')).toLowerCase();
+      const okQ = !q || txt.includes(q);
+      const okS = !fs || (fs==='active' ? p.active!==false : p.active===false);
+      const okC = !fc || p.category===fc;
+      return okQ && okS && okC;
+    })
+    .sort((a,b) => (a.sort||99)-(b.sort||99));
 
   const grid = document.getElementById('productsGrid');
-  if (!filtered.length) {
-    grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);grid-column:1/-1;"><div style="font-size:40px;opacity:0.3;margin-bottom:12px;">🛍️</div><div style="font-size:16px;">Koi product nahi mila</div><div style="font-size:13px;margin-top:6px;">Upar "+ Add New Product" button se product add karo</div></div>';
+  if (!list.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);"><div style="font-size:40px;opacity:0.25;margin-bottom:12px;">🛍️</div><div style="font-size:15px;margin-bottom:6px;">Koi product nahi mila</div><div style="font-size:12px;">Upar "➕ Add New Product" se add karo</div></div>';
     return;
   }
 
-  grid.innerHTML = filtered.map(p => {
-    const discount = p.mrp && p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
-    return `
-    <div class="product-card ${p.isActive === false ? 'inactive' : ''}">
-      ${p.offerText ? `<div class="product-badge">${p.offerText}</div>` : discount ? `<div class="product-badge">${discount}% OFF</div>` : ''}
-      ${p.imageUrl
-        ? `<img class="product-card-img" src="${p.imageUrl}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="product-card-img-placeholder" style="display:none;">🛍️</div>`
+  grid.innerHTML = list.map(p => {
+    const disc = p.mrp && p.mrp > p.price ? Math.round((1-p.price/p.mrp)*100) : 0;
+    const badge = p.offer || (disc ? disc+'% OFF' : '');
+    return `<div class="product-card ${p.active===false?'inactive':''}">
+      ${badge ? `<div class="product-offer-badge">${badge}</div>` : ''}
+      ${p.image
+        ? `<img class="product-card-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'"/>`
         : `<div class="product-card-img-placeholder">🛍️</div>`}
       <div class="product-card-body">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-          <div class="product-card-title">${p.name || '—'}</div>
-          <span class="product-status-badge ${p.isActive !== false ? 'product-status-active' : 'product-status-inactive'}">${p.isActive !== false ? '✅ Active' : '❌ Off'}</span>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px;">
+          <div class="product-card-title">${p.name}</div>
+          <span class="product-status-pill ${p.active!==false?'psp-active':'psp-inactive'}">${p.active!==false?'✅ On':'❌ Off'}</span>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${p.category || ''} ${p.deliveryTime ? '· '+p.deliveryTime : ''}</div>
-        <div class="product-card-desc">${(p.shortDesc || p.description || '').substring(0,80)}${(p.shortDesc || p.description || '').length > 80 ? '...' : ''}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">${p.category||''}${p.delivery?' · '+p.delivery:''}</div>
+        <div class="product-card-desc">${(p.shortDesc||p.desc||'').slice(0,75)}${(p.shortDesc||p.desc||'').length>75?'...':''}</div>
         <div class="product-price-row">
-          <div class="product-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
-          ${p.mrp && p.mrp > p.price ? `<div class="product-mrp">₹${Number(p.mrp).toLocaleString('en-IN')}</div><span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);font-size:10px;">${discount}% OFF</span>` : ''}
+          <span class="product-price">₹${Number(p.price).toLocaleString('en-IN')}</span>
+          ${disc ? `<span class="product-mrp">₹${Number(p.mrp).toLocaleString('en-IN')}</span><span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);font-size:10px;padding:2px 6px;">${disc}% OFF</span>` : ''}
         </div>
-        ${p.expertAdvice ? '<div style="font-size:11px;color:var(--saffron);margin-bottom:8px;">⭐ Expert Advice included</div>' : ''}
-        ${p.isFeatured ? '<div style="font-size:11px;color:var(--blue);margin-bottom:6px;">🔥 Featured Product</div>' : ''}
-        <div class="product-card-actions">
+        ${p.expert ? '<div style="font-size:11px;color:var(--saffron);margin-bottom:6px;">⭐ Expert Advice included</div>' : ''}
+        ${p.featured ? '<div style="font-size:11px;color:#60a5fa;margin-bottom:4px;">🔥 Featured</div>' : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
           <button class="btn-sm btn-primary" style="flex:1;" onclick="openProductModal('${p.id}')">✏️ Edit</button>
-          <button class="btn-sm ${p.isActive !== false ? 'btn-secondary' : 'btn-green'}" onclick="toggleProductActive('${p.id}')">${p.isActive !== false ? '⏸ Deactivate' : '▶ Activate'}</button>
-          <button class="btn-sm btn-red" onclick="confirmDeleteProduct('${p.id}')">🗑️</button>
+          <button class="btn-sm btn-secondary" onclick="prodToggleActive('${p.id}')">${p.active!==false?'⏸ Off':'▶ On'}</button>
+          <button class="btn-sm btn-red" onclick="prodDelete('${p.id}')">🗑️</button>
         </div>
       </div>
     </div>`;
@@ -2552,409 +2764,722 @@ function renderProductsPage() {
 }
 
 function openProductModal(id) {
-  const prods = getProducts();
-  const p = id ? prods.find(x => x.id === id) : null;
-  document.getElementById('productModalTitle').textContent = p ? '✏️ Edit Product' : '➕ Add New Product';
-  document.getElementById('pm_id').value = p ? p.id : '';
-  document.getElementById('pm_name').value = p?.name || '';
+  const p = id ? getProducts().find(x => x.id===id) : null;
+  document.getElementById('pm_title').textContent = p ? '✏️ Edit Product' : '➕ Add New Product';
+  document.getElementById('pm_id').value       = p?.id || '';
+  document.getElementById('pm_name').value     = p?.name || '';
   document.getElementById('pm_category').value = p?.category || 'Gazette';
-  document.getElementById('pm_price').value = p?.price || '';
-  document.getElementById('pm_mrp').value = p?.mrp || '';
-  document.getElementById('pm_offer').value = p?.offerText || '';
-  document.getElementById('pm_delivery').value = p?.deliveryTime || '';
-  document.getElementById('pm_image').value = p?.imageUrl || '';
-  document.getElementById('pm_short_desc').value = p?.shortDesc || '';
-  document.getElementById('pm_description').value = p?.description || '';
-  document.getElementById('pm_documents').value = p?.documents || '';
-  document.getElementById('pm_sort').value = p?.sortOrder ?? 99;
-
-  const activeToggle = document.getElementById('pm_active_toggle');
-  const featuredToggle = document.getElementById('pm_featured_toggle');
-  const expertToggle = document.getElementById('pm_expert_toggle');
-  if (p?.isActive === false) activeToggle.classList.remove('on'); else activeToggle.classList.add('on');
-  if (p?.isFeatured) featuredToggle.classList.add('on'); else featuredToggle.classList.remove('on');
-  if (p?.expertAdvice) expertToggle.classList.add('on'); else expertToggle.classList.remove('on');
-
-  // Preview image if URL exists
-  if (p?.imageUrl) { document.getElementById('imgPreview').src = p.imageUrl; document.getElementById('imgPreviewBox').style.display = 'block'; }
-  else { document.getElementById('imgPreviewBox').style.display = 'none'; }
-
-  calcDiscount();
+  document.getElementById('pm_price').value    = p?.price || '';
+  document.getElementById('pm_mrp').value      = p?.mrp || '';
+  document.getElementById('pm_offer').value    = p?.offer || '';
+  document.getElementById('pm_delivery').value = p?.delivery || '';
+  document.getElementById('pm_image').value    = p?.image || '';
+  document.getElementById('pm_short').value    = p?.shortDesc || '';
+  document.getElementById('pm_desc').value     = p?.desc || '';
+  document.getElementById('pm_docs').value     = p?.docs || '';
+  document.getElementById('pm_sort').value     = p?.sort ?? 99;
+  // Toggles
+  const setToggle = (id, val) => { const el = document.getElementById(id); el.classList.toggle('on', !!val); };
+  setToggle('pm_active',   p ? p.active !== false : true);
+  setToggle('pm_featured', !!p?.featured);
+  setToggle('pm_expert',   !!p?.expert);
+  // Image preview
+  const imgEl = document.getElementById('pm_img_preview');
+  if (p?.image) { imgEl.src = p.image; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
+  pmCalcDiscount();
   openModal('productModal');
 }
 
-function previewImage() {
+function pmPreviewImg() {
   const url = document.getElementById('pm_image').value.trim();
-  const box = document.getElementById('imgPreviewBox');
-  const img = document.getElementById('imgPreview');
-  if (url) { img.src = url; box.style.display = 'block'; } else box.style.display = 'none';
+  const el  = document.getElementById('pm_img_preview');
+  if (url) { el.src = url; el.style.display = 'block'; } else el.style.display = 'none';
 }
 
-function calcDiscount() {
-  const price = Number(document.getElementById('pm_price').value) || 0;
-  const mrp = Number(document.getElementById('pm_mrp').value) || 0;
-  const preview = document.getElementById('discountPreview');
-  const text = document.getElementById('discountText');
+function pmCalcDiscount() {
+  const price = Number(document.getElementById('pm_price').value)||0;
+  const mrp   = Number(document.getElementById('pm_mrp').value)||0;
+  const row   = document.getElementById('pm_discount_row');
   if (mrp > price && price > 0) {
-    const disc = Math.round((1 - price/mrp)*100);
-    const save = mrp - price;
-    text.textContent = `${disc}% OFF — Customer ₹${save.toLocaleString('en-IN')} bachayega!`;
-    preview.style.display = 'flex';
-  } else {
-    preview.style.display = 'none';
-  }
+    const d = Math.round((1-price/mrp)*100);
+    row.textContent = `🏷️ ${d}% OFF — Customer ₹${(mrp-price).toLocaleString('en-IN')} bachayega!`;
+    row.style.display = 'block';
+  } else row.style.display = 'none';
 }
 
 function saveProduct() {
-  const name = document.getElementById('pm_name').value.trim();
+  const name  = document.getElementById('pm_name').value.trim();
   const price = Number(document.getElementById('pm_price').value);
-  if (!name) { showToast('Product name required!', 'error'); return; }
-  if (!price) { showToast('Price required!', 'error'); return; }
+  if (!name)  { showToast('Product name likhna zaroori hai!', 'error'); return; }
+  if (!price) { showToast('Price likhna zaroori hai!', 'error'); return; }
 
   const prods = getProducts();
-  const id = document.getElementById('pm_id').value;
-  const now = new Date().toISOString();
-
-  const data = {
-    id: id || 'prod_' + Date.now(),
+  const id    = document.getElementById('pm_id').value;
+  const now   = new Date().toISOString();
+  const obj   = {
+    id:       id || 'p_'+Date.now(),
     name,
     category: document.getElementById('pm_category').value,
     price,
-    mrp: Number(document.getElementById('pm_mrp').value) || 0,
-    offerText: document.getElementById('pm_offer').value.trim(),
-    deliveryTime: document.getElementById('pm_delivery').value.trim(),
-    imageUrl: document.getElementById('pm_image').value.trim(),
-    shortDesc: document.getElementById('pm_short_desc').value.trim(),
-    description: document.getElementById('pm_description').value.trim(),
-    documents: document.getElementById('pm_documents').value.trim(),
-    sortOrder: Number(document.getElementById('pm_sort').value) || 99,
-    isActive: document.getElementById('pm_active_toggle').classList.contains('on'),
-    isFeatured: document.getElementById('pm_featured_toggle').classList.contains('on'),
-    expertAdvice: document.getElementById('pm_expert_toggle').classList.contains('on'),
+    mrp:      Number(document.getElementById('pm_mrp').value)||0,
+    offer:    document.getElementById('pm_offer').value.trim(),
+    delivery: document.getElementById('pm_delivery').value.trim(),
+    image:    document.getElementById('pm_image').value.trim(),
+    shortDesc:document.getElementById('pm_short').value.trim(),
+    desc:     document.getElementById('pm_desc').value.trim(),
+    docs:     document.getElementById('pm_docs').value.trim(),
+    sort:     Number(document.getElementById('pm_sort').value)||99,
+    active:   document.getElementById('pm_active').classList.contains('on'),
+    featured: document.getElementById('pm_featured').classList.contains('on'),
+    expert:   document.getElementById('pm_expert').classList.contains('on'),
     updatedAt: now,
-    createdAt: id ? (prods.find(p => p.id === id)?.createdAt || now) : now
+    createdAt: id ? (prods.find(p=>p.id===id)?.createdAt||now) : now
   };
 
   if (id) {
-    const idx = prods.findIndex(p => p.id === id);
-    if (idx >= 0) prods[idx] = data; else prods.push(data);
+    const i = prods.findIndex(p=>p.id===id);
+    if (i>=0) prods[i]=obj; else prods.push(obj);
   } else {
-    prods.push(data);
+    prods.push(obj);
   }
-
-  saveProducts(prods);
-  syncProductsToSupabase(data, !!id);
+  setProducts(prods);
   closeModal('productModal');
   renderProductsPage();
-  renderFBProductList();
-  showToast(`✅ Product "${name}" ${id ? 'updated' : 'added'}!`, 'success');
+  fbRenderProductList();
+  showToast(`✅ "${name}" ${id?'updated':'added'} successfully!`, 'success');
 }
 
-function toggleProductActive(id) {
+function prodToggleActive(id) {
   const prods = getProducts();
-  const p = prods.find(x => x.id === id);
+  const p = prods.find(x=>x.id===id);
   if (!p) return;
-  p.isActive = p.isActive === false ? true : false;
+  p.active = p.active===false ? true : false;
   p.updatedAt = new Date().toISOString();
-  saveProducts(prods);
+  setProducts(prods);
   renderProductsPage();
-  showToast(p.isActive ? `✅ "${p.name}" Activated!` : `⏸ "${p.name}" Deactivated!`, 'success');
+  showToast(p.active ? `✅ "${p.name}" Activated!` : `⏸ "${p.name}" Deactivated!`, 'success');
 }
 
-function confirmDeleteProduct(id) {
-  const p = getProducts().find(x => x.id === id);
+function prodDelete(id) {
+  const p = getProducts().find(x=>x.id===id);
   if (!p) return;
-  showConfirm('🗑️', 'Delete Product?', `"${p.name}" permanently delete ho jayega!`, () => {
-    const prods = getProducts().filter(x => x.id !== id);
-    saveProducts(prods);
+  showConfirm('🗑️','Delete Product?',`"${p.name}" permanently delete ho jayega!`, () => {
+    setProducts(getProducts().filter(x=>x.id!==id));
     renderProductsPage();
-    renderFBProductList();
-    showToast(`✅ Product deleted!`, 'success');
+    fbRenderProductList();
+    showToast('🗑️ Product deleted', 'info');
   });
 }
 
 function exportProductsCSV() {
-  const rows = [['ID','Name','Category','Price','MRP','Offer','Status','Featured','Expert Advice','Created']];
-  getProducts().forEach(p => rows.push([p.id,p.name,p.category,p.price,p.mrp||'',p.offerText||'',p.isActive!==false?'Active':'Inactive',p.isFeatured?'Yes':'No',p.expertAdvice?'Yes':'No',fmtDate(p.createdAt)]));
-  downloadCSV(rows, 'hsc_products_'+new Date().toISOString().split('T')[0]+'.csv');
-}
-
-// Sync to Supabase products table (optional — table may not exist)
-async function syncProductsToSupabase(product, isUpdate) {
-  try {
-    if (isUpdate) {
-      await sbUpdateByRef('products', 'product_id', product.id, product);
-    } else {
-      const data = { ...product, product_id: product.id };
-      await sbInsert('products', data);
-    }
-  } catch (e) { /* Supabase table optional, localStorage is primary */ }
-}
-
-// Load products from Supabase (if table exists, sync to localStorage)
-async function syncProductsFromSupabase() {
-  try {
-    const remote = await sbFetch('products', 'select=*');
-    if (remote && remote.length > 0) {
-      const local = getProducts();
-      if (local.length === 0) { // Only populate if local is empty
-        saveProducts(remote.map(p => ({ ...p, id: p.product_id || p.id })));
-      }
-    }
-  } catch(e) {}
+  const rows = [['ID','Name','Category','Price','MRP','Offer','Status','Featured','Expert','Created']];
+  getProducts().forEach(p => rows.push([p.id,p.name,p.category,p.price,p.mrp||'',p.offer||'',p.active!==false?'Active':'Inactive',p.featured?'Yes':'No',p.expert?'Yes':'No',fmtDate(p.createdAt)]));
+  downloadCSV(rows,'hsc_products_'+new Date().toISOString().split('T')[0]+'.csv');
 }
 
 // ══════════════════════════════════════════
 //  FORM BUILDER
 // ══════════════════════════════════════════
-const FORMS_KEY = 'hsc_forms_v2';
-let fbCurrentProductId = null;
-let fbDragIndex = null;
+const FB_KEY = 'hsc_forms_v3';
+let fbProdId  = null;
+let fbDragIdx = null;
 
-function getForms() {
-  try { return JSON.parse(localStorage.getItem(FORMS_KEY) || '{}'); } catch { return {}; }
-}
-function saveForms(forms) { localStorage.setItem(FORMS_KEY, JSON.stringify(forms)); }
-function getFormForProduct(prodId) { return getForms()[prodId] || []; }
-function saveFormForProduct(prodId, fields) { const f = getForms(); f[prodId] = fields; saveForms(f); }
+function fbGetForms()          { try { return JSON.parse(localStorage.getItem(FB_KEY)||'{}'); } catch(e) { return {}; } }
+function fbSetForms(obj)       { localStorage.setItem(FB_KEY, JSON.stringify(obj)); }
+function fbGetFields(pid)      { return fbGetForms()[pid] || []; }
+function fbSetFields(pid, arr) { const f=fbGetForms(); f[pid]=arr; fbSetForms(f); }
 
-const FB_FIELD_TYPES = {
-  text: { label: 'Text Input', icon: '📝' },
-  number: { label: 'Number', icon: '🔢' },
-  email: { label: 'Email', icon: '📧' },
-  tel: { label: 'Phone', icon: '📱' },
-  select: { label: 'Dropdown', icon: '📋' },
-  radio: { label: 'Radio Buttons', icon: '🔘' },
-  checkbox: { label: 'Checkbox', icon: '☑️' },
-  date: { label: 'Date Picker', icon: '📅' },
-  file: { label: 'File Upload', icon: '📎' },
-  textarea: { label: 'Long Text', icon: '📄' },
+const FB_TYPES = {
+  text:     {label:'Text Input',    icon:'📝'},
+  number:   {label:'Number',        icon:'🔢'},
+  email:    {label:'Email',         icon:'📧'},
+  tel:      {label:'Phone',         icon:'📱'},
+  select:   {label:'Dropdown',      icon:'📋'},
+  radio:    {label:'Radio Buttons', icon:'🔘'},
+  checkbox: {label:'Checkbox',      icon:'☑️'},
+  date:     {label:'Date Picker',   icon:'📅'},
+  file:     {label:'File Upload',   icon:'📎'},
+  textarea: {label:'Long Text',     icon:'📄'},
 };
 
-function renderFBProductList() {
+function fbRenderProductList() {
   const prods = getProducts();
-  const el = document.getElementById('fbProductList');
+  const el    = document.getElementById('fb_prod_list');
   if (!prods.length) {
-    el.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px;">Pehle Products page pe koi service add karo</div>';
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:14px;">Pehle Manage Products pe jao aur services add karo</div>';
     return;
   }
   el.innerHTML = prods.map(p => `
-    <div class="fb-product-item ${fbCurrentProductId === p.id ? 'active' : ''}" onclick="fbSelectProduct('${p.id}')">
-      <span style="margin-right:6px;">${p.isActive !== false ? '✅' : '❌'}</span>
-      <strong>${p.name}</strong>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px;">${getFormForProduct(p.id).length} fields configured</div>
+    <div class="fb-prod-item ${fbProdId===p.id?'active':''}" onclick="fbSelectProd('${p.id}')">
+      <span>${p.name}</span>
+      <span style="font-size:10px;color:var(--text3);">${fbGetFields(p.id).length} fields</span>
     </div>`).join('');
 }
 
-function fbSelectProduct(prodId) {
-  fbCurrentProductId = prodId;
-  const p = getProducts().find(x => x.id === prodId);
-  document.getElementById('fbSelectedProductTitle').textContent = `📝 ${p?.name || 'Service'} — Form Fields`;
-  document.getElementById('fbSaveBtn').style.display = '';
-  document.getElementById('fbPreviewBtn').style.display = '';
-  renderFBProductList();
-  renderFBFields();
-  renderFBAddPanel();
+function fbSelectProd(id) {
+  fbProdId = id;
+  const p  = getProducts().find(x=>x.id===id);
+  document.getElementById('fb_title').textContent = `📝 ${p?.name} — Form Fields`;
+  document.getElementById('fb_save_btn').style.display    = '';
+  document.getElementById('fb_preview_btn').style.display = '';
+  fbRenderProductList();
+  fbRenderFields();
+  fbRenderAddPanel();
 }
 
-function renderFBFields() {
-  if (!fbCurrentProductId) return;
-  const fields = getFormForProduct(fbCurrentProductId);
-  const el = document.getElementById('fbFieldsContainer');
+function fbRenderFields() {
+  if (!fbProdId) return;
+  const fields = fbGetFields(fbProdId);
+  const el     = document.getElementById('fb_fields');
   if (!fields.length) {
-    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);"><div style="font-size:28px;opacity:0.3;margin-bottom:8px;">📝</div><div>Abhi koi field nahi hai. Neeche se field type choose karo aur add karo.</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);"><div style="font-size:28px;opacity:0.25;margin-bottom:8px;">📝</div><div>Abhi koi field nahi. Neeche se add karo.</div></div>';
     return;
   }
   el.innerHTML = `
-    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Drag to reorder • ${fields.length} fields</div>
-    ${fields.map((f, i) => `
-    <div class="fb-field-item" draggable="true" ondragstart="fbDragStart(${i})" ondragover="fbDragOver(event,${i})" ondrop="fbDrop(${i})">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Drag ⠿ se reorder karo • ${fields.length} fields configured</div>
+    ${fields.map((f,i)=>`
+    <div class="fb-field-item" draggable="true"
+      ondragstart="fbDragIdx=${i}"
+      ondragover="event.preventDefault()"
+      ondrop="fbDrop(event,${i})">
       <div class="fb-field-handle">⠿</div>
       <div class="fb-field-info">
-        <div class="fb-field-label">${f.label} ${f.required ? '<span style="color:var(--red);">*</span>' : ''}</div>
-        <div class="fb-field-type">${FB_FIELD_TYPES[f.type]?.icon} ${FB_FIELD_TYPES[f.type]?.label || f.type} ${f.placeholder ? '· '+f.placeholder : ''} ${f.options ? '· ['+f.options.slice(0,2).join(', ')+(f.options.length>2?'...':'')+']' : ''}</div>
+        <div class="fb-field-label">${f.label}${f.required?' <span style="color:var(--red)">*</span>':''}</div>
+        <div class="fb-field-meta">${FB_TYPES[f.type]?.icon||''} ${FB_TYPES[f.type]?.label||f.type}${f.placeholder?' · '+f.placeholder:''}${f.options?.length?' · ['+f.options.slice(0,2).join(', ')+(f.options.length>2?'...':'')+']':''}</div>
       </div>
-      <div class="fb-field-actions">
+      <div style="display:flex;gap:4px;">
         <button class="btn-sm btn-orange" onclick="fbEditField(${i})">✏️</button>
-        <button class="btn-sm btn-red" onclick="fbDeleteField(${i})">🗑️</button>
+        <button class="btn-sm btn-red"    onclick="fbDelField(${i})">🗑️</button>
       </div>
     </div>`).join('')}`;
 }
 
-function renderFBAddPanel() {
-  const el = document.getElementById('fbAddFieldPanel');
-  if (!fbCurrentProductId) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px;">Select a service first</div>'; return; }
+function fbRenderAddPanel() {
+  const el = document.getElementById('fb_add_panel');
+  if (!fbProdId) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px;">Service pehle select karo</div>'; return; }
   el.innerHTML = `
-    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Choose Field Type</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-      ${Object.entries(FB_FIELD_TYPES).map(([type, {label, icon}]) => `
-        <button class="btn-sm btn-secondary" style="font-size:11px;justify-content:flex-start;gap:4px;" onclick="fbAddField('${type}')">
-          <span>${icon}</span> ${label}
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Field Type Choose Karo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">
+      ${Object.entries(FB_TYPES).map(([type,{label,icon}])=>`
+        <button class="btn-sm btn-secondary" style="font-size:11px;justify-content:flex-start;gap:3px;" onclick="fbAddField('${type}')">
+          ${icon} ${label}
         </button>`).join('')}
     </div>
-    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Quick Add Common Fields:</div>
-      ${[['Aadhaar Number','text','Aadhaar Card Number (12 digits)','number',true],
-         ['Mobile Number','tel','10-digit mobile number','',true],
-         ['Email Address','email','your@email.com','',false],
-         ['Date of Birth','date','','',true],
-         ['Full Address','textarea','Poora address dalein','',true],
-         ['Document Upload','file','PDF ya Image upload karo','',false]
-        ].map(([lbl,type,ph,intype,req]) => `
-        <button class="btn-sm btn-secondary" style="font-size:11px;width:100%;margin-bottom:4px;justify-content:flex-start;" onclick="fbQuickAdd(${JSON.stringify(lbl)},${JSON.stringify(type)},${JSON.stringify(ph)},${req})">
+    <div style="border-top:1px solid var(--border);padding-top:8px;">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">⚡ Quick Add Common Fields</div>
+      ${[
+        ['Aadhaar Number','text','12-digit Aadhaar number',true],
+        ['Mobile Number','tel','10-digit mobile number',true],
+        ['Email Address','email','your@email.com',false],
+        ['Date of Birth','date','',true],
+        ['Father\'s Name','text','Pita ka naam',true],
+        ['Full Address','textarea','Poora address dalein',true],
+        ['Document Upload','file','PDF ya Image',false],
+        ['PAN Card Number','text','10-digit PAN number',false],
+      ].map(([lbl,type,ph,req])=>`
+        <button class="btn-sm btn-secondary" style="width:100%;font-size:11px;margin-bottom:3px;justify-content:flex-start;" onclick="fbQuickAdd(${JSON.stringify(lbl)},${JSON.stringify(type)},${JSON.stringify(ph)},${req})">
           + ${lbl}
         </button>`).join('')}
     </div>`;
 }
 
 function fbAddField(type) {
-  const label = prompt(`Field ka naam dalein (e.g. "Aadhaar Number"):`);
-  if (!label) return;
-  const fields = getFormForProduct(fbCurrentProductId);
-  const newField = {
-    id: 'field_' + Date.now(),
-    type,
-    label: label.trim(),
-    placeholder: type === 'file' ? '' : `${label.trim()} dalein`,
-    required: confirm('Kya yeh field Required hai?'),
-    options: (type === 'select' || type === 'radio') ? (prompt('Options dalein, comma se separate karo:') || '').split(',').map(s=>s.trim()).filter(Boolean) : []
-  };
-  fields.push(newField);
-  saveFormForProduct(fbCurrentProductId, fields);
-  renderFBFields();
-  showToast(`✅ "${label}" field added!`, 'success');
+  const label = prompt(`Field ka naam dalein:\n(e.g. "Aadhaar Number", "Father's Name")`);
+  if (!label?.trim()) return;
+  const fields = fbGetFields(fbProdId);
+  const opts   = (type==='select'||type==='radio') ? (prompt('Options dalein, comma se alag karo:')||'').split(',').map(s=>s.trim()).filter(Boolean) : [];
+  fields.push({ id:'f_'+Date.now(), type, label:label.trim(), placeholder:type!=='file'&&type!=='date'&&type!=='checkbox' ? label.trim()+' dalein' : '', required:confirm('Kya yeh field required (zaroori) hai?'), options:opts });
+  fbSetFields(fbProdId, fields);
+  fbRenderFields();
+  showToast(`✅ "${label.trim()}" field add ho gaya!`, 'success');
 }
 
-function fbQuickAdd(label, type, placeholder, required) {
-  const fields = getFormForProduct(fbCurrentProductId);
-  fields.push({ id: 'field_' + Date.now(), type, label, placeholder, required, options: [] });
-  saveFormForProduct(fbCurrentProductId, fields);
-  renderFBFields();
-  showToast(`✅ "${label}" added!`, 'success');
+function fbQuickAdd(label, type, ph, required) {
+  const fields = fbGetFields(fbProdId);
+  fields.push({ id:'f_'+Date.now(), type, label, placeholder:ph, required, options:[] });
+  fbSetFields(fbProdId, fields);
+  fbRenderFields();
+  showToast(`✅ "${label}" add ho gaya!`, 'success');
 }
 
-function fbEditField(index) {
-  const fields = getFormForProduct(fbCurrentProductId);
-  const f = fields[index];
+function fbEditField(i) {
+  const fields = fbGetFields(fbProdId);
+  const f = fields[i];
   if (!f) return;
-  const newLabel = prompt('Field label:', f.label);
-  if (newLabel !== null) f.label = newLabel.trim() || f.label;
-  const newPh = prompt('Placeholder text:', f.placeholder || '');
-  if (newPh !== null) f.placeholder = newPh;
+  const nl = prompt('Field label:', f.label);
+  if (nl!==null) f.label = nl.trim()||f.label;
+  const np = prompt('Placeholder text:', f.placeholder||'');
+  if (np!==null) f.placeholder = np;
   f.required = confirm('Required field?');
-  if (f.type === 'select' || f.type === 'radio') {
-    const opts = prompt('Options (comma separated):', (f.options||[]).join(', '));
-    if (opts !== null) f.options = opts.split(',').map(s=>s.trim()).filter(Boolean);
+  if (f.type==='select'||f.type==='radio') {
+    const no = prompt('Options (comma separated):', (f.options||[]).join(', '));
+    if (no!==null) f.options = no.split(',').map(s=>s.trim()).filter(Boolean);
   }
-  saveFormForProduct(fbCurrentProductId, fields);
-  renderFBFields();
-  showToast('✅ Field updated!', 'success');
+  fbSetFields(fbProdId, fields);
+  fbRenderFields();
+  showToast('✅ Field update ho gaya!', 'success');
 }
 
-function fbDeleteField(index) {
-  const fields = getFormForProduct(fbCurrentProductId);
-  const name = fields[index]?.label;
-  if (!confirm(`"${name}" field delete karein?`)) return;
-  fields.splice(index, 1);
-  saveFormForProduct(fbCurrentProductId, fields);
-  renderFBFields();
+function fbDelField(i) {
+  const fields = fbGetFields(fbProdId);
+  if (!confirm(`"${fields[i]?.label}" delete karna chahte ho?`)) return;
+  fields.splice(i,1);
+  fbSetFields(fbProdId, fields);
+  fbRenderFields();
   showToast('🗑️ Field deleted', 'info');
 }
 
-function fbDragStart(i) { fbDragIndex = i; }
-function fbDragOver(e, i) { e.preventDefault(); }
-function fbDrop(toIndex) {
-  if (fbDragIndex === null || fbDragIndex === toIndex) return;
-  const fields = getFormForProduct(fbCurrentProductId);
-  const moved = fields.splice(fbDragIndex, 1)[0];
-  fields.splice(toIndex, 0, moved);
-  saveFormForProduct(fbCurrentProductId, fields);
-  fbDragIndex = null;
-  renderFBFields();
+function fbDrop(e, toIdx) {
+  e.preventDefault();
+  if (fbDragIdx===null || fbDragIdx===toIdx) return;
+  const fields = fbGetFields(fbProdId);
+  const moved  = fields.splice(fbDragIdx,1)[0];
+  fields.splice(toIdx,0,moved);
+  fbDragIdx = null;
+  fbSetFields(fbProdId, fields);
+  fbRenderFields();
 }
 
-function fbSaveFields() {
-  showToast('✅ Form fields saved successfully!', 'success');
-  renderFBProductList();
+function fbSaveConfirm() {
+  showToast('✅ Form fields save ho gaye!', 'success');
+  fbRenderProductList();
 }
 
 function fbPreviewForm() {
-  const p = getProducts().find(x => x.id === fbCurrentProductId);
-  const fields = getFormForProduct(fbCurrentProductId);
-  document.getElementById('fbPreviewTitle').textContent = `Preview — ${p?.name || 'Service'} Form`;
-  if (!fields.length) {
-    document.getElementById('fbPreviewBody').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">No fields configured yet</div>';
-  } else {
-    document.getElementById('fbPreviewBody').innerHTML = `
-      <div style="font-size:13px;color:var(--text3);margin-bottom:16px;">Yeh form customer ko dikhega jab vo yeh service order karega:</div>
-      ${fields.map(f => `
-        <div class="f-group" style="margin-bottom:14px;">
-          <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">${f.label}${f.required ? ' <span style="color:var(--red);">*</span>' : ''}</label>
-          ${f.type === 'select'
-            ? `<select class="f-select" disabled><option>-- Select ${f.label} --</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`
-            : f.type === 'radio'
-            ? `<div style="display:flex;gap:12px;flex-wrap:wrap;">${(f.options||[]).map(o=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" disabled/> ${o}</label>`).join('')}</div>`
-            : f.type === 'checkbox'
-            ? `<label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" disabled/> ${f.label}</label>`
-            : f.type === 'textarea'
+  const p = getProducts().find(x=>x.id===fbProdId);
+  document.getElementById('fb_preview_title').textContent = `Preview — ${p?.name}`;
+  const fields = fbGetFields(fbProdId);
+  document.getElementById('fb_preview_body').innerHTML = !fields.length
+    ? '<div style="text-align:center;padding:30px;color:var(--text3);">Koi field configure nahi kiya abhi tak</div>'
+    : `<div style="font-size:12px;color:var(--text3);margin-bottom:14px;">Yeh form customer ko dikhega jab vo yeh service order karega:</div>
+       ${fields.map(f=>`
+        <div class="f-group" style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">${f.label}${f.required?' <span style="color:var(--red)">*</span>':''}</label>
+          ${f.type==='select'
+            ? `<select class="f-select" disabled><option>-- ${f.label} choose karo --</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`
+            : f.type==='radio'
+            ? `<div style="display:flex;gap:10px;flex-wrap:wrap;">${(f.options||[]).map(o=>`<label style="display:flex;align-items:center;gap:5px;font-size:13px;"><input type="radio" disabled/>${o}</label>`).join('')}</div>`
+            : f.type==='checkbox'
+            ? `<label style="display:flex;align-items:center;gap:7px;font-size:13px;"><input type="checkbox" disabled/>${f.label}</label>`
+            : f.type==='textarea'
             ? `<textarea class="f-textarea" rows="3" placeholder="${f.placeholder||''}" disabled></textarea>`
-            : f.type === 'file'
-            ? `<input class="f-input" type="text" placeholder="📎 File choose karo..." disabled/>`
             : `<input class="f-input" type="${f.type}" placeholder="${f.placeholder||''}" disabled/>`
           }
         </div>`).join('')}`;
-  }
   openModal('fbPreviewModal');
 }
 
 // ══════════════════════════════════════════
-//  HOOK INTO EXISTING initApp
+//  ANALYTICS
 // ══════════════════════════════════════════
-const _origInitApp = initApp;
-// We extend initApp by calling our render functions after it loads
-const _origRefreshAll = refreshAll;
+function renderAnalytics() {
+  // Gather data from existing orders in Supabase cache or localStorage
+  const orders = window._cachedOrders || [];
+  const consults = window._cachedConsults || [];
 
-// Patch showPage to also render products/formbuilder when those pages are opened
-const _origShowPage = showPage;
-function showPage(name, btn) {
-  _origShowPage(name, btn);
-  if (name === 'products') renderProductsPage();
-  if (name === 'formbuilder') { renderFBProductList(); renderFBAddPanel(); }
-}
-
-// On app init, also sync products
-const _origLoadAllData = loadAllData;
-async function loadAllData() {
-  await _origLoadAllData();
-  // Load products from Supabase once on first load
-  if (!window._prodSynced) { window._prodSynced = true; syncProductsFromSupabase(); }
-}
-
-// Show dashboard export button
-window.addEventListener('DOMContentLoaded', () => {
-  // Add Export CSV button to topbar
-  const topbarRight = document.querySelector('.topbar-right');
-  if (topbarRight) {
-    const btn = document.createElement('button');
-    btn.className = 'btn-sm btn-secondary';
-    btn.innerHTML = '📊 Export';
-    btn.onclick = () => {
-      const menu = document.createElement('div');
-      menu.style.cssText = 'position:fixed;top:60px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:1000;min-width:160px;';
-      menu.innerHTML = `
-        <button class="btn-sm btn-secondary" style="width:100%;margin-bottom:4px;" onclick="exportOrders();this.closest('div').remove()">📦 Export Orders</button>
-        <button class="btn-sm btn-secondary" style="width:100%;margin-bottom:4px;" onclick="exportConsults();this.closest('div').remove()">📞 Export Consults</button>
-        <button class="btn-sm btn-secondary" style="width:100%;" onclick="exportProductsCSV();this.closest('div').remove()">🛍️ Export Products</button>`;
-      document.body.appendChild(menu);
-      setTimeout(() => document.addEventListener('click', () => menu.remove(), {once:true}), 100);
-    };
-    topbarRight.insertBefore(btn, topbarRight.querySelector('.btn-primary'));
+  // Build monthly buckets (last 6 months)
+  const months = [];
+  for (let i=5; i>=0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleString('default',{month:'short'}), rev:0, count:0 });
   }
-});
+  orders.forEach(o => {
+    const mk = (o.created_at||'').slice(0,7);
+    const m  = months.find(x=>x.key===mk);
+    if (m) { m.rev += Number(o.amount||0); m.count++; }
+  });
 
-// Add to showPage titles
-const _origTitles = { dashboard: 'Dashboard', orders: 'All Orders', consultations: 'Consultations', gazette: 'Gazette Orders', bpr: 'Project Reports', pvc: 'PVC Cards', tracking: 'Add Tracking', messages: 'Send WhatsApp', settings: 'Settings', products: '🛍️ Manage Products', formbuilder: '📝 Form Builder' };
+  // Stats
+  const totalRev  = orders.reduce((s,o)=>s+Number(o.amount||0),0);
+  const pending   = orders.filter(o=>o.status==='pending'||o.status==='processing').length;
+  const completed = orders.filter(o=>o.status==='completed'||o.status==='delivered').length;
+  document.getElementById('an_stats').innerHTML = `
+    <div class="stat-card orange"><div class="stat-label">Total Revenue</div><div class="stat-value" style="font-size:20px;">₹${totalRev.toLocaleString('en-IN')}</div><div class="stat-icon">💰</div></div>
+    <div class="stat-card blue"><div class="stat-label">Total Orders</div><div class="stat-value">${orders.length}</div><div class="stat-icon">📦</div></div>
+    <div class="stat-card green"><div class="stat-label">Completed</div><div class="stat-value">${completed}</div><div class="stat-icon">✅</div></div>
+    <div class="stat-card red"><div class="stat-label">Pending</div><div class="stat-value">${pending}</div><div class="stat-icon">⏳</div></div>
+    <div class="stat-card purple"><div class="stat-label">Consultations</div><div class="stat-value">${consults.length}</div><div class="stat-icon">📞</div></div>
+    <div class="stat-card orange"><div class="stat-label">Avg Order Value</div><div class="stat-value" style="font-size:16px;">₹${orders.length?Math.round(totalRev/orders.length).toLocaleString('en-IN'):0}</div><div class="stat-icon">📊</div></div>`;
 
+  // Revenue chart
+  const maxRev = Math.max(...months.map(m=>m.rev),1);
+  document.getElementById('an_rev_chart').innerHTML = months.map(m=>`
+    <div class="chart-bar-col">
+      <div class="chart-bar-val">₹${m.rev>=1000?Math.round(m.rev/1000)+'k':m.rev}</div>
+      <div class="chart-bar" style="height:${Math.round((m.rev/maxRev)*130)+4}px;"></div>
+      <div class="chart-bar-label">${m.label}</div>
+    </div>`).join('');
+
+  // Orders chart
+  const maxOrd = Math.max(...months.map(m=>m.count),1);
+  document.getElementById('an_ord_chart').innerHTML = months.map(m=>`
+    <div class="chart-bar-col">
+      <div class="chart-bar-val">${m.count}</div>
+      <div class="chart-bar" style="height:${Math.round((m.count/maxOrd)*130)+4}px;background:linear-gradient(180deg,#60a5fa,#3b82f6);"></div>
+      <div class="chart-bar-label">${m.label}</div>
+    </div>`).join('');
+
+  // Top services
+  const svcCount = {};
+  orders.forEach(o => { const s=o.service||o.service_type||'Other'; svcCount[s]=(svcCount[s]||0)+1; });
+  const topSvcs = Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxSvc  = topSvcs[0]?.[1]||1;
+  document.getElementById('an_top_services').innerHTML = topSvcs.length
+    ? topSvcs.map(([name,cnt])=>`
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+          <span>${name}</span><strong>${cnt} orders</strong>
+        </div>
+        <div style="height:6px;border-radius:3px;background:var(--surface3);overflow:hidden;">
+          <div style="height:100%;width:${Math.round(cnt/maxSvc*100)}%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:3px;"></div>
+        </div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:30px;color:var(--text3);">Abhi koi orders nahi hain</div>';
+
+  // Status breakdown
+  const statuses = {};
+  orders.forEach(o=>{ const s=o.status||'unknown'; statuses[s]=(statuses[s]||0)+1; });
+  const statusColors = { pending:'#f59e0b', processing:'#60a5fa', completed:'#22c55e', delivered:'#10b981', cancelled:'#ef4444' };
+  document.getElementById('an_status_break').innerHTML = Object.entries(statuses).length
+    ? Object.entries(statuses).map(([s,c])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${statusColors[s]||'var(--text3)'}"></div>
+          <span style="font-size:13px;text-transform:capitalize;">${s}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <strong style="font-size:13px;">${c}</strong>
+          <span style="font-size:11px;color:var(--text3);">${orders.length?Math.round(c/orders.length*100):0}%</span>
+        </div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:30px;color:var(--text3);">Koi data nahi</div>';
+}
+
+// ══════════════════════════════════════════
+//  COUPONS
+// ══════════════════════════════════════════
+const CP_KEY = 'hsc_coupons_v1';
+function getCoupons() { try { return JSON.parse(localStorage.getItem(CP_KEY)||'[]'); } catch(e){ return []; } }
+function setCoupons(a){ localStorage.setItem(CP_KEY, JSON.stringify(a)); }
+
+function renderCoupons() {
+  const cps = getCoupons();
+  document.getElementById('cp_total').textContent  = cps.length;
+  document.getElementById('cp_active').textContent = cps.filter(c=>c.active!==false && (!c.expiry||new Date(c.expiry)>=new Date())).length;
+  document.getElementById('cp_used').textContent   = cps.reduce((s,c)=>s+(c.usedCount||0),0);
+  const saved = cps.reduce((s,c)=>s+(c.totalSaved||0),0);
+  document.getElementById('cp_saved').textContent  = '₹'+saved.toLocaleString('en-IN');
+
+  const el = document.getElementById('coupons_list');
+  if (!cps.length) {
+    el.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);"><div style="font-size:40px;opacity:0.25;margin-bottom:12px;">🏷️</div><div>Koi coupon nahi. "➕ New Coupon" se banao.</div></div>';
+    return;
+  }
+  const now = new Date();
+  el.innerHTML = cps.map(c=>{
+    const expired = c.expiry && new Date(c.expiry) < now;
+    const isActive = c.active!==false && !expired;
+    return `<div class="coupon-card" style="${!isActive?'opacity:0.55':''}">
+      <div class="coupon-code">${c.code}</div>
+      <div class="coupon-info">
+        <div class="coupon-title">${c.type==='percent'?c.value+'% OFF':c.type==='flat'?'₹'+c.value+' OFF':'Free Service'}${c.minOrder?' (min ₹'+c.minOrder+')':''}</div>
+        <div class="coupon-meta">${c.desc||''}${c.expiry?' · Expires: '+fmtDate(c.expiry):''}${c.maxUse?' · Max uses: '+c.maxUse:' · Unlimited'}</div>
+        <div style="margin-top:4px;display:flex;gap:6px;align-items:center;">
+          <span class="product-status-pill ${isActive?'psp-active':'psp-inactive'}">${expired?'⏰ Expired':isActive?'✅ Active':'❌ Off'}</span>
+          <span style="font-size:11px;color:var(--text3);">Used ${c.usedCount||0} times · Saved ₹${(c.totalSaved||0).toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="btn-sm btn-primary" onclick="openCouponModal('${c.id}')">✏️ Edit</button>
+        <button class="btn-sm btn-secondary" onclick="cpToggle('${c.id}')">${c.active!==false?'⏸ Off':'▶ On'}</button>
+        <button class="btn-sm btn-red" onclick="cpDelete('${c.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openCouponModal(id) {
+  const c = id ? getCoupons().find(x=>x.id===id) : null;
+  document.getElementById('cp_modal_title').textContent = c ? '✏️ Edit Coupon' : '➕ New Coupon';
+  document.getElementById('cp_id').value      = c?.id||'';
+  document.getElementById('cp_code').value    = c?.code||'';
+  document.getElementById('cp_type').value    = c?.type||'percent';
+  document.getElementById('cp_value').value   = c?.value||'';
+  document.getElementById('cp_min').value     = c?.minOrder||'';
+  document.getElementById('cp_max_use').value = c?.maxUse||'0';
+  document.getElementById('cp_expiry').value  = c?.expiry||'';
+  document.getElementById('cp_desc').value    = c?.desc||'';
+  document.getElementById('cp_active_toggle').classList.toggle('on', c ? c.active!==false : true);
+  updateCouponPreview();
+  openModal('couponModal');
+}
+
+function genCouponCode() {
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const pre=['HARSH','CSC','OFFER','DEAL','SAVE','WIN'];
+  const rand = pre[Math.floor(Math.random()*pre.length)] + Math.random().toString(36).slice(2,5).toUpperCase();
+  document.getElementById('cp_code').value = rand;
+}
+
+function updateCouponPreview() {
+  const type  = document.getElementById('cp_type').value;
+  const val   = document.getElementById('cp_value').value;
+  const box   = document.getElementById('cp_preview_box');
+  if (!val) { box.style.display='none'; return; }
+  const txt = type==='percent' ? `${val}% discount milega!` : type==='flat' ? `₹${val} seedha discount milega!` : 'Free service milegi!';
+  box.textContent = '🏷️ ' + txt;
+  box.style.display = 'block';
+}
+
+function saveCoupon() {
+  const code = document.getElementById('cp_code').value.trim().toUpperCase();
+  const val  = Number(document.getElementById('cp_value').value)||0;
+  if (!code) { showToast('Coupon code required!','error'); return; }
+  if (!val && document.getElementById('cp_type').value!=='free') { showToast('Discount value required!','error'); return; }
+
+  const cps = getCoupons();
+  const id  = document.getElementById('cp_id').value;
+  // Check duplicate code
+  if (!id && cps.find(c=>c.code===code)) { showToast('Yeh code pehle se exist karta hai!','error'); return; }
+
+  const obj = {
+    id:       id||'cp_'+Date.now(),
+    code,
+    type:     document.getElementById('cp_type').value,
+    value:    val,
+    minOrder: Number(document.getElementById('cp_min').value)||0,
+    maxUse:   Number(document.getElementById('cp_max_use').value)||0,
+    expiry:   document.getElementById('cp_expiry').value||null,
+    desc:     document.getElementById('cp_desc').value.trim(),
+    active:   document.getElementById('cp_active_toggle').classList.contains('on'),
+    usedCount: id ? (cps.find(c=>c.id===id)?.usedCount||0) : 0,
+    totalSaved: id ? (cps.find(c=>c.id===id)?.totalSaved||0) : 0,
+    createdAt: id ? (cps.find(c=>c.id===id)?.createdAt||new Date().toISOString()) : new Date().toISOString()
+  };
+  if (id) { const i=cps.findIndex(c=>c.id===id); if(i>=0) cps[i]=obj; else cps.push(obj); }
+  else cps.push(obj);
+  setCoupons(cps);
+  closeModal('couponModal');
+  renderCoupons();
+  showToast(`✅ Coupon "${code}" ${id?'updated':'created'}!`, 'success');
+}
+
+function cpToggle(id) {
+  const cps=getCoupons(); const c=cps.find(x=>x.id===id); if(!c)return;
+  c.active=c.active===false?true:false;
+  setCoupons(cps); renderCoupons();
+  showToast(c.active?`✅ "${c.code}" Activated!`:`⏸ "${c.code}" Deactivated!`,'success');
+}
+
+function cpDelete(id) {
+  const c=getCoupons().find(x=>x.id===id); if(!c)return;
+  showConfirm('🗑️','Delete Coupon?',`"${c.code}" delete ho jayega!`,()=>{ setCoupons(getCoupons().filter(x=>x.id!==id)); renderCoupons(); showToast('🗑️ Coupon deleted','info'); });
+}
+
+// Coupon validation (use in checkout)
+function validateCoupon(code, orderAmount) {
+  const c = getCoupons().find(x=>x.code===code.toUpperCase()&&x.active!==false);
+  if (!c)              return { valid:false, msg:'Invalid coupon code' };
+  if (c.expiry && new Date(c.expiry)<new Date()) return { valid:false, msg:'Coupon expired ho gaya' };
+  if (c.maxUse && c.usedCount>=c.maxUse)         return { valid:false, msg:'Coupon limit khatam ho gayi' };
+  if (c.minOrder && orderAmount<c.minOrder)       return { valid:false, msg:`Min order ₹${c.minOrder} chahiye` };
+  const discount = c.type==='percent' ? Math.round(orderAmount*c.value/100) : c.type==='flat' ? c.value : orderAmount;
+  return { valid:true, discount, msg:`✅ ₹${discount} discount mila!`, coupon:c };
+}
+
+// ══════════════════════════════════════════
+//  STAFF MANAGEMENT
+// ══════════════════════════════════════════
+const ST_KEY = 'hsc_staff_v1';
+function getStaff() { try { return JSON.parse(localStorage.getItem(ST_KEY)||'[]'); } catch(e){ return []; } }
+function setStaff(a){ localStorage.setItem(ST_KEY, JSON.stringify(a)); }
+
+const ROLE_ICONS = { manager:'👔', operator:'🖥️', viewer:'👁️' };
+
+function renderStaff() {
+  const list = getStaff();
+  const el   = document.getElementById('staff_list');
+  if (!list.length) {
+    el.innerHTML='<div style="text-align:center;padding:60px;color:var(--text3);"><div style="font-size:40px;opacity:0.25;margin-bottom:12px;">👥</div><div>Koi staff member nahi. "➕ Add Staff" se add karo.</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(s=>`
+    <div class="staff-card" style="${s.active===false?'opacity:0.55':''}">
+      <div class="staff-avatar">${ROLE_ICONS[s.role]||'👤'}</div>
+      <div class="staff-info">
+        <div class="staff-name">${s.name} <span style="font-size:11px;color:var(--text3);">@${s.username}</span></div>
+        <div class="staff-role" style="text-transform:capitalize;margin-bottom:6px;">${s.role} · ${s.active!==false?'<span style="color:var(--green);">Active</span>':'<span style="color:var(--red);">Inactive</span>'}</div>
+        <div>${(s.perms||[]).map(p=>`<span class="perm-tag">${p}</span>`).join('')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="btn-sm btn-primary" onclick="openStaffModal('${s.id}')">✏️ Edit</button>
+        <button class="btn-sm btn-secondary" onclick="stToggle('${s.id}')">${s.active!==false?'⏸ Off':'▶ On'}</button>
+        <button class="btn-sm btn-red" onclick="stDelete('${s.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function openStaffModal(id) {
+  const s = id ? getStaff().find(x=>x.id===id) : null;
+  document.getElementById('staff_modal_title').textContent = s ? '✏️ Edit Staff' : '➕ Add Staff';
+  document.getElementById('st_id').value  = s?.id||'';
+  document.getElementById('st_name').value = s?.name||'';
+  document.getElementById('st_role').value = s?.role||'operator';
+  document.getElementById('st_user').value = s?.username||'';
+  document.getElementById('st_pass').value = '';
+  document.getElementById('st_active_toggle').classList.toggle('on', s ? s.active!==false : true);
+  // Set permissions
+  document.querySelectorAll('.st_perm_cb').forEach(cb => {
+    cb.checked = s ? (s.perms||[]).includes(cb.value) : ['dashboard','orders'].includes(cb.value);
+  });
+  openModal('staffModal');
+}
+
+function saveStaff() {
+  const name = document.getElementById('st_name').value.trim();
+  const user = document.getElementById('st_user').value.trim().toLowerCase();
+  const pass = document.getElementById('st_pass').value;
+  const id   = document.getElementById('st_id').value;
+  if (!name) { showToast('Name required!','error'); return; }
+  if (!user) { showToast('Username required!','error'); return; }
+  if (!id && !pass) { showToast('Password required for new staff!','error'); return; }
+
+  const staff = getStaff();
+  if (!id && staff.find(s=>s.username===user)) { showToast('Yeh username pehle se hai!','error'); return; }
+
+  const perms = Array.from(document.querySelectorAll('.st_perm_cb:checked')).map(cb=>cb.value);
+  const existing = staff.find(s=>s.id===id);
+  const obj = {
+    id:       id||'st_'+Date.now(),
+    name,
+    username: user,
+    password: pass || existing?.password || '',
+    role:     document.getElementById('st_role').value,
+    perms,
+    active:   document.getElementById('st_active_toggle').classList.contains('on'),
+    createdAt: existing?.createdAt||new Date().toISOString()
+  };
+  if (id) { const i=staff.findIndex(s=>s.id===id); if(i>=0) staff[i]=obj; else staff.push(obj); }
+  else staff.push(obj);
+  setStaff(staff);
+  closeModal('staffModal');
+  renderStaff();
+  showToast(`✅ Staff "${name}" ${id?'updated':'added'}!`,'success');
+}
+
+function stToggle(id) {
+  const staff=getStaff(); const s=staff.find(x=>x.id===id); if(!s)return;
+  s.active=s.active===false?true:false;
+  setStaff(staff); renderStaff();
+  showToast(s.active?`✅ "${s.name}" Activated!`:`⏸ "${s.name}" Deactivated!`,'success');
+}
+
+function stDelete(id) {
+  const s=getStaff().find(x=>x.id===id); if(!s)return;
+  showConfirm('🗑️','Delete Staff?',`"${s.name}" ka account delete ho jayega!`,()=>{ setStaff(getStaff().filter(x=>x.id!==id)); renderStaff(); showToast('🗑️ Staff deleted','info'); });
+}
+
+// ══════════════════════════════════════════
+//  DOCUMENT MANAGER
+// ══════════════════════════════════════════
+const DOC_KEY = 'hsc_docs_v1';
+let docTabFilter = 'all';
+function getDocs() { try { return JSON.parse(localStorage.getItem(DOC_KEY)||'[]'); } catch(e){ return []; } }
+function setDocs(a){ localStorage.setItem(DOC_KEY, JSON.stringify(a)); }
+
+const DOC_ICONS = { 'Aadhaar Card':'🪪','PAN Card':'💳','Passport Photo':'📷','Address Proof':'🏠','Income Certificate':'📜','Birth Certificate':'📄','Caste Certificate':'📋','Other':'📎' };
+
+function setDocTab(tab, btn) {
+  docTabFilter = tab;
+  document.querySelectorAll('[id^="docTab_"]').forEach(b=>b.classList.replace('btn-primary','btn-secondary')||b.classList.add('btn-secondary'));
+  btn.classList.replace('btn-secondary','btn-primary');
+  renderDocs();
+}
+
+function renderDocs() {
+  const all  = getDocs();
+  const q    = (document.getElementById('doc_search')?.value||'').toLowerCase();
+  document.getElementById('doc_total').textContent    = all.length;
+  document.getElementById('doc_pending').textContent  = all.filter(d=>d.status==='pending').length;
+  document.getElementById('doc_approved').textContent = all.filter(d=>d.status==='approved').length;
+  document.getElementById('doc_rejected').textContent = all.filter(d=>d.status==='rejected').length;
+
+  const filtered = all.filter(d=>{
+    const txt = `${d.customerName||''} ${d.type||''} ${d.orderRef||''} ${d.note||''}`.toLowerCase();
+    const okQ = !q || txt.includes(q);
+    const okT = docTabFilter==='all' || d.status===docTabFilter;
+    return okQ && okT;
+  }).sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt));
+
+  const el = document.getElementById('docs_table');
+  if (!filtered.length) {
+    el.innerHTML='<div style="text-align:center;padding:50px;color:var(--text3);"><div style="font-size:40px;opacity:0.25;margin-bottom:12px;">📁</div><div>Koi document nahi mila</div></div>';
+    return;
+  }
+  const statusColor = { pending:'var(--gold)', approved:'var(--green)', rejected:'var(--red)' };
+  el.innerHTML = filtered.map(d=>`
+    <div class="doc-row">
+      <div class="doc-icon">${DOC_ICONS[d.type]||'📎'}</div>
+      <div class="doc-info">
+        <div class="doc-name">${d.customerName||'Unknown'} — ${d.type}</div>
+        <div class="doc-meta">${d.orderRef?'Order: '+d.orderRef+' · ':''}${fmtDate(d.uploadedAt)}${d.note?' · '+d.note:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;font-weight:700;color:${statusColor[d.status]||'var(--text3)'};text-transform:capitalize;">${d.status||'pending'}</span>
+        ${d.url?`<a href="${d.url}" target="_blank" class="btn-sm btn-blue">👁 View</a>`:''}
+        ${d.status!=='approved'?`<button class="btn-sm btn-green" onclick="docSetStatus('${d.id}','approved')">✅</button>`:''}
+        ${d.status!=='rejected'?`<button class="btn-sm btn-red" onclick="docSetStatus('${d.id}','rejected')">❌</button>`:''}
+        <button class="btn-sm btn-secondary" onclick="docDelete('${d.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function openDocUploadModal() {
+  ['du_name','du_order','du_url','du_note'].forEach(id=>document.getElementById(id).value='');
+  openModal('docUploadModal');
+}
+
+function saveDoc() {
+  const name = document.getElementById('du_name').value.trim();
+  const url  = document.getElementById('du_url').value.trim();
+  if (!name) { showToast('Customer name required!','error'); return; }
+  if (!url)  { showToast('Document URL required!','error'); return; }
+  const docs = getDocs();
+  docs.push({ id:'doc_'+Date.now(), customerName:name, orderRef:document.getElementById('du_order').value.trim(), type:document.getElementById('du_type').value, url, note:document.getElementById('du_note').value.trim(), status:'pending', uploadedAt:new Date().toISOString() });
+  setDocs(docs);
+  closeModal('docUploadModal');
+  renderDocs();
+  showToast('✅ Document saved!','success');
+}
+
+function docSetStatus(id, status) {
+  const docs=getDocs(); const d=docs.find(x=>x.id===id); if(!d)return;
+  d.status=status; d.reviewedAt=new Date().toISOString();
+  setDocs(docs); renderDocs();
+  showToast(`${status==='approved'?'✅ Approved':'❌ Rejected'}!`,'success');
+}
+
+function docDelete(id) {
+  showConfirm('🗑️','Delete Document?','Yeh document permanently delete ho jayega!',()=>{ setDocs(getDocs().filter(x=>x.id!==id)); renderDocs(); showToast('🗑️ Document deleted','info'); });
+}
+
+// Cache orders & consults for analytics (hook into existing data load)
+const _origLoadAll = loadAllData;
+async function loadAllData() {
+  const res = await _origLoadAll();
+  // Analytics ke liye data cache karo
+  try {
+    const oRes = await sbFetch('orders','select=*&order=created_at.desc');
+    if (oRes) window._cachedOrders = oRes;
+    const cRes = await sbFetch('consultations','select=*&order=created_at.desc');
+    if (cRes) window._cachedConsults = cRes;
+  } catch(e) {}
+  return res;
+}
+
+// ══════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════
 window.onload = () => {
   // Set login logo even before auth
   const loginLogo = document.getElementById('loginLogo');
