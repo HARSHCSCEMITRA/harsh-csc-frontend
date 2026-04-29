@@ -592,181 +592,215 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
 
 
-<!-- ═══════════════════════════════════════ -->
-<!-- PRODUCTS PAGE                          -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-products">
-        <div class="page-content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-    <div>
-      <h2 style="font-size:20px;font-weight:700;margin:0;">🛍️ Manage Products & Services</h2>
-      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Website pe jo services dikhti hain unhe yahan se manage karo — add, edit, price, offer, image sab kuch</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-sm btn-secondary" onclick="exportProductsCSV()">📥 Export CSV</button>
-      <button class="btn-sm btn-primary" onclick="openProductModal(null)">➕ Add New Product</button>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
-    <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="ps_total">0</div><div class="stat-icon">🛍️</div></div>
-    <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="ps_active">0</div><div class="stat-icon">✅</div></div>
-    <div class="stat-card red"><div class="stat-label">Inactive</div><div class="stat-value" id="ps_inactive">0</div><div class="stat-icon">❌</div></div>
-    <div class="stat-card blue"><div class="stat-label">With Offers</div><div class="stat-value" id="ps_offers">0</div><div class="stat-icon">🏷️</div></div>
-    <div class="stat-card purple"><div class="stat-label">Featured</div><div class="stat-value" id="ps_featured">0</div><div class="stat-icon">⭐</div></div>
-  </div>
-  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-    <input class="search-box" id="prod_search" placeholder="Search products..." oninput="renderProductsPage()" style="width:200px;"/>
-    <select class="filter-select" id="prod_filter_status" onchange="renderProductsPage()">
-      <option value="">All Status</option>
-      <option value="active">Active Only</option>
-      <option value="inactive">Inactive Only</option>
-    </select>
-    <select class="filter-select" id="prod_filter_cat" onchange="renderProductsPage()">
-      <option value="">All Categories</option>
-      <option>Gazette</option><option>BPR</option><option>PVC</option>
-      <option>Government</option><option>Digital Services</option><option>Other</option>
-    </select>
-  </div>
-  <div id="productsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
-</div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- FORM BUILDER PAGE                      -->
-<!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-formbuilder">
+      <!-- PRODUCTS PAGE -->
+      <div class="page" id="page-products">
         <div class="page-content">
-  <div style="margin-bottom:20px;">
-    <h2 style="font-size:20px;font-weight:700;margin:0;">📝 Form Builder</h2>
-    <div style="font-size:12px;color:var(--text3);margin-top:3px;">Har service ke liye custom form fields banao — customer se data collect karne ke liye</div>
-  </div>
-  <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;">
-    <div>
-      <div class="card">
-        <div class="card-head"><div class="card-title">📦 Services</div></div>
-        <div style="padding:10px;" id="fb_prod_list"><div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Loading...</div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:700;margin:0;">🛍️ Manage Products & Services</h2>
+              <div style="font-size:13px;color:var(--text3);margin-top:4px;">Add, edit, price, offers, images — manage everything from here</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn-sm btn-secondary" onclick="exportProductsCSV()">📥 Export CSV</button>
+              <button class="btn-sm btn-primary" onclick="openProductModal(null)">➕ Add New Product</button>
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="ps_total">0</div><div class="stat-icon">🛍️</div></div>
+            <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="ps_active">0</div><div class="stat-icon">✅</div></div>
+            <div class="stat-card red"><div class="stat-label">Inactive</div><div class="stat-value" id="ps_inactive">0</div><div class="stat-icon">❌</div></div>
+            <div class="stat-card blue"><div class="stat-label">With Offers</div><div class="stat-value" id="ps_offers">0</div><div class="stat-icon">🏷️</div></div>
+            <div class="stat-card purple"><div class="stat-label">Featured</div><div class="stat-value" id="ps_featured">0</div><div class="stat-icon">⭐</div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+            <input class="search-box" id="prod_search" placeholder="Search products..." oninput="renderProductsPage()" style="width:220px;"/>
+            <select class="filter-select" id="prod_filter_status" onchange="renderProductsPage()">
+              <option value="">All Status</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+            <select class="filter-select" id="prod_filter_cat" onchange="renderProductsPage()">
+              <option value="">All Categories</option>
+              <option>Gazette</option><option>BPR</option><option>PVC</option>
+              <option>Government</option><option>Digital Services</option><option>Other</option>
+            </select>
+          </div>
+          <div id="productsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;min-height:200px;"></div>
+        </div>
       </div>
-      <div class="card" style="margin-top:12px;" id="fb_add_panel_card">
-        <div class="card-head"><div class="card-title">➕ Add Field</div></div>
-        <div style="padding:12px;" id="fb_add_panel"><div style="font-size:12px;color:var(--text3);text-align:center;padding:10px;">Service pehle select karo</div></div>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title" id="fb_title">← Service select karo</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn-sm btn-secondary" id="fb_preview_btn" onclick="fbPreviewForm()" style="display:none;">👁 Preview</button>
-            <button class="btn-sm btn-primary" id="fb_save_btn" onclick="fbSaveConfirm()" style="display:none;">💾 Save</button>
+
+      <!-- FORM BUILDER PAGE -->
+      <div class="page" id="page-formbuilder">
+        <div class="page-content">
+          <div style="margin-bottom:24px;">
+            <h2 style="font-size:22px;font-weight:700;margin:0;">📝 Form Builder</h2>
+            <div style="font-size:13px;color:var(--text3);margin-top:4px;">Create custom form fields for each service — collect customer data at checkout</div>
+          </div>
+          <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;">
+            <div>
+              <div class="card">
+                <div class="card-head"><div class="card-title">📦 Services</div></div>
+                <div style="padding:10px;" id="fb_prod_list">
+                  <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Go to Manage Products and add services first</div>
+                </div>
+              </div>
+              <div class="card" style="margin-top:12px;">
+                <div class="card-head"><div class="card-title">➕ Add Field</div></div>
+                <div style="padding:12px;" id="fb_add_panel">
+                  <div style="font-size:12px;color:var(--text3);text-align:center;padding:10px;">Select a service first</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title" id="fb_title">← Select a service from left</div>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn-sm btn-secondary" id="fb_preview_btn" onclick="fbPreviewForm()" style="display:none;">👁 Preview</button>
+                    <button class="btn-sm btn-primary" id="fb_save_btn" onclick="fbSaveConfirm()" style="display:none;">💾 Save</button>
+                  </div>
+                </div>
+                <div id="fb_fields" style="padding:16px;min-height:300px;">
+                  <div style="text-align:center;padding:50px;color:var(--text3);">
+                    <div style="font-size:40px;opacity:0.2;margin-bottom:12px;">📝</div>
+                    <div>Select a service from the left panel to configure its form fields</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="fb_fields" style="padding:16px;min-height:260px;">
-          <div style="text-align:center;padding:40px;color:var(--text3);"><div style="font-size:36px;opacity:0.25;margin-bottom:10px;">📝</div>Left se service select karo</div>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="page-content">
+          <div style="margin-bottom:24px;">
+            <h2 style="font-size:22px;font-weight:700;margin:0;">📈 Analytics</h2>
+            <div style="font-size:13px;color:var(--text3);margin-top:4px;">Orders, revenue and service performance overview</div>
+          </div>
+          <div class="stats-grid" id="an_stats" style="margin-bottom:24px;">
+            <div class="stat-card orange"><div class="stat-label">Total Revenue</div><div class="stat-value" style="font-size:18px;" id="an_rev_total">₹0</div><div class="stat-icon">💰</div></div>
+            <div class="stat-card blue"><div class="stat-label">Total Orders</div><div class="stat-value" id="an_ord_total">0</div><div class="stat-icon">📦</div></div>
+            <div class="stat-card green"><div class="stat-label">Completed</div><div class="stat-value" id="an_completed">0</div><div class="stat-icon">✅</div></div>
+            <div class="stat-card red"><div class="stat-label">Pending</div><div class="stat-value" id="an_pending">0</div><div class="stat-icon">⏳</div></div>
+            <div class="stat-card purple"><div class="stat-label">Consultations</div><div class="stat-value" id="an_consults">0</div><div class="stat-icon">📞</div></div>
+            <div class="stat-card orange"><div class="stat-label">Avg Order Value</div><div class="stat-value" style="font-size:16px;" id="an_avg">₹0</div><div class="stat-icon">📊</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+            <div class="card">
+              <div class="card-head"><div class="card-title">📅 Monthly Revenue (₹)</div></div>
+              <div style="padding:16px;"><div class="chart-bar-wrap" id="an_rev_chart"><div style="text-align:center;color:var(--text3);padding:30px;width:100%;">No data yet</div></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">📦 Monthly Orders</div></div>
+              <div style="padding:16px;"><div class="chart-bar-wrap" id="an_ord_chart"><div style="text-align:center;color:var(--text3);padding:30px;width:100%;">No data yet</div></div></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="card">
+              <div class="card-head"><div class="card-title">🏆 Top Services</div></div>
+              <div id="an_top_services" style="padding:4px 0 8px;min-height:100px;">
+                <div style="text-align:center;color:var(--text3);padding:30px;">No orders yet</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">📊 Order Status Breakdown</div></div>
+              <div id="an_status_break" style="padding:16px;min-height:100px;">
+                <div style="text-align:center;color:var(--text3);padding:30px;">No data yet</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════ ANALYTICS PAGE ═══════════════════════ -->
-<div class="page" id="page-analytics">
+      <!-- COUPONS PAGE -->
+      <div class="page" id="page-coupons">
         <div class="page-content">
-  <div style="margin-bottom:20px;">
-    <h2 style="font-size:20px;font-weight:700;margin:0;">📈 Analytics</h2>
-    <div style="font-size:12px;color:var(--text3);margin-top:3px;">Orders, revenue aur services ka performance dekho</div>
-  </div>
-  <!-- Top Stats -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;" id="an_stats"></div>
-  <!-- Charts Row -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-    <div class="card">
-      <div class="card-head"><div class="card-title">📅 Monthly Revenue (₹)</div></div>
-      <div style="padding:16px;">
-        <div class="chart-bar-wrap" id="an_rev_chart"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:700;margin:0;">🏷️ Coupon Codes</h2>
+              <div style="font-size:13px;color:var(--text3);margin-top:4px;">Create and manage discount codes for customers</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="openCouponModal(null)">➕ New Coupon</button>
+          </div>
+          <div class="stats-grid" style="margin-bottom:24px;">
+            <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="cp_total">0</div><div class="stat-icon">🏷️</div></div>
+            <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="cp_active">0</div><div class="stat-icon">✅</div></div>
+            <div class="stat-card blue"><div class="stat-label">Times Used</div><div class="stat-value" id="cp_used">0</div><div class="stat-icon">🔢</div></div>
+            <div class="stat-card purple"><div class="stat-label">Total Savings</div><div class="stat-value" id="cp_saved">₹0</div><div class="stat-icon">💰</div></div>
+          </div>
+          <div id="coupons_list" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:60px;color:var(--text3);">
+              <div style="font-size:40px;opacity:0.2;margin-bottom:12px;">🏷️</div>
+              <div style="font-size:15px;margin-bottom:6px;">No coupons yet</div>
+              <div style="font-size:12px;">Click "➕ New Coupon" to create your first discount code</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">📦 Monthly Orders</div></div>
-      <div style="padding:16px;">
-        <div class="chart-bar-wrap" id="an_ord_chart"></div>
+
+      <!-- STAFF PAGE -->
+      <div class="page" id="page-staff">
+        <div class="page-content">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:700;margin:0;">👥 Staff Access</h2>
+              <div style="font-size:13px;color:var(--text3);margin-top:4px;">Manage staff accounts and their page permissions</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="openStaffModal(null)">➕ Add Staff</button>
+          </div>
+          <div style="margin-bottom:20px;padding:14px 16px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);border-radius:var(--radius);font-size:13px;color:var(--gold);">
+            ⚠️ Staff members will see a limited admin panel — only pages assigned to them will be visible
+          </div>
+          <div id="staff_list" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:60px;color:var(--text3);">
+              <div style="font-size:40px;opacity:0.2;margin-bottom:12px;">👥</div>
+              <div style="font-size:15px;margin-bottom:6px;">No staff members yet</div>
+              <div style="font-size:12px;">Click "➕ Add Staff" to add a team member</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-  <!-- Service breakdown -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-    <div class="card">
-      <div class="card-head"><div class="card-title">🏆 Top Services</div></div>
-      <div id="an_top_services" style="padding:0 4px 8px;"></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">📊 Order Status Breakdown</div></div>
-      <div id="an_status_break" style="padding:12px;"></div>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════ COUPONS PAGE ═══════════════════════ -->
-<div class="page" id="page-coupons">
+      <!-- DOCUMENTS PAGE -->
+      <div class="page" id="page-docs">
         <div class="page-content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-    <div>
-      <h2 style="font-size:20px;font-weight:700;margin:0;">🏷️ Coupon Codes</h2>
-      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Discount codes banao aur manage karo</div>
-    </div>
-    <button class="btn-sm btn-primary" onclick="openCouponModal(null)">➕ New Coupon</button>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
-    <div class="stat-card orange"><div class="stat-label">Total</div><div class="stat-value" id="cp_total">0</div><div class="stat-icon">🏷️</div></div>
-    <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="cp_active">0</div><div class="stat-icon">✅</div></div>
-    <div class="stat-card blue"><div class="stat-label">Used</div><div class="stat-value" id="cp_used">0</div><div class="stat-icon">🔢</div></div>
-    <div class="stat-card purple"><div class="stat-label">Total Savings</div><div class="stat-value" id="cp_saved">₹0</div><div class="stat-icon">💰</div></div>
-  </div>
-  <div id="coupons_list" style="display:flex;flex-direction:column;gap:10px;"></div>
-</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:700;margin:0;">📁 Document Manager</h2>
+              <div style="font-size:13px;color:var(--text3);margin-top:4px;">Customer documents in one place — upload, view, approve, reject</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input class="search-box" id="doc_search" placeholder="Search by name, order..." oninput="renderDocs()" style="width:200px;"/>
+              <button class="btn-sm btn-primary" onclick="openDocUploadModal()">📤 Upload Doc</button>
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card blue"><div class="stat-label">Total Docs</div><div class="stat-value" id="doc_total">0</div><div class="stat-icon">📁</div></div>
+            <div class="stat-card orange"><div class="stat-label">Pending Review</div><div class="stat-value" id="doc_pending">0</div><div class="stat-icon">⏳</div></div>
+            <div class="stat-card green"><div class="stat-label">Approved</div><div class="stat-value" id="doc_approved">0</div><div class="stat-icon">✅</div></div>
+            <div class="stat-card red"><div class="stat-label">Rejected</div><div class="stat-value" id="doc_rejected">0</div><div class="stat-icon">❌</div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+            <button class="btn-sm btn-primary" id="docTab_all" onclick="setDocTab('all',this)">All</button>
+            <button class="btn-sm btn-secondary" id="docTab_pending" onclick="setDocTab('pending',this)">⏳ Pending</button>
+            <button class="btn-sm btn-secondary" id="docTab_approved" onclick="setDocTab('approved',this)">✅ Approved</button>
+            <button class="btn-sm btn-secondary" id="docTab_rejected" onclick="setDocTab('rejected',this)">❌ Rejected</button>
+          </div>
+          <div class="card">
+            <div id="docs_table">
+              <div style="text-align:center;padding:50px;color:var(--text3);">
+                <div style="font-size:40px;opacity:0.2;margin-bottom:12px;">📁</div>
+                <div>No documents uploaded yet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<!-- ═══════════════════════ STAFF PAGE ═══════════════════════ -->
-<div class="page" id="page-staff">
-        <div class="page-content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-    <div>
-      <h2 style="font-size:20px;font-weight:700;margin:0;">👥 Staff Access</h2>
-      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Staff accounts aur unke permissions manage karo</div>
     </div>
-    <button class="btn-sm btn-primary" onclick="openStaffModal(null)">➕ Add Staff</button>
-  </div>
-  <div style="margin-bottom:16px;padding:14px 16px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);border-radius:var(--radius);font-size:13px;color:var(--gold);">
-    ⚠️ Staff members admin panel ka limited version dekhenge — sirf unhe assign ki gayi pages dikhegi
-  </div>
-  <div id="staff_list" style="display:flex;flex-direction:column;gap:10px;"></div>
-</div>
-
-<!-- ═══════════════════════ DOCUMENTS PAGE ═══════════════════════ -->
-<div class="page" id="page-docs">
-        <div class="page-content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-    <div>
-      <h2 style="font-size:20px;font-weight:700;margin:0;">📁 Document Manager</h2>
-      <div style="font-size:12px;color:var(--text3);margin-top:3px;">Customers ke documents ek jagah — upload, view, download</div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <input class="search-box" id="doc_search" placeholder="Search by name, order..." oninput="renderDocs()" style="width:200px;"/>
-      <button class="btn-sm btn-primary" onclick="openDocUploadModal()">📤 Upload Doc</button>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;">
-    <div class="stat-card blue"><div class="stat-label">Total Docs</div><div class="stat-value" id="doc_total">0</div><div class="stat-icon">📁</div></div>
-    <div class="stat-card orange"><div class="stat-label">Pending Review</div><div class="stat-value" id="doc_pending">0</div><div class="stat-icon">⏳</div></div>
-    <div class="stat-card green"><div class="stat-label">Approved</div><div class="stat-value" id="doc_approved">0</div><div class="stat-icon">✅</div></div>
-    <div class="stat-card red"><div class="stat-label">Rejected</div><div class="stat-value" id="doc_rejected">0</div><div class="stat-icon">❌</div></div>
-  </div>
-  <!-- Filter tabs -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
-    <button class="btn-sm btn-primary" id="docTab_all" onclick="setDocTab('all',this)">All</button>
-    <button class="btn-sm btn-secondary" id="docTab_pending" onclick="setDocTab('pending',this)">⏳ Pending</button>
-    <button class="btn-sm btn-secondary" id="docTab_approved" onclick="setDocTab('approved',this)">✅ Approved</button>
-    <button class="btn-sm btn-secondary" id="docTab_rejected" onclick="setDocTab('rejected',this)">❌ Rejected</button>
-  </div>
-  <div class="card">
-    <div id="docs_table"></div>
   </div>
 </div>
 
@@ -890,6 +924,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     </div>
   </div>
 </div>
+
 
 <!-- PRODUCT ADD/EDIT MODAL -->
 <div class="modal-bg" id="productModal">
@@ -3164,13 +3199,13 @@ function renderAnalytics() {
   const totalRev  = orders.reduce((s,o)=>s+Number(o.amount||0),0);
   const pending   = orders.filter(o=>o.status==='pending'||o.status==='processing').length;
   const completed = orders.filter(o=>o.status==='completed'||o.status==='delivered').length;
-  document.getElementById('an_stats').innerHTML = `
-    <div class="stat-card orange"><div class="stat-label">Total Revenue</div><div class="stat-value" style="font-size:20px;">₹${totalRev.toLocaleString('en-IN')}</div><div class="stat-icon">💰</div></div>
-    <div class="stat-card blue"><div class="stat-label">Total Orders</div><div class="stat-value">${orders.length}</div><div class="stat-icon">📦</div></div>
-    <div class="stat-card green"><div class="stat-label">Completed</div><div class="stat-value">${completed}</div><div class="stat-icon">✅</div></div>
-    <div class="stat-card red"><div class="stat-label">Pending</div><div class="stat-value">${pending}</div><div class="stat-icon">⏳</div></div>
-    <div class="stat-card purple"><div class="stat-label">Consultations</div><div class="stat-value">${consults.length}</div><div class="stat-icon">📞</div></div>
-    <div class="stat-card orange"><div class="stat-label">Avg Order Value</div><div class="stat-value" style="font-size:16px;">₹${orders.length?Math.round(totalRev/orders.length).toLocaleString('en-IN'):0}</div><div class="stat-icon">📊</div></div>`;
+  // Update static stat elements
+  document.getElementById('an_rev_total').textContent = '₹'+totalRev.toLocaleString('en-IN');
+  document.getElementById('an_ord_total').textContent = orders.length;
+  document.getElementById('an_completed').textContent = completed;
+  document.getElementById('an_pending').textContent = pending;
+  document.getElementById('an_consults').textContent = consults.length;
+  document.getElementById('an_avg').textContent = '₹'+(orders.length?Math.round(totalRev/orders.length).toLocaleString('en-IN'):0);
 
   // Revenue chart
   const maxRev = Math.max(...months.map(m=>m.rev),1);
