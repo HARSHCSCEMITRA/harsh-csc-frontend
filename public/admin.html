@@ -555,6 +555,22 @@ tr:hover td{background:rgba(255,255,255,0.02);}
                   <div class="f-group"><label>Gazette Price (₹)</label><input class="f-input" id="s_gazette_price" type="number" value="5100"/></div>
                   <div class="f-group"><label>BPR Price (₹)</label><input class="f-input" id="s_bpr_price" type="number" value="1499"/></div>
                 </div>
+                <div class="settings-section" style="margin-top:20px;">📧 Email Notifications (Resend.com)</div>
+                <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#86efac;">
+                  ✅ 100% Free — Resend.com pe 100 emails/day free hain
+                </div>
+                <div class="form-row single"><div class="f-group">
+                  <label>Resend API Key</label>
+                  <input class="f-input" id="s_resend_key" placeholder="re_xxxxxxxxxxxxxx" type="password"/>
+                  <div style="font-size:11px;color:var(--text3);margin-top:3px;">resend.com → API Keys → Create API Key</div>
+                </div></div>
+                <div class="form-row single"><div class="f-group">
+                  <label>From Email (Resend mein verify karo)</label>
+                  <input class="f-input" id="s_from_email" placeholder="noreply@tumharadomain.com"/>
+                  <div style="font-size:11px;color:var(--text3);margin-top:3px;">Ya Resend ka free domain: onboarding@resend.dev (testing ke liye)</div>
+                </div></div>
+                <button class="btn-sm btn-secondary" style="width:100%;padding:10px;margin-top:4px;" onclick="saveEmailConfig()">💾 Email Config Save Karo</button>
+                <button class="btn-sm btn-blue" style="width:100%;padding:10px;margin-top:6px;" onclick="sendTestEmail()">📧 Test Email Bhejo</button>
                 <div class="settings-section" style="margin-top:20px;">Admin Password</div>
                 <div class="form-row single"><div class="f-group"><label>New Password</label><input class="f-input" id="s_newpass" type="password" placeholder="Leave blank to keep current"/></div></div>
                 <div class="form-row single"><div class="f-group"><label>Confirm Password</label><input class="f-input" id="s_confirmpass" type="password" placeholder="Confirm new password"/></div></div>
@@ -981,6 +997,13 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         <span style="font-size:13px;font-weight:500;">Notify Customer on WhatsApp</span>
         <div class="toggle on" id="su_wa_toggle" onclick="this.classList.toggle('on')"></div>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);">
+        <div>
+          <span style="font-size:13px;font-weight:500;">📧 Email Notification</span>
+          <div style="font-size:11px;color:var(--text3);">Customer ko status update email jaye</div>
+        </div>
+        <div class="toggle on" id="su_email_toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm btn-primary" style="flex:1;" onclick="saveStatusUpdate()">💾 Save</button>
@@ -1176,6 +1199,8 @@ async function sbDeleteByRef(table, col, val) {
 //  INIT
 // ══════════════════════════════════════════
 function initApp() {
+  // Load email config from localStorage
+  loadEmailConfig();
   // Set real icons
   const setImg = (id, src) => { const el = document.getElementById(id); if(el) el.src = src; };
   setImg('sidebarLogo', ICON_LOGO);
@@ -1689,13 +1714,48 @@ async function saveStatusUpdate() {
     showToast(`✅ Status updated to "${status}"!`, 'success');
     closeModal('statusModal');
     await refreshAll();
+
+    // ── AUTO EMAIL — status update ──────────────────────
+    const orderData = service === 'PVC'
+      ? allPVCOrders.find(x => x.order_ref === ref)
+      : allOrders.find(x => x.order_ref === ref);
+    const customerEmail = orderData?.email || orderData?.customer_email || '';
+    if (customerEmail) {
+      sendEmailNotification('status_update', customerEmail, {
+        ...orderData, ...data,
+        ref_id: ref,
+        tracking_id: tracking || orderData?.tracking_number,
+        admin_note: note || orderData?.admin_note,
+      });
+    }
+    // ── WhatsApp ────────────────────────────────────────
     if (notifyWA) {
-      const o = service === 'PVC' ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
-      const phone = o?.customer_phone || '';
+      const phone = orderData?.customer_phone || '';
       if (phone) waOrder(phone, ref, service, status, tracking);
     }
   } else {
     showToast('❌ Update failed. Check connection.', 'error');
+  }
+}
+
+// ── EMAIL SENDER (Supabase Edge Function call) ──────────
+async function sendEmailNotification(type, email, orderData) {
+  try {
+    const notifyEmail = document.getElementById('su_email_toggle');
+    if (notifyEmail && !notifyEmail.classList.contains('on')) return;
+
+    // Use existing SUPABASE_URL and SUPABASE_KEY constants
+    if (!SUPABASE_URL) return;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ type, email, order: orderData })
+    });
+    const result = await res.json();
+    if (result.success) showToast('📧 Email bhi bhej diya!', 'info');
+    else console.warn('Email failed:', result.error);
+  } catch(e) {
+    console.warn('Email notification error:', e);
   }
 }
 
@@ -3475,6 +3535,52 @@ async function loadAllData() {
     if (cRes) window._cachedConsults = cRes;
   } catch(e) {}
   return res;
+}
+
+// ══════════════════════════════════════════
+//  EMAIL CONFIG (Settings page)
+// ══════════════════════════════════════════
+function saveEmailConfig() {
+  const key  = document.getElementById('s_resend_key')?.value.trim();
+  const from = document.getElementById('s_from_email')?.value.trim();
+  if (!key)  { showToast('Resend API Key required!', 'error'); return; }
+  if (!from) { showToast('From Email required!', 'error'); return; }
+  localStorage.setItem('hsc_resend_key',  key);
+  localStorage.setItem('hsc_from_email',  from);
+  showToast('✅ Email config saved! Supabase Edge Function mein bhi set karo.', 'success');
+}
+
+async function sendTestEmail() {
+  const key  = localStorage.getItem('hsc_resend_key') || document.getElementById('s_resend_key')?.value.trim();
+  const from = localStorage.getItem('hsc_from_email') || document.getElementById('s_from_email')?.value.trim();
+  if (!key || !from) { showToast('Pehle Email Config save karo!', 'error'); return; }
+
+  // Call our Supabase edge function for test
+  try {
+    showToast('📧 Test email bhej raha hai...', 'info');
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({
+        type: 'order_confirmation',
+        email: 'harshcscemitra@gmail.com',
+        order: { ref_id: 'TEST-001', customer_name: 'Test Customer', mobile: '9876543210', service_type: 'Gazette Notification', amount: 5100, status: 'pending', created_at: new Date().toISOString() }
+      })
+    });
+    const r = await res.json();
+    if (r.success) showToast('✅ Test email sent! Inbox check karo.', 'success');
+    else showToast(`❌ Failed: ${r.error}`, 'error');
+  } catch(e) {
+    showToast('❌ Edge Function connect nahi ho raha. Deploy karo pehle.', 'error');
+  }
+}
+
+// Load email config on settings page
+function loadEmailConfig() {
+  const key  = localStorage.getItem('hsc_resend_key');
+  const from = localStorage.getItem('hsc_from_email');
+  if (key  && document.getElementById('s_resend_key'))  document.getElementById('s_resend_key').value  = key;
+  if (from && document.getElementById('s_from_email'))  document.getElementById('s_from_email').value = from;
 }
 
 // ══════════════════════════════════════════
