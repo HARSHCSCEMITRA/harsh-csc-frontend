@@ -590,14 +590,13 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
+
 
 <!-- ═══════════════════════════════════════ -->
 <!-- PRODUCTS PAGE                          -->
 <!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-products" style="display:none;padding:28px;">
+<div class="page" id="page-products">
+        <div class="page-content">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:20px;font-weight:700;margin:0;">🛍️ Manage Products & Services</h2>
@@ -634,7 +633,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 <!-- ═══════════════════════════════════════ -->
 <!-- FORM BUILDER PAGE                      -->
 <!-- ═══════════════════════════════════════ -->
-<div class="page" id="page-formbuilder" style="display:none;padding:28px;">
+<div class="page" id="page-formbuilder">
+        <div class="page-content">
   <div style="margin-bottom:20px;">
     <h2 style="font-size:20px;font-weight:700;margin:0;">📝 Form Builder</h2>
     <div style="font-size:12px;color:var(--text3);margin-top:3px;">Har service ke liye custom form fields banao — customer se data collect karne ke liye</div>
@@ -668,7 +668,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 </div>
 
 <!-- ═══════════════════════ ANALYTICS PAGE ═══════════════════════ -->
-<div class="page" id="page-analytics" style="display:none;padding:28px;">
+<div class="page" id="page-analytics">
+        <div class="page-content">
   <div style="margin-bottom:20px;">
     <h2 style="font-size:20px;font-weight:700;margin:0;">📈 Analytics</h2>
     <div style="font-size:12px;color:var(--text3);margin-top:3px;">Orders, revenue aur services ka performance dekho</div>
@@ -704,7 +705,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 </div>
 
 <!-- ═══════════════════════ COUPONS PAGE ═══════════════════════ -->
-<div class="page" id="page-coupons" style="display:none;padding:28px;">
+<div class="page" id="page-coupons">
+        <div class="page-content">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:20px;font-weight:700;margin:0;">🏷️ Coupon Codes</h2>
@@ -722,7 +724,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 </div>
 
 <!-- ═══════════════════════ STAFF PAGE ═══════════════════════ -->
-<div class="page" id="page-staff" style="display:none;padding:28px;">
+<div class="page" id="page-staff">
+        <div class="page-content">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:20px;font-weight:700;margin:0;">👥 Staff Access</h2>
@@ -737,7 +740,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 </div>
 
 <!-- ═══════════════════════ DOCUMENTS PAGE ═══════════════════════ -->
-<div class="page" id="page-docs" style="display:none;padding:28px;">
+<div class="page" id="page-docs">
+        <div class="page-content">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <h2 style="font-size:20px;font-weight:700;margin:0;">📁 Document Manager</h2>
@@ -878,6 +882,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="modal-footer">
       <button class="btn-sm btn-primary" style="flex:1;padding:12px;" onclick="saveDoc()">💾 Save Document</button>
       <button class="btn-sm btn-secondary" onclick="closeModal('docUploadModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
     </div>
   </div>
 </div>
@@ -2162,19 +2171,12 @@ function closeConfirm() { document.getElementById('confirmBg').classList.remove(
 //  UI HELPERS
 // ══════════════════════════════════════════
 function showPage(name, btn) {
-  const NEW_PAGES = ['products','formbuilder','analytics','coupons','staff','docs'];
-  // Hide all pages
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    if (NEW_PAGES.includes(p.id.replace('page-',''))) p.style.display = 'none';
-  });
+  // Hide all pages uniformly
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
   const page = document.getElementById('page-' + name);
-  if (page) {
-    if (NEW_PAGES.includes(name)) page.style.display = 'block';
-    else page.classList.add('active');
-  }
+  if (page) page.classList.add('active');
   if (btn) btn.classList.add('active');
   const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents' };
   document.getElementById('pageTitle').textContent = titles[name] || name;
