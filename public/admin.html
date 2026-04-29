@@ -280,7 +280,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="login-title">Welcome Back</div>
     <div class="login-sub">Enter your credentials to access the admin dashboard.</div>
     <div class="login-err" id="loginErr">❌ Incorrect username or password.</div>
-    <div class="login-field"><label>Username</label><input id="loginUser" type="text" placeholder="admin" autocomplete="username"/></div>
+    <div class="login-field"><label>Username</label><input id="loginUser" type="text" placeholder="Enter username" autocomplete="username"/></div>
     <div class="login-field"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="btn-login" onclick="doLogin()">Sign In →</button>
   </div>
@@ -2046,13 +2046,20 @@ function searchByMobile() {
 //  WHATSAPP
 // ══════════════════════════════════════════
 const WA_TEMPLATES = {
-  order_received: (name, ref) => `🙏 नमस्ते ${name} जी!\n\n✅ आपका Order Received हो गया है।\n📋 Order Ref: *${ref}*\n\nहमारी टीम जल्द ही आपसे संपर्क करेगी।\n\n— Harsh CSC eMitra 🏛️`,
-  doc_needed: (name, ref) => `🙏 नमस्ते ${name} जी!\n\n📎 आपके Order (${ref}) के लिए Documents चाहिए।\n\nकृपया WhatsApp पर भेजें:\n• Aadhaar Card (front + back)\n• PAN Card\n• Passport Photo\n\n— Harsh CSC eMitra 🏛️`,
-  processing: (name, ref) => `🙏 नमस्ते ${name} जी!\n\n⚙️ आपके Order (${ref}) का काम शुरू हो गया है।\n\nधन्यवाद! 🙏\n\n— Harsh CSC eMitra 🏛️`,
-  dispatched: (name, ref, tracking = '') => `🙏 नमस्ते ${name} जी!\n\n📮 आपका Order *Dispatch* हो गया है!\n📋 Order Ref: *${ref}*\n${tracking ? `📬 Speed Post Tracking: *${tracking}*\n🔗 Track: https://www.indiapost.gov.in` : ''}\n\n2-5 दिनों में पहुंच जाएगा।\n\n— Harsh CSC eMitra 🏛️`,
-  delivered: (name, ref) => `🙏 नमस्ते ${name} जी!\n\n🎉 आपका Order *Delivered* हो गया!\n📋 Order Ref: *${ref}*\n\nहमें उम्मीद है आपको service पसंद आई। ⭐\n\n— Harsh CSC eMitra 🏛️`,
-  payment_reminder: (name, ref, amount) => `🙏 नमस्ते ${name} जी!\n\n💰 आपके Order (${ref}) का Payment Pending है।\nAmount: *₹${amount}*\n\nकृपया जल्दी payment करें।\n\n— Harsh CSC eMitra 🏛️`,
-  cancelled: (name, ref) => `🙏 नमस्ते ${name} जी!\n\n❌ आपका Order *Cancelled* कर दिया गया है।\n📋 Order Ref: *${ref}*\n\nकिसी भी सहायता के लिए WhatsApp करें।\n\n— Harsh CSC eMitra 🏛️`,
+  order_received: (name, ref) => `Hello ${name},\n\n✅ Your order has been received successfully!\n📋 Order Reference: *${ref}*\n\nOur team will contact you shortly to guide you through the next steps.\n\nThank you for choosing Harsh CSC eMitra! 🏛️\n📞 Support: +91 70230 29903`,
+
+  doc_needed: (name, ref) => `Hello ${name},\n\n📎 Documents Required for your Order (${ref})\n\nPlease send the following documents on WhatsApp:\n• Aadhaar Card (Front & Back)\n• PAN Card\n• Passport Size Photo\n• Any other relevant documents\n\nFor any queries, feel free to contact us.\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
+  processing: (name, ref) => `Hello ${name},\n\n⚙️ Great news! Your Order (${ref}) is now being processed.\n\nOur team is working on it. We will notify you once it is ready.\n\nThank you for your patience!\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
+  dispatched: (name, ref, tracking = '') => `Hello ${name},\n\n📮 Your Order has been Dispatched!\n📋 Order Reference: *${ref}*\n${tracking ? `📬 Speed Post Tracking No: *${tracking}*\n🔗 Track here: https://www.indiapost.gov.in` : ''}\n\nExpected delivery: 2-5 working days.\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
+  delivered: (name, ref) => `Hello ${name},\n\n🎉 Your Order has been Delivered!\n📋 Order Reference: *${ref}*\n\nWe hope you are satisfied with our service. ⭐\nPlease share your feedback — it means a lot to us!\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
+  payment_reminder: (name, ref, amount) => `Hello ${name},\n\n💰 Payment Reminder for Order (${ref})\nAmount Due: *₹${amount}*\n\nKindly complete your payment at the earliest to avoid delays in processing.\n\nFor any queries, contact us on WhatsApp.\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
+  cancelled: (name, ref) => `Hello ${name},\n\n❌ Your Order (${ref}) has been Cancelled.\n\nIf you have any questions or need assistance, please contact us on WhatsApp or call us.\n\nWe apologize for any inconvenience caused.\n\n— Harsh CSC eMitra 🏛️\n📞 +91 70230 29903`,
+
   custom: () => ''
 };
 
