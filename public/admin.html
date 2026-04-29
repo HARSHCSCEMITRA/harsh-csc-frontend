@@ -3671,5 +3671,53 @@ window.onload = () => {
   }
 };
 </script>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+
+const supabase = createClient(
+  "https://qhqvmzrdncxddzlfrgrn.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc"
+)
+
+// FORM AUTO DETECT + SAVE
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form")
+
+  if (!form) {
+    console.log("Form not found ❌")
+    return
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault()
+
+    const product = {
+      name: form.querySelector('[placeholder*="Name"]')?.value,
+      category: form.querySelector('select')?.value,
+      price: form.querySelector('[placeholder*="Selling"]')?.value,
+      mrp: form.querySelector('[placeholder*="MRP"]')?.value,
+      offer_text: form.querySelector('[placeholder*="Offer"]')?.value,
+      delivery_time: form.querySelector('[placeholder*="Delivery"]')?.value,
+      image_url: form.querySelector('[placeholder*="Image"]')?.value,
+      short_description: form.querySelector('[placeholder*="Short"]')?.value,
+      full_description: form.querySelector('textarea')?.value,
+      documents_required: form.querySelector('[placeholder*="Documents"]')?.value,
+      sort_order: form.querySelector('[placeholder*="Sort"]')?.value || 0,
+      is_active: form.querySelector('input[type="checkbox"]')?.checked || true,
+      is_featured: false,
+      expert_advice: false
+    }
+
+    const { error } = await supabase.from('products').insert([product])
+
+    if (error) {
+      alert("Error: " + error.message)
+    } else {
+      alert("✅ Product Saved Successfully")
+      form.reset()
+    }
+  })
+})
+</script>
 </body>
 </html>
