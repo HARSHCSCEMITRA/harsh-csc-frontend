@@ -1250,6 +1250,9 @@ async function loadAllData() {
   const newC = allConsults.filter(c => !c.read).length;
   document.getElementById('newOrderBadge').textContent = newO || '0';
   document.getElementById('newConsultBadge').textContent = newC || '0';
+  // Cache for analytics
+  window._cachedOrders = allOrders;
+  window._cachedConsults = allConsults;
 }
 
 // ══════════════════════════════════════════
@@ -2152,6 +2155,7 @@ function closeConfirm() { document.getElementById('confirmBg').classList.remove(
 //  UI HELPERS
 // ══════════════════════════════════════════
 function showPage(name, btn) {
+  const NEW_PAGES = ['products','formbuilder','analytics','coupons','staff','docs'];
   // Hide all pages
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
@@ -2165,8 +2169,6 @@ function showPage(name, btn) {
     else page.classList.add('active');
   }
   if (btn) btn.classList.add('active');
-
-  const NEW_PAGES = ['products','formbuilder','analytics','coupons','staff','docs'];
   const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents' };
   document.getElementById('pageTitle').textContent = titles[name] || name;
 
@@ -3523,18 +3525,14 @@ function docDelete(id) {
   showConfirm('🗑️','Delete Document?','Yeh document permanently delete ho jayega!',()=>{ setDocs(getDocs().filter(x=>x.id!==id)); renderDocs(); showToast('🗑️ Document deleted','info'); });
 }
 
-// Cache orders & consults for analytics (hook into existing data load)
-const _origLoadAll = loadAllData;
-async function loadAllData() {
-  const res = await _origLoadAll();
-  // Analytics ke liye data cache karo
+// Cache orders & consults for analytics (called after main data loads)
+async function cacheDataForAnalytics() {
   try {
     const oRes = await sbFetch('orders','select=*&order=created_at.desc');
     if (oRes) window._cachedOrders = oRes;
     const cRes = await sbFetch('consultations','select=*&order=created_at.desc');
     if (cRes) window._cachedConsults = cRes;
   } catch(e) {}
-  return res;
 }
 
 // ══════════════════════════════════════════
