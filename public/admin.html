@@ -2804,8 +2804,40 @@ function generateInvoice(ref, service) {
 // ══════════════════════════════════════════
 const PROD_KEY = 'hsc_products_v3';
 
+// ── Default products (from website's existing services) ──────────────────
+const DEFAULT_PRODUCTS = [
+  { id:'p001', name:'Gazette Notification (Name/DOB Correction)', category:'Gazette', price:5100, mrp:6000, offer:'Official', delivery:'7–10 Working Days', shortDesc:'Official legal correction via Govt Gazette for name or date of birth.', docs:'Aadhaar Card, Birth Certificate, Affidavit on ₹50 stamp paper, Passport Photo (2)', active:true, featured:true, expert:false, sort:1, createdAt:new Date().toISOString() },
+  { id:'p002', name:'Business Project Report (BPR)', category:'BPR', price:1499, mrp:2500, offer:'Popular', delivery:'3–5 Working Days', shortDesc:'Professional project reports for bank loans and government subsidies.', docs:'Business idea, Aadhaar Card, PAN Card, Bank account details, Estimated investment', active:true, featured:true, expert:false, sort:2, createdAt:new Date().toISOString() },
+  { id:'p003', name:'PVC Smart Card Printing', category:'PVC', price:100, mrp:0, offer:'Fast', delivery:'2–3 Working Days', shortDesc:'High quality PVC ID cards with photo and details printed professionally.', docs:'Photo, Name, Details for card', active:true, featured:false, expert:false, sort:3, createdAt:new Date().toISOString() },
+  { id:'p004', name:'PAN Card (New / Correction)', category:'Government', price:150, mrp:0, offer:'Fast', delivery:'1–2 Working Days', shortDesc:'Fast PAN card processing — new application or data correction.', docs:'Aadhaar Card, Passport Photo, Mobile number linked to Aadhaar, Email', active:true, featured:false, expert:false, sort:4, createdAt:new Date().toISOString() },
+  { id:'p005', name:'Income, Caste & Domicile Certificates', category:'Government', price:100, mrp:0, offer:'Popular', delivery:'3–5 Working Days', shortDesc:'Official state government certificates for income, caste and domicile.', docs:'Aadhaar Card, Ration Card, Birth Certificate or Class 10 Marksheet', active:true, featured:false, expert:false, sort:5, createdAt:new Date().toISOString() },
+  { id:'p006', name:'Aadhaar Update / Correction', category:'Government', price:50, mrp:0, offer:'', delivery:'5–7 Working Days', shortDesc:'Name, address, DOB and mobile update on Aadhaar card.', docs:'Existing Aadhaar Card, Proof of update, Mobile number for OTP', active:true, featured:false, expert:false, sort:6, createdAt:new Date().toISOString() },
+  { id:'p007', name:'Passport Application Assistance', category:'Government', price:800, mrp:0, offer:'', delivery:'2–3 Working Days (filing)', shortDesc:'End-to-end help for fresh passport and renewal applications.', docs:'Aadhaar Card, Birth Certificate, Class 10 Certificate, Police Verification docs', active:true, featured:false, expert:false, sort:7, createdAt:new Date().toISOString() },
+  { id:'p008', name:'Driving License (New / Renewal)', category:'Government', price:300, mrp:0, offer:'', delivery:'3–5 Working Days', shortDesc:'Learner license, permanent DL, and renewal application assistance.', docs:'Aadhaar Card, Age proof, Medical certificate Form 1A, 3 Passport Photos', active:true, featured:false, expert:false, sort:8, createdAt:new Date().toISOString() },
+  { id:'p009', name:'Birth / Death Certificate', category:'Government', price:80, mrp:0, offer:'', delivery:'2–4 Working Days', shortDesc:'Official birth and death certificates from municipal/panchayat records.', docs:'Hospital discharge slip, Parent Aadhaar Card, Panchayat head letter', active:true, featured:false, expert:false, sort:9, createdAt:new Date().toISOString() },
+  { id:'p010', name:'FSSAI Food License', category:'Government', price:1200, mrp:0, offer:'New', delivery:'10–15 Working Days', shortDesc:'Registration and license for food businesses under FSSAI regulations.', docs:'Aadhaar Card, PAN Card, Proof of business address, Bank statement', active:true, featured:false, expert:false, sort:10, createdAt:new Date().toISOString() },
+  { id:'p011', name:'GST Registration', category:'Government', price:500, mrp:0, offer:'', delivery:'3–7 Working Days', shortDesc:'GST number registration for businesses above ₹20 lakh turnover.', docs:'PAN Card of business, Aadhaar Card, Business address proof, Bank account details', active:true, featured:false, expert:false, sort:11, createdAt:new Date().toISOString() },
+  { id:'p012', name:'ITR Filing (Income Tax Return)', category:'Government', price:300, mrp:0, offer:'Popular', delivery:'1–2 Working Days', shortDesc:'Income tax return filing for individuals and small businesses.', docs:'PAN Card, Aadhaar Card, Form 16, Bank statement, Investment proof', active:true, featured:false, expert:false, sort:12, createdAt:new Date().toISOString() },
+  { id:'p013', name:'PM-KISAN Registration & Status', category:'Government', price:50, mrp:0, offer:'Govt', delivery:'1 Working Day', shortDesc:'Register for PM-KISAN scheme and check ₹6000/year instalment status.', docs:'Aadhaar Card, Bank Passbook, Land record Khasra Khatauni, Mobile number', active:true, featured:false, expert:false, sort:13, createdAt:new Date().toISOString() },
+  { id:'p014', name:'E-Shram Card', category:'Government', price:0, mrp:0, offer:'Free', delivery:'Same Day', shortDesc:'National database registration for unorganized sector workers.', docs:'Aadhaar Card, Bank account details, Mobile number linked to Aadhaar', active:true, featured:false, expert:false, sort:14, createdAt:new Date().toISOString() },
+  { id:'p015', name:'Ayushman Bharat Card', category:'Government', price:0, mrp:0, offer:'Free', delivery:'Same Day', shortDesc:'PM-JAY health card giving ₹5 lakh health cover to eligible families.', docs:'Aadhaar Card, Ration Card, Mobile number', active:true, featured:false, expert:false, sort:15, createdAt:new Date().toISOString() },
+  { id:'p016', name:'PM Awas Yojana Application', category:'Government', price:0, mrp:0, offer:'Free', delivery:'2–3 Working Days', shortDesc:'Apply for Pradhan Mantri Awas Yojana housing scheme.', docs:'Aadhaar Card, Ration Card, Bank account details, Income certificate, Land documents', active:true, featured:false, expert:false, sort:16, createdAt:new Date().toISOString() },
+  { id:'p017', name:'Competitive Exam Form Filling', category:'Digital Services', price:100, mrp:0, offer:'Popular', delivery:'Same Day', shortDesc:'RPSC, SSC, Railway RRB, REET and other exam application forms.', docs:'Aadhaar Card, Educational certificates, Passport Photo, Signature scanned', active:true, featured:false, expert:false, sort:17, createdAt:new Date().toISOString() },
+  { id:'p018', name:'Scholarship Application', category:'Digital Services', price:50, mrp:0, offer:'', delivery:'1 Working Day', shortDesc:'Apply for NSP, state board and minority scholarships online.', docs:'Aadhaar Card, Bank account in student name, Income certificate, Marksheet', active:true, featured:false, expert:false, sort:18, createdAt:new Date().toISOString() },
+  { id:'p019', name:'Vehicle & Health Insurance', category:'Digital Services', price:500, mrp:0, offer:'Popular', delivery:'Same Day', shortDesc:'Policy issuance and premium renewal for vehicle and health insurance.', docs:'Aadhaar Card, Vehicle RC, Previous policy, PAN Card', active:true, featured:false, expert:false, sort:19, createdAt:new Date().toISOString() },
+  { id:'p020', name:'HDFC Bank BC Services', category:'Digital Services', price:0, mrp:0, offer:'Free', delivery:'Instant', shortDesc:'Account opening, cash withdrawal, deposits and mini statement.', docs:'Aadhaar Card, PAN Card, Passport Photo, Mobile number', active:true, featured:false, expert:false, sort:20, createdAt:new Date().toISOString() },
+];
+
 function getProducts() {
-  try { return JSON.parse(localStorage.getItem(PROD_KEY) || '[]'); } catch(e) { return []; }
+  try {
+    const stored = JSON.parse(localStorage.getItem(PROD_KEY) || 'null');
+    // First time — load default products
+    if (!stored) {
+      setProducts(DEFAULT_PRODUCTS);
+      return DEFAULT_PRODUCTS;
+    }
+    return stored;
+  } catch(e) { return DEFAULT_PRODUCTS; }
 }
 function setProducts(arr) { localStorage.setItem(PROD_KEY, JSON.stringify(arr)); }
 
