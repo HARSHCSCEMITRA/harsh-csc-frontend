@@ -2,8 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const ADMIN_EMAIL    = Deno.env.get("ADMIN_EMAIL") || "harshcscemitra@gmail.com";
-const FROM_EMAIL     = Deno.env.get("FROM_EMAIL")  || "noreply@harshcsc.com"; // Resend mein verify karo
-const SITE_NAME      = "Harsh CSC Mitra";
+const FROM_EMAIL     = Deno.env.get("FROM_EMAIL")  || "noreply@harshcsc.com";
+const SITE_NAME      = "Harsh CSC eMitra";
+const SITE_TAGLINE   = "Digital Experts & Documents Consultation";
 const SITE_URL       = "https://harshcscemitra.com";
 
 // ─── Brand Colors ────────────────────────
@@ -29,8 +30,8 @@ function baseTemplate(content: string) {
         <!-- Header -->
         <tr>
           <td style="background:${DARK};padding:24px 32px;text-align:center;">
-            <div style="font-size:22px;font-weight:800;color:${ORANGE};">${SITE_NAME}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px;letter-spacing:1px;">GOVERNMENT SERVICES PORTAL</div>
+            <div style="font-size:24px;font-weight:800;color:${ORANGE};letter-spacing:1px;">${SITE_NAME}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:4px;letter-spacing:0.5px;">${SITE_TAGLINE}</div>
           </td>
         </tr>
 
@@ -41,12 +42,13 @@ function baseTemplate(content: string) {
         <tr>
           <td style="background:#f9f9f9;border-top:1px solid #eee;padding:20px 32px;text-align:center;">
             <div style="font-size:12px;color:#888;line-height:1.6;">
-              ${SITE_NAME} · Sarkar Seva Kendra<br/>
-              <a href="${SITE_URL}" style="color:${ORANGE};text-decoration:none;">${SITE_URL}</a> ·
-              <a href="mailto:${ADMIN_EMAIL}" style="color:${ORANGE};text-decoration:none;">${ADMIN_EMAIL}</a>
+              <strong style="color:#555;">${SITE_NAME}</strong> — ${SITE_TAGLINE}<br/>
+              <a href="${SITE_URL}" style="color:${ORANGE};text-decoration:none;">${SITE_URL}</a> &nbsp;|&nbsp;
+              <a href="mailto:${ADMIN_EMAIL}" style="color:${ORANGE};text-decoration:none;">${ADMIN_EMAIL}</a> &nbsp;|&nbsp;
+              📞 +91 70230 29903
             </div>
             <div style="font-size:11px;color:#aaa;margin-top:8px;">
-              Yeh ek automated email hai. Directly reply mat karo.
+              This is an automated email. Please do not reply directly to this email.
             </div>
           </td>
         </tr>
@@ -86,14 +88,14 @@ function orderConfirmationEmail(order: any) {
     <div style="text-align:center;margin-bottom:24px;">
       <div style="width:60px;height:60px;background:#e8f5e9;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;">✅</div>
       <h2 style="margin:0;font-size:20px;color:#1a1a1a;">Order Confirm Ho Gaya!</h2>
-      <p style="margin:6px 0 0;color:#666;font-size:13px;">Aapka order successfully place ho gaya hai</p>
+      <p style="margin:6px 0 0;color:#666;font-size:13px;">Your order has been placed successfully</p>
     </div>
 
     <!-- Order ID Box -->
     <div style="background:#fff8f0;border:2px dashed ${ORANGE};border-radius:10px;padding:14px;text-align:center;margin-bottom:24px;">
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Order Reference</div>
       <div style="font-size:20px;font-weight:800;color:${ORANGE};letter-spacing:2px;">${order.ref_id || order.id || "—"}</div>
-      <div style="font-size:11px;color:#888;margin-top:4px;">Yeh number save kar lo — tracking ke liye zaroori hai</div>
+      <div style="font-size:11px;color:#888;margin-top:4px;">Please save this number for order tracking</div>
     </div>
 
     <!-- Customer Info -->
@@ -119,10 +121,10 @@ function orderConfirmationEmail(order: any) {
     <div style="background:#f0f7ff;border-left:4px solid #3b82f6;border-radius:4px;padding:14px 16px;margin-top:20px;">
       <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:8px;">📋 Aage Kya Hoga:</div>
       <ol style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:2;">
-        <li>Hamare team aapko <strong>24 ghante</strong> mein contact karengi</li>
-        <li>Required documents ki list share karenge</li>
-        <li>Processing shuru hogi documents receive hone ke baad</li>
-        <li>Order complete hone pe email aayegi</li>
+        <li>Our team will contact you within <strong>24 hours</strong></li>
+        <li>We will share the list of required documents</li>
+        <li>Processing will begin once documents are received</li>
+        <li>You will receive an email once your order is complete</li>
       </ol>
     </div>
 
@@ -135,7 +137,7 @@ function orderConfirmationEmail(order: any) {
     </div>
 
     <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px;">
-      Koi sawal ho to WhatsApp karo: <strong>+91 70230 29903</strong>
+      For any queries, WhatsApp us: <strong>+91 70230 29903</strong>
     </p>`;
 
   return {
@@ -148,12 +150,12 @@ function orderConfirmationEmail(order: any) {
 function statusUpdateEmail(order: any) {
   const STATUS_CONFIG: Record<string, { emoji: string; color: string; title: string; msg: string; bgColor: string }> = {
     processing: { emoji: "⚙️", color: "#3b82f6", bgColor: "#eff6ff", title: "Processing Shuru Ho Gayi!", msg: "Aapki application hamare experts ke paas hai. Kaam chal raha hai!" },
-    documents_required: { emoji: "📋", color: "#f59e0b", bgColor: "#fffbeb", title: "Documents Chahiye!", msg: "Processing ke liye kuch documents aur chahiye. Jaldi submit karo." },
-    approved: { emoji: "🎉", color: "#10b981", bgColor: "#ecfdf5", title: "Application Approved!", msg: "Badhai ho! Aapki application approve ho gayi hai." },
-    completed: { emoji: "✅", color: "#22c55e", bgColor: "#f0fdf4", title: "Order Complete!", msg: "Aapka kaam successfully complete ho gaya hai. Thank you!" },
-    delivered: { emoji: "📬", color: "#8b5cf6", bgColor: "#f5f3ff", title: "Deliver Ho Gaya!", msg: "Aapka document/card deliver kar diya gaya hai." },
-    rejected: { emoji: "❌", color: "#ef4444", bgColor: "#fef2f2", title: "Application Rejected", msg: "Maafi chahte hain. Application reject hui. Details ke liye sampark karo." },
-    cancelled: { emoji: "🚫", color: "#6b7280", bgColor: "#f9fafb", title: "Order Cancelled", msg: "Aapka order cancel ho gaya hai. Refund ke liye sampark karo." },
+    documents_required: { emoji: "📋", color: "#f59e0b", bgColor: "#fffbeb", title: "Documents Required!", msg: "Additional documents are required for processing. Please submit them at the earliest." },
+    approved: { emoji: "🎉", color: "#10b981", bgColor: "#ecfdf5", title: "Application Approved!", msg: "Congratulations! Your application has been approved." },
+    completed: { emoji: "✅", color: "#22c55e", bgColor: "#f0fdf4", title: "Order Completed!", msg: "Your work has been completed successfully. Thank you!" },
+    delivered: { emoji: "📬", color: "#8b5cf6", bgColor: "#f5f3ff", title: "Order Delivered!", msg: "Your document/card has been successfully delivered." },
+    rejected: { emoji: "❌", color: "#ef4444", bgColor: "#fef2f2", title: "Application Rejected", msg: "We regret to inform you that your application has been rejected. Please contact us for details." },
+    cancelled: { emoji: "🚫", color: "#6b7280", bgColor: "#f9fafb", title: "Order Cancelled", msg: "Your order has been cancelled. Please contact us regarding your refund." },
   };
 
   const cfg = STATUS_CONFIG[order.status] || { emoji: "🔄", color: ORANGE, bgColor: "#fff8f0", title: "Status Update", msg: "Aapke order mein update hai." };
@@ -223,7 +225,7 @@ function statusUpdateEmail(order: any) {
     </div>
 
     <p style="text-align:center;font-size:12px;color:#aaa;margin-top:20px;">
-      Sawal ho to WhatsApp karo: <strong>+91 70230 29903</strong>
+      For any queries, WhatsApp us: <strong>+91 70230 29903</strong>
     </p>`;
 
   return {
