@@ -1270,6 +1270,7 @@ function initApp() {
   setInterval(refreshAll, 60000);
   loadTemplateList();
   refreshAll();
+  loadProductsFromSupabase().then(() => { renderProductsPage(); fbRenderProductList(); });
   testDB();
 }
 
@@ -2216,7 +2217,7 @@ function showPage(name, btn) {
   const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents' };
   document.getElementById('pageTitle').textContent = titles[name] || name;
 
-  if (name === 'products')   renderProductsPage();
+  if (name === 'products')   { renderProductsPage(); loadProductsFromSupabase().then(() => renderProductsPage()); }
   if (name === 'formbuilder'){ fbRenderProductList(); fbRenderAddPanel(); }
   if (name === 'analytics')  renderAnalytics();
   if (name === 'coupons')    renderCoupons();
@@ -2841,6 +2842,42 @@ function getProducts() {
 }
 function setProducts(arr) { localStorage.setItem(PROD_KEY, JSON.stringify(arr)); }
 
+// ── Load products from Supabase (primary source of truth) ──
+async function loadProductsFromSupabase() {
+  try {
+    const data = await sbFetch('products', 'select=*&order=sort_order.asc');
+    if (data && Array.isArray(data)) {
+      // Normalize Supabase columns → internal format for backwards compat
+      const normalized = data.map(p => ({
+        id:        p.id,
+        name:      p.name || '',
+        category:  p.category || 'Other',
+        price:     p.price || 0,
+        mrp:       p.mrp || 0,
+        offer:     p.offer_text || '',
+        delivery:  p.delivery_time || '',
+        image:     p.image_url || '',
+        shortDesc: p.short_description || '',
+        desc:      p.full_description || '',
+        docs:      p.documents_required || '',
+        sort:      p.sort_order || 99,
+        active:    p.is_active !== false,
+        featured:  !!p.is_featured,
+        expert:    !!p.expert_advice,
+        createdAt: p.created_at || new Date().toISOString(),
+        updatedAt: p.updated_at || new Date().toISOString(),
+        // keep originals too
+        _sb: true
+      }));
+      setProducts(normalized);
+      return normalized;
+    }
+  } catch(e) {
+    console.warn('loadProductsFromSupabase failed, using localStorage:', e);
+  }
+  return getProducts();
+}
+
 function renderProductsPage() {
   const all = getProducts();
   const q   = (document.getElementById('prod_search')?.value || '').toLowerCase();
@@ -2945,67 +2982,137 @@ function pmCalcDiscount() {
   } else row.style.display = 'none';
 }
 
-function saveProduct() {
+async function saveProduct() {
   const name  = document.getElementById('pm_name').value.trim();
   const price = Number(document.getElementById('pm_price').value);
   if (!name)  { showToast('Product name likhna zaroori hai!', 'error'); return; }
   if (!price) { showToast('Price likhna zaroori hai!', 'error'); return; }
 
-  const prods = getProducts();
-  const id    = document.getElementById('pm_id').value;
-  const now   = new Date().toISOString();
-  const obj   = {
-    id:       id || 'p_'+Date.now(),
+  const id = document.getElementById('pm_id').value.trim();
+
+  // Build object with Supabase column names
+  const obj = {
     name,
-    category: document.getElementById('pm_category').value,
+    category:           document.getElementById('pm_category').value,
     price,
-    mrp:      Number(document.getElementById('pm_mrp').value)||0,
-    offer:    document.getElementById('pm_offer').value.trim(),
-    delivery: document.getElementById('pm_delivery').value.trim(),
-    image:    document.getElementById('pm_image').value.trim(),
-    shortDesc:document.getElementById('pm_short').value.trim(),
-    desc:     document.getElementById('pm_desc').value.trim(),
-    docs:     document.getElementById('pm_docs').value.trim(),
-    sort:     Number(document.getElementById('pm_sort').value)||99,
-    active:   document.getElementById('pm_active').classList.contains('on'),
-    featured: document.getElementById('pm_featured').classList.contains('on'),
-    expert:   document.getElementById('pm_expert').classList.contains('on'),
-    updatedAt: now,
-    createdAt: id ? (prods.find(p=>p.id===id)?.createdAt||now) : now
+    mrp:                Number(document.getElementById('pm_mrp').value) || 0,
+    offer_text:         document.getElementById('pm_offer').value.trim(),
+    delivery_time:      document.getElementById('pm_delivery').value.trim(),
+    image_url:          document.getElementById('pm_image').value.trim(),
+    short_description:  document.getElementById('pm_short').value.trim(),
+    full_description:   document.getElementById('pm_desc').value.trim(),
+    documents_required: document.getElementById('pm_docs').value.trim(),
+    sort_order:         Number(document.getElementById('pm_sort').value) || 99,
+    is_active:          document.getElementById('pm_active').classList.contains('on'),
+    is_featured:        document.getElementById('pm_featured').classList.contains('on'),
+    expert_advice:      document.getElementById('pm_expert').classList.contains('on'),
   };
 
-  if (id) {
-    const i = prods.findIndex(p=>p.id===id);
-    if (i>=0) prods[i]=obj; else prods.push(obj);
-  } else {
-    prods.push(obj);
+  // Disable save button to prevent double-click
+  const saveBtn = document.querySelector('#productModal .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
+
+  try {
+    let sbErr = null;
+
+    if (id) {
+      // UPDATE existing row
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(obj)
+      });
+      if (!res.ok) { try { sbErr = await res.json(); } catch(e) { sbErr = { message: 'HTTP ' + res.status }; } }
+    } else {
+      // INSERT new row
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(obj)
+      });
+      if (!res.ok) { try { sbErr = await res.json(); } catch(e) { sbErr = { message: 'HTTP ' + res.status }; } }
+    }
+
+    if (sbErr) {
+      const msg = sbErr.message || sbErr.hint || sbErr.details || JSON.stringify(sbErr);
+      showToast('❌ Supabase Error: ' + msg, 'error');
+      console.error('Supabase product save error:', sbErr);
+      return;
+    }
+
+    // Refresh local cache from Supabase
+    await loadProductsFromSupabase();
+
+    closeModal('productModal');
+    renderProductsPage();
+    fbRenderProductList();
+    showToast(`✅ "${name}" ${id ? 'updated' : 'added'} in Supabase!`, 'success');
+
+  } catch(e) {
+    showToast('❌ Network error: ' + e.message, 'error');
+    console.error('saveProduct network error:', e);
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Product'; }
   }
-  setProducts(prods);
-  closeModal('productModal');
-  renderProductsPage();
-  fbRenderProductList();
-  showToast(`✅ "${name}" ${id?'updated':'added'} successfully!`, 'success');
 }
 
-function prodToggleActive(id) {
+async function prodToggleActive(id) {
   const prods = getProducts();
   const p = prods.find(x=>x.id===id);
   if (!p) return;
-  p.active = p.active===false ? true : false;
-  p.updatedAt = new Date().toISOString();
-  setProducts(prods);
-  renderProductsPage();
-  showToast(p.active ? `✅ "${p.name}" Activated!` : `⏸ "${p.name}" Deactivated!`, 'success');
+  const newActive = p.active === false ? true : false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ is_active: newActive })
+    });
+    if (!res.ok) { const e = await res.json(); showToast('❌ Update failed: ' + (e.message||''), 'error'); return; }
+    p.active = newActive;
+    setProducts(prods);
+    renderProductsPage();
+    showToast(newActive ? `✅ "${p.name}" Activated!` : `⏸ "${p.name}" Deactivated!`, 'success');
+  } catch(e) {
+    showToast('❌ Network error: ' + e.message, 'error');
+  }
 }
 
 function prodDelete(id) {
   const p = getProducts().find(x=>x.id===id);
   if (!p) return;
-  showConfirm('🗑️','Delete Product?',`"${p.name}" permanently delete ho jayega!`, () => {
-    setProducts(getProducts().filter(x=>x.id!==id));
-    renderProductsPage();
-    fbRenderProductList();
-    showToast('🗑️ Product deleted', 'info');
+  showConfirm('🗑️','Delete Product?',`"${p.name}" permanently delete ho jayega!`, async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal'
+        }
+      });
+      if (!res.ok) { const e = await res.json(); showToast('❌ Delete failed: ' + (e.message||''), 'error'); return; }
+      setProducts(getProducts().filter(x=>x.id!==id));
+      renderProductsPage();
+      fbRenderProductList();
+      showToast('🗑️ Product deleted from Supabase!', 'info');
+    } catch(e) {
+      showToast('❌ Network error: ' + e.message, 'error');
+    }
   });
 }
 
@@ -3670,54 +3777,6 @@ window.onload = () => {
     initApp();
   }
 };
-</script>
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
-
-const supabase = createClient(
-  "https://qhqvmzrdncxddzlfrgrn.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc"
-)
-
-// FORM AUTO DETECT + SAVE
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("form")
-
-  if (!form) {
-    console.log("Form not found ❌")
-    return
-  }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault()
-
-    const product = {
-      name: form.querySelector('[placeholder*="Name"]')?.value,
-      category: form.querySelector('select')?.value,
-      price: form.querySelector('[placeholder*="Selling"]')?.value,
-      mrp: form.querySelector('[placeholder*="MRP"]')?.value,
-      offer_text: form.querySelector('[placeholder*="Offer"]')?.value,
-      delivery_time: form.querySelector('[placeholder*="Delivery"]')?.value,
-      image_url: form.querySelector('[placeholder*="Image"]')?.value,
-      short_description: form.querySelector('[placeholder*="Short"]')?.value,
-      full_description: form.querySelector('textarea')?.value,
-      documents_required: form.querySelector('[placeholder*="Documents"]')?.value,
-      sort_order: form.querySelector('[placeholder*="Sort"]')?.value || 0,
-      is_active: form.querySelector('input[type="checkbox"]')?.checked || true,
-      is_featured: false,
-      expert_advice: false
-    }
-
-    const { error } = await supabase.from('products').insert([product])
-
-    if (error) {
-      alert("Error: " + error.message)
-    } else {
-      alert("✅ Product Saved Successfully")
-      form.reset()
-    }
-  })
-})
 </script>
 </body>
 </html>
