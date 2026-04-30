@@ -617,145 +617,47 @@
     <h2 class="section-title">What We Offer</h2>
     <p class="section-sub">Professional documentation services handled by certified eMitra operators with 9+ years of experience.</p>
 
-    <!-- ══ DOCUMENTATION SERVICES CATEGORY ══ -->
-    <div class="category-header">
-      <div class="category-pill">📄 Documentation Services</div>
-      <div class="category-line"></div>
-    </div>
+    <!-- Dynamic products rendered here from Supabase -->
+    <div id="dynamicServicesContainer">
 
-    <div class="products-grid">
+      <!-- ══ DOCUMENTATION SERVICES CATEGORY ══ -->
+      <div class="category-header">
+        <div class="category-pill">📄 Documentation Services</div>
+        <div class="category-line"></div>
+      </div>
+      <div class="products-grid" id="grid-Gazette"></div>
+      <div class="products-grid" id="grid-BPR"></div>
+      <div class="products-grid" id="grid-Government"></div>
 
-      <!-- GAZETTE CARD -->
-      <div class="product-card">
-        <span class="product-badge">⭐ Most Popular</span>
-        <span class="product-emoji">📰</span>
-        <h3>Gazette Notification Consultancy &amp; Assistance</h3>
-        <p>Official publication in the Rajasthan Government Gazette for name changes, corrections, or any legal announcements. Legally valid across all government departments and courts.</p>
+      <!-- ══ DIGITAL PRINTING CATEGORY ══ -->
+      <div class="category-header" style="margin-top:40px;">
+        <div class="category-pill" style="background:linear-gradient(90deg,#1a3570,#0b3d2e);">🖨️ Digital Printing Solutions</div>
+        <div class="category-line"></div>
+      </div>
+      <div class="products-grid" id="grid-PVC"></div>
 
-        <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Common Reasons People Apply</div>
-        <div class="use-cases-grid">
-          <div class="use-case-tag">🛂 Passport / Visa name fix</div>
-          <div class="use-case-tag">🪪 Aadhaar / PAN mismatch</div>
-          <div class="use-case-tag">💍 Surname after marriage</div>
-          <div class="use-case-tag">🏠 Property deed correction</div>
-          <div class="use-case-tag">🎓 School / College certificate</div>
-          <div class="use-case-tag">🔢 Numerological / religious reason</div>
-          <div class="use-case-tag">🏦 Bank account name update</div>
-          <div class="use-case-tag">📋 DOB correction in records</div>
+      <!-- ══ DIGITAL SERVICES CATEGORY ══ -->
+      <div id="digital-services-section" style="display:none;">
+        <div class="category-header" style="margin-top:40px;">
+          <div class="category-pill" style="background:linear-gradient(90deg,#3b0764,#6d28d9);">💻 Digital Services</div>
+          <div class="category-line"></div>
         </div>
-
-        <ul class="product-features">
-          <li><span class="feat-check">✓</span> Published in Official Rajasthan Gazette</li>
-          <li><span class="feat-check">✓</span> Valid for all Govt. & legal purposes</li>
-          <li><span class="feat-check">✓</span> Newspaper publication arranged by us</li>
-          <li><span class="feat-check">✓</span> Digital + physical copy delivered</li>
-          <li><span class="feat-check">✓</span> Turnaround: 15–30 working days</li>
-        </ul>
-
-        <div class="product-actions">
-          <div class="product-price">
-            <strong>₹5,100</strong>
-            <span style="text-decoration:line-through;color:var(--slate);font-size:14px;">₹10,200</span>
-            <span style="background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;">50% OFF</span>
-            <span>Processing &amp; Assistance Fee included</span>
-          </div>
-          <button class="btn-consult" onclick="openGazetteConsult()">📞 Book Primary Expert Advice</button>
-          <button class="btn-add" id="btn-gazette" onclick="addToCart('gazette','Gazette Notification',5100,'📰')">🛒 Add to Cart</button>
-
-        </div>
+        <div class="products-grid" id="grid-Digital Services"></div>
       </div>
 
-      <!-- PROJECT REPORT CARD -->
-      <div class="product-card">
-        <span class="product-badge">🏦 MSME Ready</span>
-        <span class="product-emoji">📊</span>
-        <h3>Business Project Report</h3>
-        <p>Professionally prepared DPR (Detailed Project Report) for bank loan applications, MSME registration, and government scheme eligibility. Accepted by all major nationalised banks.</p>
-
-        <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Accepted For These Loans & Schemes</div>
-        <div class="loan-tags">
-          <span class="loan-tag">PMEGP</span>
-          <span class="loan-tag">Mudra Loan</span>
-          <span class="loan-tag">CGTMSE</span>
-          <span class="loan-tag">Standup India</span>
-          <span class="loan-tag">MSME / Udyam</span>
-          <span class="loan-tag">SBI / PNB</span>
-          <span class="loan-tag">Bank of Baroda</span>
-          <span class="loan-tag">Canara Bank</span>
+      <!-- ══ OTHER CATEGORY ══ -->
+      <div id="other-services-section" style="display:none;">
+        <div class="category-header" style="margin-top:40px;">
+          <div class="category-pill" style="background:linear-gradient(90deg,#374151,#6b7280);">🔧 Other Services</div>
+          <div class="category-line"></div>
         </div>
-
-        <ul class="product-features">
-          <li><span class="feat-check">✓</span> Accepted by all nationalised banks & NBFCs</li>
-          <li><span class="feat-check">✓</span> Financial projections & market analysis included</li>
-          <li><span class="feat-check">✓</span> Kirana, Dairy, Medical, Manufacturing & more</li>
-          <li><span class="feat-check">✓</span> Delivered as bank-ready PDF</li>
-          <li><span class="feat-check">✓</span> Turnaround: 24–48 hours via WhatsApp</li>
-        </ul>
-
-        <div class="product-actions">
-          <div class="product-price">
-            <strong>₹1,499</strong>
-            <span style="text-decoration:line-through;color:var(--slate);font-size:14px;">₹2,998</span>
-            <span style="background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;">50% OFF</span>
-            <span>All inclusive</span>
-          </div>
-          <button class="btn-consult" onclick="openBPRConsult()">📞 Book Primary Expert Advice</button>
-          <button class="btn-add" id="btn-bpr" onclick="addToCart('bpr','Business Project Report',1499,'📊')">🛒 Add to Cart</button>
-
-        </div>
+        <div class="products-grid" id="grid-Other"></div>
       </div>
 
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════
-     DIGITAL PRINTING SOLUTIONS CATEGORY
-══════════════════════════════════════════════════ -->
-<section class="section" id="printing">
-  <div class="section-inner">
-    <div class="category-header">
-      <div class="category-pill" style="background:linear-gradient(90deg,#1a3570,#0b3d2e);">🖨️ Digital Printing Solutions</div>
-      <div class="category-line"></div>
-    </div>
-    <div class="products-grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));">
-
-      <!-- PVC SMART CARD -->
-      <div class="product-card">
-        <span class="product-badge" style="background:rgba(22,163,74,0.1);color:var(--green);">💳 Best Seller</span>
-        <span class="product-emoji">🪪</span>
-        <h3>Smart Card & PVC Printing</h3>
-        <p>High-quality PVC printed cards for your Aadhaar, PAN, Voter ID, and more. Credit-card size, laminated, durable — identical to original in look and feel. Delivered to your door.</p>
-
-        <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Card Types Available</div>
-        <div class="use-cases-grid">
-          <div class="use-case-tag">🪪 Aadhaar Card (Front + Back)</div>
-          <div class="use-case-tag">💳 PAN Card</div>
-          <div class="use-case-tag">🗳️ Voter ID Card</div>
-          <div class="use-case-tag">🚗 Driving Licence</div>
-          <div class="use-case-tag">🎓 Student / Employee ID</div>
-          <div class="use-case-tag">🏥 Health / Ayushman Card</div>
-          <div class="use-case-tag">🏦 Bank / ATM Style Card</div>
-          <div class="use-case-tag">🎴 Custom Visiting Card</div>
-        </div>
-
-        <ul class="product-features">
-          <li><span class="feat-check">✓</span> Premium 760 micron PVC — ultra durable</li>
-          <li><span class="feat-check">✓</span> UV lamination — waterproof & scratch-resistant</li>
-          <li><span class="feat-check">✓</span> Exact credit-card size (85.6 × 54 mm)</li>
-          <li><span class="feat-check">✓</span> Dispatched via Speed Post with tracking</li>
-          <li><span class="feat-check">✓</span> Bulk discounts available (5+ cards)</li>
-        </ul>
-
-        <div class="product-actions">
-          <div class="product-price">
-            <strong>₹99</strong>
-            <span style="text-decoration:line-through;color:var(--slate);font-size:14px;">₹199</span>
-            <span style="background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;">50% OFF</span>
-            <span>per card · free Speed Post</span>
-          </div>
-          <button class="btn-add" id="btn-pvc" onclick="openPVCOrder()">🛒 Order Now</button>
-        </div>
+      <!-- Loading state -->
+      <div id="servicesLoading" style="text-align:center;padding:60px 20px;color:var(--slate);">
+        <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+        <p style="font-size:15px;">Loading services…</p>
       </div>
 
     </div>
@@ -1695,12 +1597,210 @@
   const WHATSAPP_NUM = '917023029903';            
   const ADMIN_EMAIL  = 'harshcscemitra@gmail.com';
 
-  // ── PRODUCTS ──────────────────────────────────────────────────
+  // ── PRODUCTS — now loaded live from Supabase ──────────────────
+  // Fallback static products (used if Supabase fails or on first load)
   const products = {
-    gazette: { id:'gazette', name:'Gazette Notification',    price:5100, emoji:'📰' },
-    bpr:     { id:'bpr',     name:'Business Project Report', price:1499, emoji:'📊' },
-    pvc:     { id:'pvc',     name:'Smart Card & PVC Print',  price:99,   emoji:'🪪' }
+    gazette: { id:'gazette', name:'Gazette Notification Consultancy & Assistance', price:5100, emoji:'📰', category:'Gazette' },
+    bpr:     { id:'bpr',     name:'Business Project Report',                        price:1499, emoji:'📊', category:'BPR'     },
+    pvc:     { id:'pvc',     name:'Smart Card & PVC Printing',                      price:99,   emoji:'🪪', category:'PVC'     }
   };
+
+  // Dynamic product map — gets populated from Supabase
+  let dynamicProducts = { ...products };
+
+  // ── LOAD PRODUCTS FROM SUPABASE AND RENDER ───────────────────
+  async function loadProductsFromSupabase() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?is_active=eq.true&order=sort_order.asc`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) throw new Error('Fetch failed');
+      const data = await res.json();
+      if (!data || !data.length) { renderFallbackProducts(); return; }
+
+      // Rebuild dynamic product map from Supabase
+      dynamicProducts = {};
+      data.forEach(p => {
+        const key = String(p.id);
+        dynamicProducts[key] = {
+          id:       key,
+          name:     p.name,
+          price:    p.price,
+          mrp:      p.mrp || 0,
+          emoji:    getCategoryEmoji(p.category),
+          offerText: p.offer_text || '',
+          delivery: p.delivery_time || '',
+          image:    p.image_url || '',
+          shortDesc: p.short_description || '',
+          desc:     p.full_description || '',
+          docs:     p.documents_required || '',
+          featured: !!p.is_featured,
+          expert:   !!p.expert_advice,
+          category: p.category || 'Other'
+        };
+      });
+
+      renderDynamicProducts(data);
+    } catch(e) {
+      console.warn('Supabase products load failed, using fallback:', e);
+      renderFallbackProducts();
+    }
+  }
+
+  function getCategoryEmoji(cat) {
+    const map = { Gazette:'📰', BPR:'📊', PVC:'🪪', Government:'🏛️', 'Digital Services':'💻', Other:'🔧' };
+    return map[cat] || '🛍️';
+  }
+
+  function renderDynamicProducts(data) {
+    const loadingEl = document.getElementById('servicesLoading');
+    if (loadingEl) loadingEl.style.display = 'none';
+
+    // Clear all grids first
+    ['Gazette','BPR','PVC','Government','Digital Services','Other'].forEach(cat => {
+      const el = document.getElementById('grid-' + cat);
+      if (el) el.innerHTML = '';
+    });
+
+    // Group by category
+    const grouped = {};
+    data.forEach(p => {
+      const cat = p.category || 'Other';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(p);
+    });
+
+    // Render each product into its category grid
+    Object.entries(grouped).forEach(([cat, prods]) => {
+      const gridEl = document.getElementById('grid-' + cat);
+      if (!gridEl) return;
+      gridEl.innerHTML = prods.map(p => buildProductCard(p)).join('');
+
+      // Show optional category sections
+      if (cat === 'Digital Services') {
+        const sec = document.getElementById('digital-services-section');
+        if (sec) sec.style.display = 'block';
+      }
+      if (cat === 'Other') {
+        const sec = document.getElementById('other-services-section');
+        if (sec) sec.style.display = 'block';
+      }
+    });
+
+    // Update hero service items with live data from Gazette & BPR
+    updateHeroItems(data);
+  }
+
+  function buildProductCard(p) {
+    const key     = String(p.id);
+    const emoji   = getCategoryEmoji(p.category);
+    const price   = p.price || 0;
+    const mrp     = p.mrp || 0;
+    const disc    = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+    const badge   = p.offer_text || (disc ? disc + '% OFF' : '');
+    const delivery = p.delivery_time ? `· ${p.delivery_time}` : '';
+    const isGazette = p.category === 'Gazette';
+    const isBPR     = p.category === 'BPR';
+    const isPVC     = p.category === 'PVC';
+
+    const badgeHtml = p.is_featured
+      ? `<span class="product-badge" style="background:rgba(232,103,26,0.1);color:var(--saffron);">⭐ Featured</span>`
+      : badge
+      ? `<span class="product-badge">${badge}</span>`
+      : '';
+
+    const imageHtml = p.image_url
+      ? `<img src="${p.image_url}" alt="${p.name}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;margin-bottom:10px;" onerror="this.style.display='none'"/>`
+      : `<span class="product-emoji">${emoji}</span>`;
+
+    const descHtml = p.short_description || p.full_description
+      ? `<p>${(p.short_description || p.full_description).slice(0, 160)}${(p.short_description || '').length > 160 ? '...' : ''}</p>`
+      : '';
+
+    const docsHtml = p.documents_required
+      ? `<div style="font-size:12px;color:var(--slate);margin-bottom:14px;"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--navy);">Documents Required:</strong><br/>${p.documents_required}</div>`
+      : '';
+
+    const expertHtml = p.expert_advice
+      ? `<button class="btn-consult" onclick="${isGazette ? 'openGazetteConsult()' : isBPR ? 'openBPRConsult()' : ''}">📞 Book Primary Expert Advice</button>`
+      : '';
+
+    const ctaHtml = isPVC
+      ? `<button class="btn-add" id="btn-pvc-${key}" onclick="openPVCOrder()">🛒 Order Now</button>`
+      : `<button class="btn-add" id="btn-sb-${key}" onclick="addToCartDynamic('${key}')">🛒 Add to Cart</button>`;
+
+    const mrpHtml = disc
+      ? `<span style="text-decoration:line-through;color:var(--slate);font-size:14px;">₹${mrp.toLocaleString('en-IN')}</span>
+         <span style="background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;">${disc}% OFF</span>`
+      : '';
+
+    return `
+    <div class="product-card">
+      ${badgeHtml}
+      ${imageHtml}
+      <h3>${p.name}</h3>
+      ${descHtml}
+      ${docsHtml}
+      <div class="product-actions">
+        <div class="product-price">
+          <strong>₹${price.toLocaleString('en-IN')}</strong>
+          ${mrpHtml}
+          <span>${delivery}</span>
+        </div>
+        ${expertHtml}
+        ${ctaHtml}
+      </div>
+    </div>`;
+  }
+
+  // Update hero card service items with live prices
+  function updateHeroItems(data) {
+    const gazette = data.find(p => p.category === 'Gazette');
+    const bpr     = data.find(p => p.category === 'BPR');
+    if (gazette) {
+      const el = document.querySelector('.service-item[data-service="Gazette Notification Consultancy & Assistance"] .service-price strong');
+      if (el) el.textContent = '₹' + Number(gazette.price).toLocaleString('en-IN');
+    }
+    if (bpr) {
+      const el = document.querySelector('.service-item[data-service="Business Project Report"] .service-price strong');
+      if (el) el.textContent = '₹' + Number(bpr.price).toLocaleString('en-IN');
+    }
+  }
+
+  // Fallback: render the 3 hardcoded products if Supabase fails
+  function renderFallbackProducts() {
+    const loadingEl = document.getElementById('servicesLoading');
+    if (loadingEl) loadingEl.style.display = 'none';
+    const gazetteGrid = document.getElementById('grid-Gazette');
+    const bprGrid     = document.getElementById('grid-BPR');
+    const pvcGrid     = document.getElementById('grid-PVC');
+    if (gazetteGrid) gazetteGrid.innerHTML = buildProductCard({
+      id:'gazette-fallback', name:'Gazette Notification Consultancy & Assistance',
+      price:5100, mrp:10200, category:'Gazette', offer_text:'50% OFF',
+      short_description:'Official publication in Rajasthan Government Gazette for name changes, corrections, or legal announcements.',
+      delivery_time:'15–30 Working Days', expert_advice:true, is_featured:false, image_url:''
+    });
+    if (bprGrid) bprGrid.innerHTML = buildProductCard({
+      id:'bpr-fallback', name:'Business Project Report',
+      price:1499, mrp:2998, category:'BPR', offer_text:'50% OFF',
+      short_description:'Professionally prepared DPR for bank loan applications, MSME registration and government scheme eligibility.',
+      delivery_time:'24–48 Hours', expert_advice:true, is_featured:false, image_url:''
+    });
+    if (pvcGrid) pvcGrid.innerHTML = buildProductCard({
+      id:'pvc-fallback', name:'Smart Card & PVC Printing',
+      price:99, mrp:199, category:'PVC', offer_text:'50% OFF',
+      short_description:'High-quality PVC printed cards — Aadhaar, PAN, Voter ID and more. Dispatched via Speed Post.',
+      delivery_time:'2–3 Working Days', expert_advice:false, is_featured:false, image_url:''
+    });
+  }
+
+  // Add dynamic product to cart (works with Supabase products)
+  function addToCartDynamic(id) {
+    const p = dynamicProducts[id];
+    if (!p) return;
+    addToCart(id, p.name, p.price, p.emoji);
+  }
 
   const RAZORPAY_KEY = 'rzp_live_ShL15WckCTU12U';
 
@@ -2119,15 +2219,23 @@
   let cart = {};
 
   function addToCart(id, name, price, emoji) {
+    // Look up in dynamicProducts first, then fall back to passed params
+    const p = dynamicProducts[id];
+    const cartName  = (p && p.name)  || name;
+    const cartPrice = (p && p.price) || price;
+    const cartEmoji = (p && p.emoji) || emoji;
+
     if (cart[id]) { cart[id].qty += 1; }
-    else { cart[id] = { ...products[id], qty:1 }; }
+    else { cart[id] = { id, name: cartName, price: cartPrice, emoji: cartEmoji, qty: 1 }; }
     renderCart();
     openCartPanel();
-    const btn = document.getElementById('btn-' + id);
+    // Try both static and dynamic button IDs
+    const btn = document.getElementById('btn-' + id) || document.getElementById('btn-sb-' + id);
     if (btn) {
+      const orig = btn.innerHTML;
       btn.innerHTML = '✓ Added!';
       btn.classList.add('added');
-      setTimeout(() => { btn.innerHTML = '🛒 Add to Cart'; btn.classList.remove('added'); }, 2000);
+      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('added'); }, 2000);
     }
   }
 
@@ -3278,6 +3386,8 @@ Hum jald hi contact karenge.`);
   // ── INIT ──────────────────────────────────────────────────────
   initAuth();
   renderCart();
+  // Load products live from Supabase
+  loadProductsFromSupabase();
 </script>
 <script type="text/javascript">
   function googleTranslateElementInit() {
