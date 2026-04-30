@@ -1741,14 +1741,31 @@
     const badgeStyle = cat==='PVC' ? 'background:rgba(22,163,74,0.1);color:var(--green);' : '';
     const badgeHtml = badgeText ? `<span class="product-badge" style="${badgeStyle}">${badgeText}</span>` : '';
 
-    // Image or emoji
+    // Image — show full width banner if URL provided, else emoji icon
     const imgHtml = p.image_url
-      ? `<img src="${p.image_url}" alt="${p.name}" style="width:64px;height:64px;object-fit:cover;border-radius:12px;margin-bottom:10px;display:block;" onerror="this.style.display='none'"/>`
+      ? `<div class="card-img-wrap">
+           <img src="${p.image_url}" alt="${p.name}"
+             style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:14px;display:block;"
+             onerror="this.parentElement.innerHTML='<span class=\\'product-emoji\\'>${emoji}</span>'"/>
+         </div>`
       : `<span class="product-emoji">${emoji}</span>`;
 
-    // Description
-    const desc = p.short_description || p.full_description || '';
-    const descHtml = desc ? `<p>${desc.slice(0,200)}${desc.length>200?'…':''}</p>` : '';
+    // Short description (always shown)
+    const shortDesc = (p.short_description || '').trim();
+    // Full description (shown in expandable section)
+    const fullDesc  = (p.full_description  || '').trim();
+
+    const shortHtml = shortDesc
+      ? `<p style="margin-bottom:8px;">${shortDesc}</p>`
+      : '';
+
+    // Full description — expandable block
+    const fullHtml = fullDesc
+      ? `<div class="card-full-desc" id="fulldesc-${id}" style="display:none;font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:10px;white-space:pre-line;">${fullDesc}</div>
+         <button class="card-read-more" id="readmore-${id}" onclick="toggleFullDesc('${id}')" style="background:none;border:none;color:var(--saffron);font-size:12px;font-weight:700;cursor:pointer;padding:0;margin-bottom:10px;">▼ Read More</button>`
+      : '';
+
+    const descHtml = shortHtml + fullHtml;
 
     // Documents required
     const docsHtml = p.documents_required
@@ -1790,6 +1807,15 @@
         ${ctaBtn}
       </div>
     </div>`;
+  }
+
+  function toggleFullDesc(id) {
+    const desc = document.getElementById('fulldesc-' + id);
+    const btn  = document.getElementById('readmore-' + id);
+    if (!desc || !btn) return;
+    const isOpen = desc.style.display !== 'none';
+    desc.style.display = isOpen ? 'none' : 'block';
+    btn.textContent    = isOpen ? '▼ Read More' : '▲ Read Less';
   }
 
   // Add product from Supabase to cart

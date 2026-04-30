@@ -955,7 +955,9 @@ tr:hover td{background:rgba(255,255,255,0.02);}
           <label>Product Image URL</label>
           <input class="f-input" id="pm_image" placeholder="https://i.imgur.com/xxx.jpg  ya  Cloudinary URL" oninput="pmPreviewImg()"/>
           <div style="font-size:11px;color:var(--text3);margin-top:3px;">Cloudinary / Imgur / Google Drive direct link — koi bhi image URL</div>
-          <img id="pm_img_preview" src="" style="display:none;width:72px;height:72px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border);" onerror="this.style.display='none'"/>
+          <img id="pm_img_preview" src="" style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border);"/>
+          <div id="pm_img_hint" style="display:none;font-size:11px;color:#f87171;margin-top:6px;line-height:1.5;padding:6px 8px;background:rgba(248,113,113,0.08);border-radius:6px;"></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;">✅ Recommended: <b>imgbb.com</b> upload karo → "Direct Link" copy karo (.jpg wala)</div>
         </div>
       </div>
       <div class="form-row single"><div class="f-group"><label>Short Description (1-2 lines)</label><input class="f-input" id="pm_short" placeholder="Service ki summary"/></div></div>
@@ -2997,7 +2999,18 @@ function openProductModal(id) {
 function pmPreviewImg() {
   const url = document.getElementById('pm_image').value.trim();
   const el  = document.getElementById('pm_img_preview');
-  if (url) { el.src = url; el.style.display = 'block'; } else el.style.display = 'none';
+  const hint = document.getElementById('pm_img_hint');
+  if (!url) { el.style.display = 'none'; if(hint) hint.style.display='none'; return; }
+  el.src = url;
+  el.style.display = 'block';
+  el.onerror = () => {
+    el.style.display = 'none';
+    if (hint) {
+      hint.innerHTML = '⚠️ Image load nahi hui — ibb.co / Imgur hotlink block karta hai. Use karo: <a href="https://imgbb.com" target="_blank" style="color:var(--saffron)">imgbb.com</a> ka <b>Direct Link</b> (.jpg/.png extension wala) ya Google Drive public link.';
+      hint.style.display = 'block';
+    }
+  };
+  el.onload = () => { if (hint) hint.style.display = 'none'; };
 }
 
 function pmCalcDiscount() {
