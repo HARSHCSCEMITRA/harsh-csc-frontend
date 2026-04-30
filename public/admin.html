@@ -972,7 +972,26 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         </div>
         <div class="f-group">
           <label style="display:block;margin-bottom:6px;">Expert Advice</label>
-          <div style="display:flex;align-items:center;gap:8px;"><div class="toggle" id="pm_expert" onclick="this.classList.toggle('on')"></div><span style="font-size:12px;">Auto-add</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div class="toggle" id="pm_expert" onclick="this.classList.toggle('on');document.getElementById('pm_expert_suboptions').style.display=this.classList.contains('on')?'block':'none'"></div><span style="font-size:12px;">Auto-add</span></div>
+        </div>
+      </div>
+      <!-- ── Expert Advice Sub-options (only visible when Expert ON) ── -->
+      <div id="pm_expert_suboptions" style="display:none;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--saffron);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">📞 Expert Advice Settings</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="f-group">
+            <label style="display:block;margin-bottom:6px;font-size:12px;">WhatsApp Send</label>
+            <div style="display:flex;align-items:center;gap:8px;"><div class="toggle on" id="pm_wa_send" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;color:var(--text3);">Form submit hone par WA bheje</span></div>
+          </div>
+          <div class="f-group">
+            <label style="display:block;margin-bottom:6px;font-size:12px;">Booking Confirmation</label>
+            <div style="display:flex;align-items:center;gap:8px;"><div class="toggle on" id="pm_booking_confirm" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;color:var(--text3);">"Advice Booked!" popup dikhaye</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label style="display:block;margin-bottom:6px;font-size:12px;">Documents Checklist <span style="font-weight:400;color:var(--text3);">(Booking confirmation mein dikhegi — ek line per item)</span></label>
+          <textarea class="f-input" id="pm_checklist" rows="4" placeholder="Aadhaar Card (both sides)&#10;PAN Card&#10;Passport-size photograph&#10;Address Proof" style="font-size:12px;line-height:1.6;"></textarea>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;">💡 Har item alag line mein likhein. Yeh checklist customer ko "Primary Expert Advice Booked!" popup mein dikhayi jayegi.</div>
         </div>
       </div>
       <div class="form-row single"><div class="f-group"><label>Sort Order (1 = pehle dikhega)</label><input class="f-input" id="pm_sort" type="number" value="99"/></div></div>
@@ -1270,7 +1289,7 @@ function initApp() {
   setInterval(refreshAll, 60000);
   loadTemplateList();
   refreshAll();
-  loadProductsFromSupabase().then(() => { renderProductsPage(); fbRenderProductList(); });
+  loadProductsFromSupabase().then(() => { renderProductsPage(); fbRenderProductList(); fbLoadAllFromSupabase(); });
   testDB();
 }
 
@@ -2218,7 +2237,7 @@ function showPage(name, btn) {
   document.getElementById('pageTitle').textContent = titles[name] || name;
 
   if (name === 'products')   { renderProductsPage(); loadProductsFromSupabase().then(() => renderProductsPage()); }
-  if (name === 'formbuilder'){ fbRenderProductList(); fbRenderAddPanel(); }
+  if (name === 'formbuilder'){ fbLoadAllFromSupabase(); fbRenderProductList(); fbRenderAddPanel(); }
   if (name === 'analytics')  renderAnalytics();
   if (name === 'coupons')    renderCoupons();
   if (name === 'staff')      renderStaff();
@@ -2864,6 +2883,9 @@ async function loadProductsFromSupabase() {
         active:    p.is_active !== false,
         featured:  !!p.is_featured,
         expert:    !!p.expert_advice,
+        wa_send:        p.whatsapp_enabled !== false,
+        booking_confirm: p.booking_confirm !== false,
+        checklist: p.consult_checklist || '',
         createdAt: p.created_at || new Date().toISOString(),
         updatedAt: p.updated_at || new Date().toISOString(),
         // keep originals too
@@ -2958,6 +2980,13 @@ function openProductModal(id) {
   setToggle('pm_active',   p ? p.active !== false : true);
   setToggle('pm_featured', !!p?.featured);
   setToggle('pm_expert',   !!p?.expert);
+  // Expert sub-options
+  setToggle('pm_wa_send',        p ? p.wa_send !== false : true);
+  setToggle('pm_booking_confirm', p ? p.booking_confirm !== false : true);
+  const checklistEl = document.getElementById('pm_checklist');
+  if (checklistEl) checklistEl.value = p?.checklist || '';
+  const subOpts = document.getElementById('pm_expert_suboptions');
+  if (subOpts) subOpts.style.display = !!p?.expert ? 'block' : 'none';
   // Image preview
   const imgEl = document.getElementById('pm_img_preview');
   if (p?.image) { imgEl.src = p.image; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
@@ -3006,6 +3035,9 @@ async function saveProduct() {
     is_active:          document.getElementById('pm_active').classList.contains('on'),
     is_featured:        document.getElementById('pm_featured').classList.contains('on'),
     expert_advice:      document.getElementById('pm_expert').classList.contains('on'),
+    whatsapp_enabled:   document.getElementById('pm_wa_send').classList.contains('on'),
+    booking_confirm:    document.getElementById('pm_booking_confirm').classList.contains('on'),
+    consult_checklist:  document.getElementById('pm_checklist').value.trim(),
   };
 
   // Disable save button to prevent double-click
@@ -3123,16 +3155,122 @@ function exportProductsCSV() {
 }
 
 // ══════════════════════════════════════════
-//  FORM BUILDER
+//  FORM BUILDER — Supabase synced
 // ══════════════════════════════════════════
-const FB_KEY = 'hsc_forms_v3';
+const FB_KEY = 'hsc_forms_v3'; // local cache key
 let fbProdId  = null;
 let fbDragIdx = null;
+let fbFormCache = {}; // local cache: { [productId]: fields[] }
 
-function fbGetForms()          { try { return JSON.parse(localStorage.getItem(FB_KEY)||'{}'); } catch(e) { return {}; } }
-function fbSetForms(obj)       { localStorage.setItem(FB_KEY, JSON.stringify(obj)); }
-function fbGetFields(pid)      { return fbGetForms()[pid] || []; }
-function fbSetFields(pid, arr) { const f=fbGetForms(); f[pid]=arr; fbSetForms(f); }
+// ── Gazette & BPR hardcoded default fields ────────────────────
+const GAZETTE_DEFAULT_FIELDS = [
+  { id:'f_g1', type:'text',     label:'Full Name (Applicant)',      placeholder:'e.g. Ramesh Kumar Sharma',  required:true,  options:[] },
+  { id:'f_g2', type:'tel',      label:'WhatsApp / Mobile Number',   placeholder:'10-digit mobile number',    required:true,  options:[] },
+  { id:'f_g3', type:'tel',      label:'Calling Number (if different)',placeholder:'Optional alternate number', required:false, options:[] },
+  { id:'f_g4', type:'email',    label:'Email Address',              placeholder:'example@email.com',         required:false, options:[] },
+  { id:'f_g5', type:'text',     label:'Old Name — हिंदी में पुराना नाम', placeholder:'हिंदी में पुराना नाम',  required:false, options:[] },
+  { id:'f_g6', type:'text',     label:'Old Name — English',         placeholder:'Old name in English',       required:false, options:[] },
+  { id:'f_g7', type:'text',     label:'New Name — Hindi (नया नाम)', placeholder:'हिंदी में नया नाम',         required:false, options:[] },
+  { id:'f_g8', type:'text',     label:'New Name — English',         placeholder:'New name in English',       required:false, options:[] },
+  { id:'f_g9', type:'date',     label:'Date of Birth',              placeholder:'',                          required:false, options:[] },
+  { id:'f_g10',type:'radio',    label:'Applicant Type',             placeholder:'',                          required:false, options:['Adult (18+)','Minor (Below 18)'] },
+  { id:'f_g11',type:'text',     label:"Father's Name — Hindi",      placeholder:'पिता का नाम हिंदी में',     required:false, options:[] },
+  { id:'f_g12',type:'text',     label:"Father's Name — English",    placeholder:"Father's name in English",  required:false, options:[] },
+  { id:'f_g13',type:'select',   label:'Reason for Name Change',     placeholder:'',                          required:false, options:['Passport/Visa','Aadhaar/PAN Mismatch','Marriage','Property Deed','School/College Certificate','Numerological/Religious','Bank Account','DOB Correction','Other'] },
+  { id:'f_g14',type:'textarea', label:'Address for Print on Gazette',placeholder:'Poora pata jaise gazette mein chhapna chahiye', required:false, options:[] },
+  { id:'f_g15',type:'textarea', label:'Courier / Delivery Address', placeholder:'Documents bhejne ka pata', required:false, options:[] },
+  { id:'f_g16',type:'textarea', label:'Additional Notes',           placeholder:'Koi aur jaankari ho to yahan likhein', required:false, options:[] },
+];
+
+const BPR_DEFAULT_FIELDS = [
+  { id:'f_b1', type:'text',     label:'Full Name',                  placeholder:'Aapka poora naam',          required:true,  options:[] },
+  { id:'f_b2', type:'tel',      label:'WhatsApp / Mobile Number',   placeholder:'10-digit mobile number',    required:true,  options:[] },
+  { id:'f_b3', type:'email',    label:'Email Address',              placeholder:'example@email.com',         required:false, options:[] },
+  { id:'f_b4', type:'text',     label:"Father's / Spouse's Name",   placeholder:'Pita ya patni ka naam',     required:false, options:[] },
+  { id:'f_b5', type:'textarea', label:'Home Address',               placeholder:'Poora ghar ka pata',        required:false, options:[] },
+  { id:'f_b6', type:'text',     label:'Business / Shop Name',       placeholder:'Dukaan ya business ka naam',required:false, options:[] },
+  { id:'f_b7', type:'select',   label:'Business Type',              placeholder:'',                          required:false, options:['Kirana/Grocery','Dairy/Milk','Medical/Pharmacy','Manufacturing','Service/Repair','Agriculture','Transport','Education','Other'] },
+  { id:'f_b8', type:'textarea', label:'Business Address / Location', placeholder:'Dukaan ka pata',           required:false, options:[] },
+  { id:'f_b9', type:'select',   label:'Loan Scheme',                placeholder:'',                          required:false, options:['PMEGP','Mudra Loan (Shishu)','Mudra Loan (Kishore)','Mudra Loan (Tarun)','CGTMSE','Standup India','Other'] },
+  { id:'f_b10',type:'number',   label:'Total Project Cost (₹)',     placeholder:'e.g. 500000',               required:false, options:[] },
+  { id:'f_b11',type:'number',   label:'Loan Amount Required (₹)',   placeholder:'e.g. 350000',               required:false, options:[] },
+  { id:'f_b12',type:'number',   label:'Own Contribution (₹)',       placeholder:'e.g. 150000',               required:false, options:[] },
+  { id:'f_b13',type:'select',   label:'Business Premises',          placeholder:'',                          required:false, options:['Owned','Rented','Family property'] },
+  { id:'f_b14',type:'text',     label:'Power Load (if applicable)', placeholder:'e.g. 5 KW',                 required:false, options:[] },
+  { id:'f_b15',type:'number',   label:'Number of Employees',        placeholder:'e.g. 3',                    required:false, options:[] },
+  { id:'f_b16',type:'number',   label:'Expected Annual Turnover (₹)',placeholder:'e.g. 1200000',             required:false, options:[] },
+  { id:'f_b17',type:'textarea', label:'Machinery / Equipment List', placeholder:'e.g. Mixer Machine - ₹15,000 ; Refrigerator - ₹20,000', required:false, options:[] },
+  { id:'f_b18',type:'textarea', label:'Additional Notes',           placeholder:'Koi aur jaankari',          required:false, options:[] },
+];
+
+// ── Supabase helpers for form_fields table ────────────────────
+async function fbLoadAllFromSupabase() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/product_forms?select=product_id,fields`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    fbFormCache = {};
+    rows.forEach(r => {
+      try { fbFormCache[r.product_id] = JSON.parse(r.fields || '[]'); } catch(e) {}
+    });
+    // Merge local cache as fallback
+    try {
+      const local = JSON.parse(localStorage.getItem(FB_KEY) || '{}');
+      Object.entries(local).forEach(([pid, fields]) => {
+        if (!fbFormCache[pid]) fbFormCache[pid] = fields;
+      });
+    } catch(e) {}
+    fbRenderProductList();
+    if (fbProdId) fbRenderFields();
+  } catch(e) { console.warn('fbLoadAllFromSupabase failed:', e); }
+}
+
+async function fbSaveToSupabase(pid, fields) {
+  // Also update local cache
+  fbFormCache[pid] = fields;
+  // Update localStorage as backup
+  try {
+    const local = JSON.parse(localStorage.getItem(FB_KEY) || '{}');
+    local[pid] = fields;
+    localStorage.setItem(FB_KEY, JSON.stringify(local));
+  } catch(e) {}
+  // Upsert to Supabase
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/product_forms`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ product_id: pid, fields: JSON.stringify(fields) })
+    });
+  } catch(e) { console.warn('fbSaveToSupabase failed:', e); }
+}
+
+function fbGetForms() { return fbFormCache; }
+function fbSetForms(obj) {
+  fbFormCache = obj;
+  try { localStorage.setItem(FB_KEY, JSON.stringify(obj)); } catch(e) {}
+}
+function fbGetFields(pid) {
+  // Special case: Gazette and BPR → return their hardcoded defaults if no custom fields saved
+  if (!fbFormCache[pid] || fbFormCache[pid].length === 0) {
+    const prods = getProducts();
+    const p = prods.find(x => String(x.id) === String(pid));
+    if (p?.category === 'Gazette' || (p?.name||'').toLowerCase().includes('gazette'))
+      return GAZETTE_DEFAULT_FIELDS;
+    if (p?.category === 'BPR' || (p?.name||'').toLowerCase().includes('project report'))
+      return BPR_DEFAULT_FIELDS;
+  }
+  return fbFormCache[pid] || [];
+}
+function fbSetFields(pid, arr) {
+  fbFormCache[pid] = arr;
+  fbSaveToSupabase(pid, arr); // async — fire and forget
+}
 
 const FB_TYPES = {
   text:     {label:'Text Input',    icon:'📝'},
@@ -3167,6 +3305,32 @@ function fbSelectProd(id) {
   document.getElementById('fb_title').textContent = `📝 ${p?.name} — Form Fields`;
   document.getElementById('fb_save_btn').style.display    = '';
   document.getElementById('fb_preview_btn').style.display = '';
+
+  // Show "Reset to Defaults" button for Gazette and BPR
+  const isGazette = p?.category === 'Gazette' || (p?.name||'').toLowerCase().includes('gazette');
+  const isBPR     = p?.category === 'BPR'     || (p?.name||'').toLowerCase().includes('project report');
+  let resetBtn = document.getElementById('fb_reset_btn');
+  if (!resetBtn) {
+    resetBtn = document.createElement('button');
+    resetBtn.id = 'fb_reset_btn';
+    resetBtn.className = 'btn-sm btn-secondary';
+    resetBtn.style.cssText = 'margin-left:6px;font-size:11px;';
+    document.getElementById('fb_save_btn').after(resetBtn);
+  }
+  if (isGazette || isBPR) {
+    resetBtn.style.display = '';
+    resetBtn.textContent = '↺ Reset to Defaults';
+    resetBtn.onclick = () => {
+      if (!confirm('Sare custom fields hat jayenge aur default fields wapas aayenge. Confirm?')) return;
+      fbFormCache[id] = [];
+      fbSaveToSupabase(id, []);
+      fbRenderFields();
+      showToast('✅ Reset ho gaya — Default fields wapas aa gaye!', 'success');
+    };
+  } else {
+    resetBtn.style.display = 'none';
+  }
+
   fbRenderProductList();
   fbRenderFields();
   fbRenderAddPanel();
@@ -3285,8 +3449,14 @@ function fbDrop(e, toIdx) {
   fbRenderFields();
 }
 
-function fbSaveConfirm() {
-  showToast('✅ Form fields save ho gaye!', 'success');
+async function fbSaveConfirm() {
+  if (fbProdId) {
+    const fields = fbGetFields(fbProdId);
+    await fbSaveToSupabase(fbProdId, fields);
+    showToast('✅ Form fields Supabase mein save ho gaye!', 'success');
+  } else {
+    showToast('⚠️ Pehle koi service select karo', 'error');
+  }
   fbRenderProductList();
 }
 

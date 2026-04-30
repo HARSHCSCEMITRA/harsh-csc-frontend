@@ -969,7 +969,7 @@
   <div class="modal-box">
     <div class="success-modal">
       <div class="success-icon">🎉</div>
-      <h2>Consultation Booked!</h2>
+      <h2>Primary Expert Advice Booked!</h2>
       <p>Our team will contact you on WhatsApp / call within <strong>2 hours</strong>. Meanwhile, please keep these documents ready to speed up the process.</p>
       <div class="checklist-box" id="consultChecklist">
         <h4>📎 Documents Checklist</h4>
@@ -982,6 +982,57 @@
       </div>
       <div style="margin-top:20px">
         <button class="btn-cancel" onclick="closeConsultSuccess()" style="width:100%;text-align:center;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     GENERIC EXPERT ADVICE MODAL (Admin-added products)
+══════════════════════════════════════════════════ -->
+<div class="consult-modal-overlay" id="genericConsultModal" onclick="if(event.target===this)closeGenericConsult()">
+  <div class="consult-modal-box">
+    <div class="consult-modal-head">
+      <div class="consult-modal-head-info">
+        <h2 id="genericConsultTitle">📞 Primary Expert Advice</h2>
+        <p>Fill in the details below. Our team will contact you within 2 hours.</p>
+      </div>
+      <button class="close-btn" onclick="closeGenericConsult()">✕</button>
+    </div>
+    <div class="consult-modal-body">
+      <div class="consult-notice-sm">
+        ✅ <span>This is a <strong>primary expert advice</strong> request. No payment needed now. Fields marked <span style="color:#dc2626">*</span> are mandatory.</span>
+      </div>
+      <div id="genericFormError" class="form-error" style="display:none;"></div>
+      <div class="form-section-title">📞 Contact Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name <span>*</span></label>
+          <input class="form-input" id="gc_name" type="text" placeholder="Aapka poora naam"/>
+        </div>
+        <div class="form-group">
+          <label>WhatsApp / Mobile Number <span>*</span></label>
+          <input class="form-input" id="gc_mobile" type="tel" placeholder="10-digit mobile number" maxlength="10"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input class="form-input" id="gc_email" type="email" placeholder="example@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>City / District</label>
+          <input class="form-input" id="gc_city" type="text" placeholder="Aapka shehar"/>
+        </div>
+      </div>
+      <div class="form-section-title">📝 Your Requirement</div>
+      <div class="form-group">
+        <label>Brief Description</label>
+        <textarea class="form-input" id="gc_notes" rows="3" placeholder="Kya kaam karna hai, koi khaas jaankari ho to batayein…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-actions" style="margin-top:20px;display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="closeGenericConsult()">Cancel</button>
+        <button class="btn-submit" style="flex:1" onclick="submitGenericConsult()">📞 Book Primary Expert Advice →</button>
       </div>
     </div>
   </div>
@@ -1622,9 +1673,17 @@
   }
 
   function renderProducts(list) {
-    // Populate sbProducts map for cart use
+    // Populate sbProducts map for cart + expert advice use
     sbProducts = {};
-    list.forEach(p => { sbProducts[String(p.id)] = p; });
+    list.forEach(p => {
+      sbProducts[String(p.id)] = {
+        ...p,
+        whatsapp_enabled:  p.whatsapp_enabled !== false,
+        booking_confirm:   p.booking_confirm  !== false,
+        consult_checklist: p.consult_checklist || '',
+        docs:              p.documents_required || '',
+      };
+    });
 
     const docCats  = ['Gazette','BPR','Government'];
     const pvcCats  = ['PVC'];
@@ -1708,7 +1767,7 @@
 
     // Expert advice / CTA buttons
     const consultBtn = (isGaz || isBPR || p.expert_advice)
-      ? `<button class="btn-consult" onclick="${isGaz?'openGazetteConsult()':isBPR?'openBPRConsult()':'openGazetteConsult()'}">📞 Book Primary Expert Advice</button>`
+      ? `<button class="btn-consult" onclick="${isGaz ? 'openGazetteConsult()' : isBPR ? 'openBPRConsult()' : `openGenericConsult('${id}')`}">📞 Book Primary Expert Advice</button>`
       : '';
     const ctaBtn = isPVC
       ? `<button class="btn-add" id="btn-pvc-${id}" onclick="openPVCOrder()">🛒 Order Now</button>`
@@ -2574,6 +2633,92 @@ Please verify & confirm.`;
     if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
 
+  // ── GENERIC EXPERT ADVICE (for admin-added products with expert_advice=true) ──
+  let _genericConsultProductId = null;
+
+  function openGenericConsult(productId) {
+    _genericConsultProductId = productId;
+    const p = sbProducts[productId];
+    const title = document.getElementById('genericConsultTitle');
+    if (title && p) title.textContent = `📞 ${p.name} — Primary Expert Advice`;
+    ['gc_name','gc_mobile','gc_email','gc_city','gc_notes'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const errEl = document.getElementById('genericFormError');
+    if (errEl) errEl.style.display = 'none';
+    const modal = document.getElementById('genericConsultModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  }
+
+  function closeGenericConsult() {
+    const modal = document.getElementById('genericConsultModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
+  }
+
+  async function submitGenericConsult() {
+    const name   = document.getElementById('gc_name')?.value.trim();
+    const mobile = document.getElementById('gc_mobile')?.value.trim();
+    const errEl  = 'genericFormError';
+    if (!name)                         { showConsultError(errEl, '⚠️ Please enter your full name.'); return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { showConsultError(errEl, '⚠️ Please enter a valid 10-digit mobile number.'); return; }
+
+    const email = document.getElementById('gc_email')?.value.trim() || '';
+    const city  = document.getElementById('gc_city')?.value.trim()  || '';
+    const notes = document.getElementById('gc_notes')?.value.trim() || '';
+    const p     = sbProducts[_genericConsultProductId] || {};
+
+    const waMsg =
+      `📞 *EXPERT ADVICE REQUEST — ${(p.name||'Service').toUpperCase()}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 Name: ${name}\n📞 WhatsApp: ${mobile}\n` +
+      (email ? `✉️ Email: ${email}\n` : '') +
+      (city  ? `🏙️ City: ${city}\n`  : '') +
+      (notes ? `\n📝 Requirement:\n${notes}\n` : '') +
+      `\n📦 Service: ${p.name||'—'}\n💰 Price: ₹${Number(p.price||0).toLocaleString('en-IN')}\n` +
+      `\n⏰ ${new Date().toLocaleString('en-IN')}`;
+
+    const emailBody =
+      `Expert Advice Request — ${p.name||'Service'}\n\nName: ${name}\nMobile: ${mobile}\n` +
+      (email ? `Email: ${email}\n` : '') + (notes ? `Requirement: ${notes}\n` : '');
+
+    // Save to Supabase expert_consults table
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/expert_consults`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          product_id: _genericConsultProductId,
+          product_name: p.name || '',
+          customer_name: name, mobile, email: email||null,
+          city: city||null, notes: notes||null,
+          status: 'Pending', read: false
+        })
+      });
+    } catch(e) { console.error('Generic consult save failed:', e); }
+
+    // WA + checklist — use product's documents_required
+    const waEnabled = p.whatsapp_enabled !== false; // default ON
+    if (waEnabled) {
+      window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+    }
+
+    closeGenericConsult();
+
+    // Build checklist from product's documents_required field
+    const docsRaw = p.docs || p.documents_required || '';
+    const checklist = docsRaw
+      ? docsRaw.split(',').map(s => s.trim()).filter(Boolean)
+      : ['Aadhaar Card', 'Mobile Number', 'Any relevant document'];
+
+    const bookingEnabled = p.booking_confirm !== false; // default ON
+    if (bookingEnabled) {
+      showConsultSuccess(checklist, waMsg, `Expert Advice — ${p.name||'Service'}`, emailBody);
+    }
+  }
+
   function showConsultError(elId, msg) {
     const el = document.getElementById(elId);
     if (el) {
@@ -2668,9 +2813,18 @@ Please verify & confirm.`;
         })
       });
     } catch(e) { console.error('Gazette save failed:', e); }
-    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+
+    // Find gazette product settings from sbProducts
+    const gazProd = Object.values(sbProducts).find(p => (p.category||'') === 'Gazette') || {};
+    const gazetteWA = gazProd.whatsapp_enabled !== false;
+    const gazetteBooking = gazProd.booking_confirm !== false;
+    const gazetteChecklist = gazProd.consult_checklist
+      ? gazProd.consult_checklist.split('\n').map(s=>s.trim()).filter(Boolean)
+      : GAZETTE_CHECKLIST;
+
+    if (gazetteWA) window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
     closeGazetteConsult();
-    showConsultSuccess(GAZETTE_CHECKLIST, waMsg, `Gazette Consultation — ${name}`, emailBody);
+    if (gazetteBooking) showConsultSuccess(gazetteChecklist, waMsg, `Gazette Consultation — ${name}`, emailBody);
   }
 
   // ── BPR ──
@@ -2781,9 +2935,18 @@ Please verify & confirm.`;
         })
       });
     } catch(e) { console.error('BPR save failed:', e); }
-    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
+
+    // Find BPR product settings from sbProducts
+    const bprProd = Object.values(sbProducts).find(p => (p.category||'') === 'BPR') || {};
+    const bprWA = bprProd.whatsapp_enabled !== false;
+    const bprBooking = bprProd.booking_confirm !== false;
+    const bprChecklist = bprProd.consult_checklist
+      ? bprProd.consult_checklist.split('\n').map(s=>s.trim()).filter(Boolean)
+      : BPR_CHECKLIST;
+
+    if (bprWA) window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank');
     closeBPRConsult();
-    showConsultSuccess(BPR_CHECKLIST, waMsg, `BPR Consultation — ${name}`, emailBody);
+    if (bprBooking) showConsultSuccess(bprChecklist, waMsg, `BPR Consultation — ${name}`, emailBody);
   }
 
 
