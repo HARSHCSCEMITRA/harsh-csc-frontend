@@ -2996,21 +2996,57 @@ function openProductModal(id) {
   openModal('productModal');
 }
 
+function convertImageUrl(url) {
+  if (!url) return url;
+  // Google Drive share link → direct image URL
+  // https://drive.google.com/file/d/FILE_ID/view → https://lh3.googleusercontent.com/d/FILE_ID
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  // drive.google.com/open?id=FILE_ID
+  const driveMatch2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (driveMatch2) return `https://lh3.googleusercontent.com/d/${driveMatch2[1]}`;
+  // drive.google.com/uc?id=FILE_ID → keep as is (already direct)
+  return url;
+}
+
 function pmPreviewImg() {
-  const url = document.getElementById('pm_image').value.trim();
-  const el  = document.getElementById('pm_img_preview');
-  const hint = document.getElementById('pm_img_hint');
-  if (!url) { el.style.display = 'none'; if(hint) hint.style.display='none'; return; }
-  el.src = url;
+  const rawUrl = document.getElementById('pm_image').value.trim();
+  const url    = convertImageUrl(rawUrl);
+  const el     = document.getElementById('pm_img_preview');
+  const hint   = document.getElementById('pm_img_hint');
+
+  // If URL was converted, show converted version in hint
+  if (url !== rawUrl && rawUrl) {
+    if (hint) {
+      hint.innerHTML   = `✅ Google Drive URL converted → <code style="font-size:10px;word-break:break-all;">${url}</code>`;
+      hint.style.color = 'var(--green)';
+      hint.style.background = 'rgba(34,197,94,0.07)';
+      hint.style.display   = 'block';
+    }
+    // Update input with converted URL so it saves correctly
+    document.getElementById('pm_image').value = url;
+  }
+
+  if (!url) {
+    el.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    return;
+  }
+
+  el.src           = url;
   el.style.display = 'block';
-  el.onerror = () => {
+  el.onerror       = () => {
     el.style.display = 'none';
     if (hint) {
-      hint.innerHTML = '⚠️ Image load nahi hui — ibb.co / Imgur hotlink block karta hai. Use karo: <a href="https://imgbb.com" target="_blank" style="color:var(--saffron)">imgbb.com</a> ka <b>Direct Link</b> (.jpg/.png extension wala) ya Google Drive public link.';
-      hint.style.display = 'block';
+      hint.innerHTML   = '👁️ Preview yahan load nahi ho sakti (browser security) — lekin <b>website pe sahi dikhegi</b> agar URL valid hai. Save karke website pe check karo.';
+      hint.style.color = 'var(--text3)';
+      hint.style.background = 'rgba(255,255,255,0.04)';
+      hint.style.display   = 'block';
     }
   };
-  el.onload = () => { if (hint) hint.style.display = 'none'; };
+  el.onload = () => {
+    if (hint && hint.innerHTML.includes('load nahi')) hint.style.display = 'none';
+  };
 }
 
 function pmCalcDiscount() {
