@@ -503,6 +503,7 @@
 
   .upi-qr-placeholder{width:200px;height:200px;border-radius:12px;border:3px dashed var(--saffron);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;color:var(--slate);text-align:center;line-height:1.4;background:var(--light);}
   .upi-qr-placeholder small{font-size:10px;color:var(--text3);margin-top:4px;}
+  .sb-loading{grid-column:1/-1;text-align:center;padding:48px;color:var(--slate);font-size:15px;}
 </style>
 </head>
 <body>
@@ -617,52 +618,41 @@
     <h2 class="section-title">What We Offer</h2>
     <p class="section-sub">Professional documentation services handled by certified eMitra operators with 9+ years of experience.</p>
 
-    <!-- Dynamic products rendered here from Supabase -->
-    <div id="dynamicServicesContainer">
-
-      <!-- ══ DOCUMENTATION SERVICES CATEGORY ══ -->
-      <div class="category-header">
-        <div class="category-pill">📄 Documentation Services</div>
-        <div class="category-line"></div>
-      </div>
-      <div class="products-grid" id="grid-Gazette"></div>
-      <div class="products-grid" id="grid-BPR"></div>
-      <div class="products-grid" id="grid-Government"></div>
-
-      <!-- ══ DIGITAL PRINTING CATEGORY ══ -->
-      <div class="category-header" style="margin-top:40px;">
-        <div class="category-pill" style="background:linear-gradient(90deg,#1a3570,#0b3d2e);">🖨️ Digital Printing Solutions</div>
-        <div class="category-line"></div>
-      </div>
-      <div class="products-grid" id="grid-PVC"></div>
-
-      <!-- ══ DIGITAL SERVICES CATEGORY ══ -->
-      <div id="digital-services-section" style="display:none;">
-        <div class="category-header" style="margin-top:40px;">
-          <div class="category-pill" style="background:linear-gradient(90deg,#3b0764,#6d28d9);">💻 Digital Services</div>
-          <div class="category-line"></div>
-        </div>
-        <div class="products-grid" id="grid-Digital Services"></div>
-      </div>
-
-      <!-- ══ OTHER CATEGORY ══ -->
-      <div id="other-services-section" style="display:none;">
-        <div class="category-header" style="margin-top:40px;">
-          <div class="category-pill" style="background:linear-gradient(90deg,#374151,#6b7280);">🔧 Other Services</div>
-          <div class="category-line"></div>
-        </div>
-        <div class="products-grid" id="grid-Other"></div>
-      </div>
-
-      <!-- Loading state -->
-      <div id="servicesLoading" style="text-align:center;padding:60px 20px;color:var(--slate);">
-        <div style="font-size:36px;margin-bottom:12px;">⏳</div>
-        <p style="font-size:15px;">Loading services…</p>
-      </div>
-
+    <!-- ══ DOCUMENTATION SERVICES ══ -->
+    <div class="category-header">
+      <div class="category-pill">📄 Documentation Services</div>
+      <div class="category-line"></div>
     </div>
+    <div class="products-grid" id="grid-doc">
+      <!-- Loaded from Supabase -->
+      <div class="sb-loading">⏳ Loading services…</div>
+    </div>
+
+    <!-- ══ DIGITAL PRINTING SOLUTIONS ══ -->
+    <div class="category-header" style="margin-top:48px;">
+      <div class="category-pill" style="background:linear-gradient(90deg,#1a3570,#0b3d2e);">🖨️ Digital Printing Solutions</div>
+      <div class="category-line"></div>
+    </div>
+    <div class="products-grid" id="grid-pvc">
+      <div class="sb-loading">⏳ Loading…</div>
+    </div>
+
+    <!-- ══ EXTRA CATEGORIES (shown only if admin adds them) ══ -->
+    <div id="grid-other-wrap" style="display:none;">
+      <div class="category-header" style="margin-top:48px;">
+        <div class="category-pill" style="background:linear-gradient(90deg,#374151,#6b7280);">💻 More Services</div>
+        <div class="category-line"></div>
+      </div>
+      <div class="products-grid" id="grid-other"></div>
+    </div>
+
   </div>
 </section>
+
+<!-- ══════════════════════════════════════════════════
+     DIGITAL PRINTING SOLUTIONS CATEGORY — kept for ID anchor
+══════════════════════════════════════════════════ -->
+<div id="printing"></div>
 
 <!-- ══════════════════════════════════════════════════
      GAZETTE CONSULTATION MODAL
@@ -1594,151 +1584,140 @@
   // ── CONFIG ────────────────────────────────────────────────────
   const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
-  const WHATSAPP_NUM = '917023029903';            
+  const WHATSAPP_NUM = '917023029903';
   const ADMIN_EMAIL  = 'harshcscemitra@gmail.com';
 
-  // ── PRODUCTS — now loaded live from Supabase ──────────────────
-  // Fallback static products (used if Supabase fails or on first load)
-  const products = {
-    gazette: { id:'gazette', name:'Gazette Notification Consultancy & Assistance', price:5100, emoji:'📰', category:'Gazette' },
-    bpr:     { id:'bpr',     name:'Business Project Report',                        price:1499, emoji:'📊', category:'BPR'     },
-    pvc:     { id:'pvc',     name:'Smart Card & PVC Printing',                      price:99,   emoji:'🪪', category:'PVC'     }
-  };
+  // ── PRODUCTS — loaded live from Supabase ──────────────────────
+  // cart uses product id as key
+  let sbProducts = {}; // populated after Supabase fetch
 
-  // Dynamic product map — gets populated from Supabase
-  let dynamicProducts = { ...products };
+  // Fallback if Supabase is unreachable
+  const FALLBACK_PRODUCTS = [
+    { id:'gazette', name:'Gazette Notification Consultancy & Assistance', price:5100, mrp:10200, category:'Gazette',
+      offer_text:'50% OFF', short_description:'Official publication in the Rajasthan Government Gazette for name changes, corrections or legal announcements. Valid across all govt. departments.',
+      full_description:'', delivery_time:'15–30 Working Days', expert_advice:true, is_featured:false, image_url:'', documents_required:'', sort_order:1 },
+    { id:'bpr', name:'Business Project Report', price:1499, mrp:2998, category:'BPR',
+      offer_text:'50% OFF', short_description:'Professionally prepared DPR for bank loan applications, MSME registration and government scheme eligibility. Accepted by all nationalised banks.',
+      full_description:'', delivery_time:'24–48 Hours', expert_advice:true, is_featured:false, image_url:'', documents_required:'', sort_order:2 },
+    { id:'pvc', name:'Smart Card & PVC Printing', price:99, mrp:199, category:'PVC',
+      offer_text:'50% OFF', short_description:'High-quality PVC printed cards — Aadhaar, PAN, Voter ID, Driving Licence and more. Dispatched via Speed Post with tracking.',
+      full_description:'', delivery_time:'2–3 Working Days', expert_advice:false, is_featured:false, image_url:'', documents_required:'', sort_order:3 }
+  ];
 
-  // ── LOAD PRODUCTS FROM SUPABASE AND RENDER ───────────────────
-  async function loadProductsFromSupabase() {
+  // ── LOAD & RENDER ALL PRODUCTS FROM SUPABASE ─────────────────
+  async function loadProducts() {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/products?is_active=eq.true&order=sort_order.asc`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
       );
-      if (!res.ok) throw new Error('Fetch failed');
+      if (!res.ok) throw new Error('fetch failed');
       const data = await res.json();
-      if (!data || !data.length) { renderFallbackProducts(); return; }
-
-      // Rebuild dynamic product map from Supabase
-      dynamicProducts = {};
-      data.forEach(p => {
-        const key = String(p.id);
-        dynamicProducts[key] = {
-          id:       key,
-          name:     p.name,
-          price:    p.price,
-          mrp:      p.mrp || 0,
-          emoji:    getCategoryEmoji(p.category),
-          offerText: p.offer_text || '',
-          delivery: p.delivery_time || '',
-          image:    p.image_url || '',
-          shortDesc: p.short_description || '',
-          desc:     p.full_description || '',
-          docs:     p.documents_required || '',
-          featured: !!p.is_featured,
-          expert:   !!p.expert_advice,
-          category: p.category || 'Other'
-        };
-      });
-
-      renderDynamicProducts(data);
+      if (!Array.isArray(data) || !data.length) throw new Error('empty');
+      renderProducts(data);
     } catch(e) {
-      console.warn('Supabase products load failed, using fallback:', e);
-      renderFallbackProducts();
+      console.warn('Supabase products failed, using fallback:', e);
+      renderProducts(FALLBACK_PRODUCTS);
     }
   }
 
-  function getCategoryEmoji(cat) {
-    const map = { Gazette:'📰', BPR:'📊', PVC:'🪪', Government:'🏛️', 'Digital Services':'💻', Other:'🔧' };
-    return map[cat] || '🛍️';
+  function renderProducts(list) {
+    // Populate sbProducts map for cart use
+    sbProducts = {};
+    list.forEach(p => { sbProducts[String(p.id)] = p; });
+
+    const docCats  = ['Gazette','BPR','Government'];
+    const pvcCats  = ['PVC'];
+    const otherCats= ['Digital Services','Other'];
+
+    const docList   = list.filter(p => docCats.includes(p.category));
+    const pvcList   = list.filter(p => pvcCats.includes(p.category));
+    const otherList = list.filter(p => otherCats.includes(p.category));
+
+    const docGrid = document.getElementById('grid-doc');
+    if (docGrid) docGrid.innerHTML = docList.length
+      ? docList.map(p => buildCard(p)).join('')
+      : '<div class="sb-loading">No documentation services found.</div>';
+
+    const pvcGrid = document.getElementById('grid-pvc');
+    if (pvcGrid) pvcGrid.innerHTML = pvcList.length
+      ? pvcList.map(p => buildCard(p)).join('')
+      : '<div class="sb-loading">No printing services found.</div>';
+
+    const otherGrid = document.getElementById('grid-other');
+    const otherWrap = document.getElementById('grid-other-wrap');
+    if (otherGrid && otherWrap) {
+      if (otherList.length) {
+        otherGrid.innerHTML = otherList.map(p => buildCard(p)).join('');
+        otherWrap.style.display = 'block';
+      } else {
+        otherWrap.style.display = 'none';
+      }
+    }
+
+    // Update hero card prices
+    const g = list.find(p => p.category === 'Gazette');
+    const b = list.find(p => p.category === 'BPR');
+    if (g) { const el = document.querySelector('[data-service="Gazette Notification Consultancy & Assistance"] .service-price strong'); if(el) el.textContent = '₹' + Number(g.price).toLocaleString('en-IN'); }
+    if (b) { const el = document.querySelector('[data-service="Business Project Report"] .service-price strong'); if(el) el.textContent = '₹' + Number(b.price).toLocaleString('en-IN'); }
   }
 
-  function renderDynamicProducts(data) {
-    const loadingEl = document.getElementById('servicesLoading');
-    if (loadingEl) loadingEl.style.display = 'none';
-
-    // Clear all grids first
-    ['Gazette','BPR','PVC','Government','Digital Services','Other'].forEach(cat => {
-      const el = document.getElementById('grid-' + cat);
-      if (el) el.innerHTML = '';
-    });
-
-    // Group by category
-    const grouped = {};
-    data.forEach(p => {
-      const cat = p.category || 'Other';
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(p);
-    });
-
-    // Render each product into its category grid
-    Object.entries(grouped).forEach(([cat, prods]) => {
-      const gridEl = document.getElementById('grid-' + cat);
-      if (!gridEl) return;
-      gridEl.innerHTML = prods.map(p => buildProductCard(p)).join('');
-
-      // Show optional category sections
-      if (cat === 'Digital Services') {
-        const sec = document.getElementById('digital-services-section');
-        if (sec) sec.style.display = 'block';
-      }
-      if (cat === 'Other') {
-        const sec = document.getElementById('other-services-section');
-        if (sec) sec.style.display = 'block';
-      }
-    });
-
-    // Update hero service items with live data from Gazette & BPR
-    updateHeroItems(data);
+  function getCatEmoji(cat) {
+    return {Gazette:'📰',BPR:'📊',PVC:'🪪',Government:'🏛️','Digital Services':'💻',Other:'🔧'}[cat] || '🛍️';
   }
 
-  function buildProductCard(p) {
-    const key     = String(p.id);
-    const emoji   = getCategoryEmoji(p.category);
-    const price   = p.price || 0;
-    const mrp     = p.mrp || 0;
+  function buildCard(p) {
+    const id      = String(p.id);
+    const price   = Number(p.price) || 0;
+    const mrp     = Number(p.mrp)   || 0;
     const disc    = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
-    const badge   = p.offer_text || (disc ? disc + '% OFF' : '');
-    const delivery = p.delivery_time ? `· ${p.delivery_time}` : '';
-    const isGazette = p.category === 'Gazette';
-    const isBPR     = p.category === 'BPR';
-    const isPVC     = p.category === 'PVC';
+    const cat     = p.category || 'Other';
+    const isGaz   = cat === 'Gazette';
+    const isBPR   = cat === 'BPR';
+    const isPVC   = cat === 'PVC';
+    const emoji   = getCatEmoji(cat);
 
-    const badgeHtml = p.is_featured
-      ? `<span class="product-badge" style="background:rgba(232,103,26,0.1);color:var(--saffron);">⭐ Featured</span>`
-      : badge
-      ? `<span class="product-badge">${badge}</span>`
-      : '';
+    // Badge
+    const badgeText = p.offer_text || (disc ? disc + '% OFF' : '') || (p.is_featured ? '⭐ Featured' : '');
+    const badgeStyle = cat==='PVC' ? 'background:rgba(22,163,74,0.1);color:var(--green);' : '';
+    const badgeHtml = badgeText ? `<span class="product-badge" style="${badgeStyle}">${badgeText}</span>` : '';
 
-    const imageHtml = p.image_url
-      ? `<img src="${p.image_url}" alt="${p.name}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;margin-bottom:10px;" onerror="this.style.display='none'"/>`
+    // Image or emoji
+    const imgHtml = p.image_url
+      ? `<img src="${p.image_url}" alt="${p.name}" style="width:64px;height:64px;object-fit:cover;border-radius:12px;margin-bottom:10px;display:block;" onerror="this.style.display='none'"/>`
       : `<span class="product-emoji">${emoji}</span>`;
 
-    const descHtml = p.short_description || p.full_description
-      ? `<p>${(p.short_description || p.full_description).slice(0, 160)}${(p.short_description || '').length > 160 ? '...' : ''}</p>`
-      : '';
+    // Description
+    const desc = p.short_description || p.full_description || '';
+    const descHtml = desc ? `<p>${desc.slice(0,200)}${desc.length>200?'…':''}</p>` : '';
 
+    // Documents required
     const docsHtml = p.documents_required
-      ? `<div style="font-size:12px;color:var(--slate);margin-bottom:14px;"><strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--navy);">Documents Required:</strong><br/>${p.documents_required}</div>`
+      ? `<div style="font-size:12px;color:var(--slate);margin-bottom:14px;line-height:1.6;">
+           <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);">Documents Required:</strong><br/>${p.documents_required}
+         </div>`
       : '';
 
-    const expertHtml = p.expert_advice
-      ? `<button class="btn-consult" onclick="${isGazette ? 'openGazetteConsult()' : isBPR ? 'openBPRConsult()' : ''}">📞 Book Primary Expert Advice</button>`
-      : '';
-
-    const ctaHtml = isPVC
-      ? `<button class="btn-add" id="btn-pvc-${key}" onclick="openPVCOrder()">🛒 Order Now</button>`
-      : `<button class="btn-add" id="btn-sb-${key}" onclick="addToCartDynamic('${key}')">🛒 Add to Cart</button>`;
-
-    const mrpHtml = disc
+    // Price row
+    const mrpHtml = mrp > price
       ? `<span style="text-decoration:line-through;color:var(--slate);font-size:14px;">₹${mrp.toLocaleString('en-IN')}</span>
          <span style="background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;">${disc}% OFF</span>`
       : '';
+    const delivHtml = p.delivery_time
+      ? `<span style="font-size:12px;color:var(--slate);display:block;margin-top:2px;">${p.delivery_time}</span>` : '';
+
+    // Expert advice / CTA buttons
+    const consultBtn = (isGaz || isBPR || p.expert_advice)
+      ? `<button class="btn-consult" onclick="${isGaz?'openGazetteConsult()':isBPR?'openBPRConsult()':'openGazetteConsult()'}">📞 Book Primary Expert Advice</button>`
+      : '';
+    const ctaBtn = isPVC
+      ? `<button class="btn-add" id="btn-pvc-${id}" onclick="openPVCOrder()">🛒 Order Now</button>`
+      : `<button class="btn-add" id="btn-sb-${id}" onclick="addToCartSb('${id}')">🛒 Add to Cart</button>`;
 
     return `
     <div class="product-card">
       ${badgeHtml}
-      ${imageHtml}
+      ${imgHtml}
       <h3>${p.name}</h3>
       ${descHtml}
       ${docsHtml}
@@ -1746,61 +1725,27 @@
         <div class="product-price">
           <strong>₹${price.toLocaleString('en-IN')}</strong>
           ${mrpHtml}
-          <span>${delivery}</span>
+          ${delivHtml}
         </div>
-        ${expertHtml}
-        ${ctaHtml}
+        ${consultBtn}
+        ${ctaBtn}
       </div>
     </div>`;
   }
 
-  // Update hero card service items with live prices
-  function updateHeroItems(data) {
-    const gazette = data.find(p => p.category === 'Gazette');
-    const bpr     = data.find(p => p.category === 'BPR');
-    if (gazette) {
-      const el = document.querySelector('.service-item[data-service="Gazette Notification Consultancy & Assistance"] .service-price strong');
-      if (el) el.textContent = '₹' + Number(gazette.price).toLocaleString('en-IN');
-    }
-    if (bpr) {
-      const el = document.querySelector('.service-item[data-service="Business Project Report"] .service-price strong');
-      if (el) el.textContent = '₹' + Number(bpr.price).toLocaleString('en-IN');
-    }
-  }
-
-  // Fallback: render the 3 hardcoded products if Supabase fails
-  function renderFallbackProducts() {
-    const loadingEl = document.getElementById('servicesLoading');
-    if (loadingEl) loadingEl.style.display = 'none';
-    const gazetteGrid = document.getElementById('grid-Gazette');
-    const bprGrid     = document.getElementById('grid-BPR');
-    const pvcGrid     = document.getElementById('grid-PVC');
-    if (gazetteGrid) gazetteGrid.innerHTML = buildProductCard({
-      id:'gazette-fallback', name:'Gazette Notification Consultancy & Assistance',
-      price:5100, mrp:10200, category:'Gazette', offer_text:'50% OFF',
-      short_description:'Official publication in Rajasthan Government Gazette for name changes, corrections, or legal announcements.',
-      delivery_time:'15–30 Working Days', expert_advice:true, is_featured:false, image_url:''
-    });
-    if (bprGrid) bprGrid.innerHTML = buildProductCard({
-      id:'bpr-fallback', name:'Business Project Report',
-      price:1499, mrp:2998, category:'BPR', offer_text:'50% OFF',
-      short_description:'Professionally prepared DPR for bank loan applications, MSME registration and government scheme eligibility.',
-      delivery_time:'24–48 Hours', expert_advice:true, is_featured:false, image_url:''
-    });
-    if (pvcGrid) pvcGrid.innerHTML = buildProductCard({
-      id:'pvc-fallback', name:'Smart Card & PVC Printing',
-      price:99, mrp:199, category:'PVC', offer_text:'50% OFF',
-      short_description:'High-quality PVC printed cards — Aadhaar, PAN, Voter ID and more. Dispatched via Speed Post.',
-      delivery_time:'2–3 Working Days', expert_advice:false, is_featured:false, image_url:''
-    });
-  }
-
-  // Add dynamic product to cart (works with Supabase products)
-  function addToCartDynamic(id) {
-    const p = dynamicProducts[id];
+  // Add product from Supabase to cart
+  function addToCartSb(id) {
+    const p = sbProducts[id];
     if (!p) return;
-    addToCart(id, p.name, p.price, p.emoji);
+    addToCart(id, p.name, p.price, getCatEmoji(p.category));
   }
+
+  // ── Legacy static products map (for hero card onclick compatibility) ──
+  const products = {
+    gazette: { id:'gazette', name:'Gazette Notification Consultancy & Assistance', price:5100, emoji:'📰' },
+    bpr:     { id:'bpr',     name:'Business Project Report',                        price:1499, emoji:'📊' },
+    pvc:     { id:'pvc',     name:'Smart Card & PVC Printing',                      price:99,   emoji:'🪪' }
+  };
 
   const RAZORPAY_KEY = 'rzp_live_ShL15WckCTU12U';
 
@@ -2219,17 +2164,16 @@
   let cart = {};
 
   function addToCart(id, name, price, emoji) {
-    // Look up in dynamicProducts first, then fall back to passed params
-    const p = dynamicProducts[id];
-    const cartName  = (p && p.name)  || name;
-    const cartPrice = (p && p.price) || price;
-    const cartEmoji = (p && p.emoji) || emoji;
+    // Look up live price from sbProducts if available
+    const live = sbProducts[id];
+    const finalName  = (live && live.name)  || name  || (products[id] && products[id].name)  || name;
+    const finalPrice = (live && live.price) || price || (products[id] && products[id].price) || price;
+    const finalEmoji = emoji || getCatEmoji(live && live.category) || '🛍️';
 
     if (cart[id]) { cart[id].qty += 1; }
-    else { cart[id] = { id, name: cartName, price: cartPrice, emoji: cartEmoji, qty: 1 }; }
+    else { cart[id] = { id, name: finalName, price: finalPrice, emoji: finalEmoji, qty: 1 }; }
     renderCart();
     openCartPanel();
-    // Try both static and dynamic button IDs
     const btn = document.getElementById('btn-' + id) || document.getElementById('btn-sb-' + id);
     if (btn) {
       const orig = btn.innerHTML;
@@ -3386,8 +3330,7 @@ Hum jald hi contact karenge.`);
   // ── INIT ──────────────────────────────────────────────────────
   initAuth();
   renderCart();
-  // Load products live from Supabase
-  loadProductsFromSupabase();
+  loadProducts();
 </script>
 <script type="text/javascript">
   function googleTranslateElementInit() {
