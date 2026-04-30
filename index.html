@@ -1725,6 +1725,15 @@
     return {Gazette:'📰',BPR:'📊',PVC:'🪪',Government:'🏛️','Digital Services':'💻',Other:'🔧'}[cat] || '🛍️';
   }
 
+  function convertImageUrl(url) {
+    if (!url) return url;
+    const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1) return `https://lh3.googleusercontent.com/d/${m1[1]}`;
+    const m2 = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+    if (m2) return `https://lh3.googleusercontent.com/d/${m2[1]}`;
+    return url;
+  }
+
   function buildCard(p) {
     const id      = String(p.id);
     const price   = Number(p.price) || 0;
@@ -1742,11 +1751,13 @@
     const badgeHtml = badgeText ? `<span class="product-badge" style="${badgeStyle}">${badgeText}</span>` : '';
 
     // Image — show full width banner if URL provided, else emoji icon
-    const imgHtml = p.image_url
+    const rawImgUrl = p.image_url || '';
+    const imgUrl    = convertImageUrl(rawImgUrl);
+    const imgHtml   = imgUrl
       ? `<div class="card-img-wrap">
-           <img src="${p.image_url}" alt="${p.name}"
+           <img src="${imgUrl}" alt="${p.name}"
              style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:14px;display:block;"
-             onerror="this.parentElement.innerHTML='<span class=\\'product-emoji\\'>${emoji}</span>'"/>
+             onerror="this.closest('.card-img-wrap').innerHTML='<span class=\\'product-emoji\\'>${emoji}</span>'"/>
          </div>`
       : `<span class="product-emoji">${emoji}</span>`;
 
