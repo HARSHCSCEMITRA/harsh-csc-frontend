@@ -3,8 +3,80 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Harsh CSC eMitra — Digital Documentation Assistance | Piplantri, Rajsamand</title>
-<meta name="description" content="Harsh CSC eMitra — Rajasthan's trusted digital documentation center since 2017. Gazette Notification ₹5,100 | Business Project Report ₹1,499. Free consultation, WhatsApp delivery."/>
+<title>Harsh CSC eMitra — Gazette Notification | Business Project Report | PVC Card Printing | Bikaner, Rajasthan</title>
+<meta name="description" content="Harsh CSC eMitra — Rajasthan ka trusted eMitra center since 2017. Gazette Notification ₹5,100 | Business Project Report ₹1,499 | PVC Card Printing ₹99. Free Expert Advice. WhatsApp delivery."/>
+<meta name="keywords" content="Gazette Notification Rajasthan, Gazette Notification Bikaner, name change gazette, Business Project Report, DPR loan, PMEGP project report, Mudra loan project report, PVC Aadhaar card, PVC card printing, eMitra Bikaner, CSC center Bikaner, document service Rajasthan, gazette notification consultancy"/>
+<meta name="author" content="Harsh CSC eMitra"/>
+<meta name="robots" content="index, follow"/>
+<meta name="geo.region" content="IN-RJ"/>
+<meta name="geo.placename" content="Bikaner, Rajasthan, India"/>
+<link rel="canonical" href="https://harshcscemitra.vercel.app/"/>
+
+<!-- Open Graph (Facebook / WhatsApp preview) -->
+<meta property="og:type"        content="website"/>
+<meta property="og:url"         content="https://harshcscemitra.vercel.app/"/>
+<meta property="og:title"       content="Harsh CSC eMitra — Gazette Notification | Project Report | PVC Card Printing"/>
+<meta property="og:description" content="Rajasthan ka trusted eMitra since 2017. Gazette Notification ₹5,100 | Business Project Report ₹1,499 | PVC Card ₹99. Free Expert Advice. WhatsApp delivery."/>
+<meta property="og:image"       content="https://harshcscemitra.vercel.app/logo.png"/>
+<meta property="og:locale"      content="en_IN"/>
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image"/>
+<meta name="twitter:title"       content="Harsh CSC eMitra — Gazette Notification | Project Report | PVC Card"/>
+<meta name="twitter:description" content="Trusted eMitra since 2017. Gazette Notification, Business Project Report, PVC Printing. Free Expert Advice."/>
+<meta name="twitter:image"       content="https://harshcscemitra.vercel.app/logo.png"/>
+
+<!-- Schema.org Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Harsh CSC eMitra",
+  "description": "Digital documentation and eMitra services — Gazette Notification, Business Project Report, PVC Card Printing",
+  "url": "https://harshcscemitra.vercel.app",
+  "logo": "https://harshcscemitra.vercel.app/logo.png",
+  "image": "https://harshcscemitra.vercel.app/logo.png",
+  "telephone": "+917023029903",
+  "email": "harshcscemitra@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Bikaner",
+    "addressRegion": "Rajasthan",
+    "addressCountry": "IN"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "28.0229",
+    "longitude": "73.3119"
+  },
+  "openingHours": "Mo-Sa 09:00-19:00",
+  "priceRange": "₹99 - ₹5100",
+  "sameAs": [
+    "https://wa.me/917023029903"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Documentation Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "Gazette Notification Consultancy" },
+        "price": "5100", "priceCurrency": "INR"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "Business Project Report" },
+        "price": "1499", "priceCurrency": "INR"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": "Smart Card & PVC Printing" },
+        "price": "99", "priceCurrency": "INR"
+      }
+    ]
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -2355,6 +2427,7 @@
   function openCheckout() {
     if (getCartItems().length === 0) return;
     closeCart();
+    autoFillCheckout();
     const items = getCartItems();
     const summary = document.getElementById('modalSummary');
     if (summary) {
@@ -3442,11 +3515,52 @@ Hum jald hi contact karenge.`);
   // ── AUTH SYSTEM ─────────────────────────────────────────────
   let currentUser = null;
 
+  // Save customer profile to Supabase customers table
+  async function saveCustomerToSupabase(user) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({
+          name: user.name, email: user.email || null,
+          mobile: user.mobile || null, auth_provider: user.provider || 'email',
+          last_login: new Date().toISOString()
+        })
+      });
+    } catch(e) { console.warn('saveCustomerToSupabase failed:', e); }
+  }
+
   function initAuth() {
     const stored = localStorage.getItem('hsc_user');
     if (stored) {
-      try { currentUser = JSON.parse(stored); updateNavUser(); } catch {}
+      try { currentUser = JSON.parse(stored); updateNavUser(); autoFillCheckout(); } catch {}
     }
+    // Firebase auth state listener
+    try {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user && !currentUser) {
+          currentUser = { name: user.displayName || 'Google User', email: user.email, mobile: user.phoneNumber || '', provider: 'google' };
+          localStorage.setItem('hsc_user', JSON.stringify(currentUser));
+          updateNavUser(); autoFillCheckout();
+          saveCustomerToSupabase(currentUser);
+        }
+      });
+    } catch(e) {}
+  }
+
+  // Auto-fill checkout form with logged-in user data
+  function autoFillCheckout() {
+    if (!currentUser) return;
+    const nameEl   = document.getElementById('f_name');
+    const phoneEl  = document.getElementById('f_phone');
+    const emailEl  = document.getElementById('f_email');
+    if (nameEl  && !nameEl.value  && currentUser.name)   nameEl.value  = currentUser.name;
+    if (phoneEl && !phoneEl.value && currentUser.mobile) phoneEl.value = currentUser.mobile;
+    if (emailEl && !emailEl.value && currentUser.email)  emailEl.value = currentUser.email;
   }
 
   function updateNavUser() {
@@ -3528,14 +3642,14 @@ Hum jald hi contact karenge.`);
     const pass  = document.getElementById('si_pass')?.value;
     const errEl = document.getElementById('si_err');
     if(errEl) errEl.style.display = 'none';
-    if (!email || !pass) { if(errEl){ errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block';} return; }
+    if (!email || !pass) { if(errEl){ errEl.textContent='Please fill all fields.'; errEl.style.display='block';} return; }
     const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
     const user  = users.find(u => u.email === email && u.pass === btoa(pass));
-    if (!user) { if(errEl){ errEl.textContent = 'Incorrect email or password. New user? Sign Up.'; errEl.style.display = 'block';} return; }
-    currentUser = { name: user.name, email: user.email, mobile: user.mobile };
+    if (!user) { if(errEl){ errEl.textContent='Incorrect email or password. New user? Sign Up.'; errEl.style.display='block';} return; }
+    currentUser = { name: user.name, email: user.email, mobile: user.mobile, provider: 'email' };
     localStorage.setItem('hsc_user', JSON.stringify(currentUser));
-    updateNavUser();
-    closeAuthModal();
+    saveCustomerToSupabase(currentUser);
+    updateNavUser(); autoFillCheckout(); closeAuthModal();
     showAuthToast(`👋 Welcome back, ${user.name.split(' ')[0]}!`);
   }
 
@@ -3546,17 +3660,17 @@ Hum jald hi contact karenge.`);
     const pass   = document.getElementById('su_pass')?.value;
     const errEl  = document.getElementById('su_err');
     if(errEl) errEl.style.display = 'none';
-    if (!name || !email || !mobile || !pass) { if(errEl){ errEl.textContent = 'Please fill all fields.'; errEl.style.display = 'block';} return; }
-    if (!/^[6-9]\d{9}$/.test(mobile)) { if(errEl){ errEl.textContent = 'Enter a valid 10-digit mobile number.'; errEl.style.display = 'block';} return; }
-    if (pass.length < 6) { if(errEl){ errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block';} return; }
+    if (!name || !email || !mobile || !pass) { if(errEl){ errEl.textContent='Please fill all fields.'; errEl.style.display='block';} return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { if(errEl){ errEl.textContent='Enter a valid 10-digit mobile number.'; errEl.style.display='block';} return; }
+    if (pass.length < 6) { if(errEl){ errEl.textContent='Password must be at least 6 characters.'; errEl.style.display='block';} return; }
     const users = JSON.parse(localStorage.getItem('hsc_users') || '[]');
-    if (users.find(u => u.email === email)) { if(errEl){ errEl.textContent = 'This email is already registered. Sign In instead.'; errEl.style.display = 'block';} return; }
+    if (users.find(u => u.email === email)) { if(errEl){ errEl.textContent='This email is already registered. Sign In instead.'; errEl.style.display='block';} return; }
     users.push({ name, email, mobile, pass: btoa(pass) });
     localStorage.setItem('hsc_users', JSON.stringify(users));
-    currentUser = { name, email, mobile };
+    currentUser = { name, email, mobile, provider: 'email' };
     localStorage.setItem('hsc_user', JSON.stringify(currentUser));
-    updateNavUser();
-    closeAuthModal();
+    saveCustomerToSupabase(currentUser);
+    updateNavUser(); autoFillCheckout(); closeAuthModal();
     showAuthToast(`🎉 Account created! Welcome, ${name.split(' ')[0]}!`);
   }
 
@@ -3578,24 +3692,19 @@ Hum jald hi contact karenge.`);
     firebase.auth().signInWithPopup(googleProvider)
       .then((result) => {
         const user = result.user;
-        // ग्राहक का नाम और ईमेल लोकल स्टोरेज में सेव करें
-        currentUser = { 
-          name: user.displayName || 'Google User', 
-          email: user.email, 
-          mobile: user.phoneNumber || '' 
+        currentUser = {
+          name: user.displayName || 'Google User',
+          email: user.email, mobile: user.phoneNumber || '', provider: 'google'
         };
         localStorage.setItem('hsc_user', JSON.stringify(currentUser));
-        updateNavUser();
-        closeAuthModal();
+        saveCustomerToSupabase(currentUser);
+        updateNavUser(); autoFillCheckout(); closeAuthModal();
         showAuthToast(`👋 Welcome, ${currentUser.name.split(' ')[0]}!`);
       })
       .catch((error) => {
-        console.error("Google Sign-In Error: ", error);
+        console.error('Google Sign-In Error: ', error);
         const errEl = document.getElementById('si_err');
-        if (errEl) {
-          errEl.textContent = 'Google Sign-In failed. Please try again.';
-          errEl.style.display = 'block';
-        }
+        if (errEl) { errEl.textContent = 'Google Sign-In failed. Please try again.'; errEl.style.display = 'block'; }
       });
   }
 
