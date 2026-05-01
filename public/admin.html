@@ -1308,16 +1308,27 @@ async function refreshAll() {
 
 async function loadAllData() {
   allOrders = await sbFetch('orders', 'select=*');
-  const gaz = (await sbFetch('gazette_consults', 'select=*')).map(r => ({ ...r, service: 'Gazette' }));
-  const bpr = (await sbFetch('bpr_consults', 'select=*')).map(r => ({ ...r, service: 'BPR' }));
-  allConsults = [...gaz, ...bpr].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const gaz     = (await sbFetch('gazette_consults',  'select=*')).map(r => ({ ...r, service: 'Gazette' }));
+  const bpr     = (await sbFetch('bpr_consults',      'select=*')).map(r => ({ ...r, service: 'BPR' }));
+  // Generic expert consults from admin-added products
+  let expertC = [];
+  try {
+    const raw = await sbFetch('expert_consults', 'select=*');
+    expertC = (raw || []).map(r => ({
+      ...r,
+      service: r.product_name || 'Expert',
+      customer_name: r.customer_name,
+      mobile: r.mobile,
+      _isExpert: true
+    }));
+  } catch(e) {}
+  allConsults = [...gaz, ...bpr, ...expertC].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   allPVCOrders = await sbFetch('pvc_orders', 'select=*');
   const newO = allOrders.filter(o => o.status === 'new').length;
   const newC = allConsults.filter(c => !c.read).length;
   document.getElementById('newOrderBadge').textContent = newO || '0';
   document.getElementById('newConsultBadge').textContent = newC || '0';
-  // Cache for analytics
-  window._cachedOrders = allOrders;
+  window._cachedOrders   = allOrders;
   window._cachedConsults = allConsults;
 }
 
@@ -1457,30 +1468,31 @@ function renderConsultationsTable() {
 function filterConsults() { renderConsultationsTable(); }
 
 function confirmDeleteConsult(id, service) {
-  const table = service === 'Gazette' ? 'gazette_consults' : 'bpr_consults';
+  const table = service === 'Gazette' ? 'gazette_consults'
+              : service === 'BPR'     ? 'bpr_consults'
+              : 'expert_consults';
   showConfirm('🗑️', 'Delete Consultation?', 'Yeh consultation permanently delete ho jayegi!', async () => {
     const ok = await sbDeleteByRef(table, 'id', id);
-    if (ok) {
-      showToast('✅ Consultation deleted!', 'success');
-      await refreshAll();
-    } else {
-      showToast('❌ Delete failed — Supabase pe DELETE policy add karo', 'error');
-      console.error('Delete failed for table:', table, 'id:', id);
-    }
+    if (ok) { showToast('✅ Consultation deleted!', 'success'); await refreshAll(); }
+    else showToast('❌ Delete failed — Supabase pe DELETE policy add karo', 'error');
   });
 }
 
 function openConsultModal(id, service) {
-  const c = allConsults.find(x => String(x.id) === String(id) && x.service === service);
+  const c = allConsults.find(x => String(x.id) === String(id))
+         || allConsults.find(x => String(x.id) === String(id) && x.service === service);
   if (!c) { showToast('Not found', 'error'); return; }
-  currentConsultId = { id, service, table: service === 'Gazette' ? 'gazette_consults' : 'bpr_consults' };
+  const table = c._isExpert ? 'expert_consults'
+              : service === 'Gazette' ? 'gazette_consults'
+              : 'bpr_consults';
+  currentConsultId = { id, service, table };
   document.getElementById('consultModalTitle').textContent = `✏️ Update — ${c.customer_name || '—'}`;
   document.getElementById('cm_name').value = c.customer_name || '';
   document.getElementById('cm_status').value = c.status || 'Pending';
   document.getElementById('cm_note').value = c.admin_note || '';
-  document.getElementById('cm_service_type').value = service === 'Gazette' ? 'Gazette' : 'BPR';
-  document.getElementById('cm_amount').value = service === 'Gazette' ? 5100 : 1499;
-  document.getElementById('cm_address').value = '';
+  document.getElementById('cm_service_type').value = c._isExpert ? (c.product_name || 'Expert') : (service === 'Gazette' ? 'Gazette' : 'BPR');
+  document.getElementById('cm_amount').value = c._isExpert ? (c.price || 0) : (service === 'Gazette' ? 5100 : 1499);
+  document.getElementById('cm_address').value = c.city || '';
   onConsultStatusChange();
   openModal('consultModal');
 }
@@ -1499,10 +1511,17 @@ function updateAmount() {
 
 async function saveConsultUpdate() {
   const status = document.getElementById('cm_status').value;
-  const note = document.getElementById('cm_note').value.trim();
+  const note   = document.getElementById('cm_note').value.trim();
   const { id, service, table } = currentConsultId;
   const ok = await sbUpdateByRef(table, 'id', id, { status, admin_note: note, read: true });
   if (ok) {
+    // Send WA to customer if toggle is on
+    const c = allConsults.find(x => String(x.id) === String(id));
+    const notifyWA = document.getElementById('su_wa_toggle')?.classList.contains('on');
+    if (notifyWA && c?.mobile) {
+      const msg = `📞 *${c.customer_name || 'Customer'} — Expert Advice Update*\n\nService: ${c.product_name || service}\nStatus: *${status}*${note ? '\n\nNote: ' + note : ''}\n\n— Harsh CSC eMitra`;
+      window.open(`https://wa.me/91${c.mobile}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
     showToast(`✅ Status updated to "${status}"!`, 'success');
     closeModal('consultModal');
     await refreshAll();
@@ -1691,25 +1710,36 @@ function viewOrder(ref, service) {
 }
 
 function viewConsult(id, service) {
-  const c = allConsults.find(x => String(x.id) === String(id) && x.service === service);
+  const c = allConsults.find(x => String(x.id) === String(id) && x.service === service)
+         || allConsults.find(x => String(x.id) === String(id));
   if (!c) { showToast('Record not found', 'error'); return; }
   document.getElementById('orderModalTitle').textContent = `📞 Consultation — ${service}`;
-  const rows = service === 'Gazette'
-    ? [['Name', c.customer_name], ['Mobile', c.mobile, true], ['Status', consultStatusBadge(c.status || 'Pending')],
-       ['Email', c.email || '—'], ['Applicant Type', c.applicant_type || '—'],
-       ['Old Name (EN)', c.old_name_en || '—'], ['New Name (EN)', c.new_name_en || '—'],
-       ['Old Name (HI)', c.old_name_hi || c.name_hindi || '—'], ['New Name (HI)', c.new_name_hi || '—'],
-       ['DOB', c.dob || '—'], ['Father (EN)', c.father_en || '—'], ['Reason', c.reason || '—'],
-       ['Print Address', c.print_address || c.gazette_address || '—'], ['Courier Address', c.courier_address || '—'],
-       ['Notes', c.notes || '—'], ['Date', fmtDate(c.created_at)]]
-    : [['Name', c.customer_name], ['Mobile', c.mobile, true], ['Status', consultStatusBadge(c.status || 'Pending')],
-       ['Email', c.email || '—'], ['Father/Spouse', c.guardian || '—'], ['Home Address', c.address || '—'],
-       ['Business Name', c.biz_name || '—'], ['Business Type', c.biz_type || '—'],
-       ['Loan Scheme', c.loan_scheme || '—'],
-       ['Total Cost', c.total_cost ? '₹' + Number(c.total_cost).toLocaleString('en-IN') : '—'],
-       ['Loan Amount', c.loan_amount ? '₹' + Number(c.loan_amount).toLocaleString('en-IN') : '—'],
-       ['Premises', c.premises || '—'], ['Machinery', c.machineries || '—'],
-       ['Notes', c.notes || '—'], ['Date', fmtDate(c.created_at)]];
+  let rows;
+  if (service === 'Gazette') {
+    rows = [['Name', c.customer_name], ['Mobile', c.mobile, true], ['Status', consultStatusBadge(c.status || 'Pending')],
+      ['Email', c.email || '—'], ['Applicant Type', c.applicant_type || '—'],
+      ['Old Name (EN)', c.old_name_en || '—'], ['New Name (EN)', c.new_name_en || '—'],
+      ['Old Name (HI)', c.old_name_hi || '—'], ['New Name (HI)', c.new_name_hi || '—'],
+      ['DOB', c.dob || '—'], ['Father (EN)', c.father_en || '—'], ['Reason', c.reason || '—'],
+      ['Print Address', c.print_address || '—'], ['Courier Address', c.courier_address || '—'],
+      ['Notes', c.notes || '—'], ['Date', fmtDate(c.created_at)]];
+  } else if (service === 'BPR') {
+    rows = [['Name', c.customer_name], ['Mobile', c.mobile, true], ['Status', consultStatusBadge(c.status || 'Pending')],
+      ['Email', c.email || '—'], ['Father/Spouse', c.guardian || '—'], ['Home Address', c.address || '—'],
+      ['Business Name', c.biz_name || '—'], ['Business Type', c.biz_type || '—'],
+      ['Loan Scheme', c.loan_scheme || '—'],
+      ['Total Cost', c.total_cost ? '₹' + Number(c.total_cost).toLocaleString('en-IN') : '—'],
+      ['Loan Amount', c.loan_amount ? '₹' + Number(c.loan_amount).toLocaleString('en-IN') : '—'],
+      ['Premises', c.premises || '—'], ['Machinery', c.machineries || '—'],
+      ['Notes', c.notes || '—'], ['Date', fmtDate(c.created_at)]];
+  } else {
+    // Generic expert consult
+    rows = [['Name', c.customer_name], ['Mobile', c.mobile, true],
+      ['Status', consultStatusBadge(c.status || 'Pending')],
+      ['Service', c.product_name || service],
+      ['Email', c.email || '—'], ['City', c.city || '—'],
+      ['Requirement', c.notes || '—'], ['Date', fmtDate(c.created_at)]];
+  }
   document.getElementById('orderModalBody').innerHTML =
     '<div class="detail-grid">' + rows.map(([k, v, m]) =>
       `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m ? 'mono' : ''}">${v || '—'}</div></div>`
@@ -2296,8 +2326,10 @@ function consultStatusBadge(s) {
   return `<span class="badge ${map[s] || 'badge-pending'}">${labels[s] || s || 'Pending'}</span>`;
 }
 function serviceTag(s) {
-  const map = { Gazette: 'badge-gazette', BPR: 'badge-bpr', PVC: 'badge-pvc' };
-  return `<span class="badge ${map[s] || 'badge-pending'}">${s || '?'}</span>`;
+  const map = { Gazette:'badge-gazette', BPR:'badge-bpr', PVC:'badge-pvc' };
+  const cls = map[s] || 'badge-processing';
+  const label = s && s.length > 14 ? s.slice(0,13)+'…' : (s||'?');
+  return `<span class="badge ${cls}" title="${s||''}">${label}</span>`;
 }
 function fmtDate(d) {
   if (!d) return '—';
@@ -3537,35 +3569,37 @@ function fbPreviewForm() {
 //  ANALYTICS
 // ══════════════════════════════════════════
 function renderAnalytics() {
-  // Gather data from existing orders in Supabase cache or localStorage
-  const orders = window._cachedOrders || [];
-  const consults = window._cachedConsults || [];
+  const orders   = window._cachedOrders || allOrders || [];
+  const pvcOrds  = allPVCOrders || [];
+  const consults = window._cachedConsults || allConsults || [];
+  const allOrd   = [
+    ...orders.map(o  => ({ ...o, _amt: Number(o.total_amount||0), _svc: guessService(o) })),
+    ...pvcOrds.map(o => ({ ...o, _amt: Number(o.amount||0),       _svc: 'PVC' }))
+  ];
 
   // Build monthly buckets (last 6 months)
   const months = [];
   for (let i=5; i>=0; i--) {
-    const d = new Date(); d.setMonth(d.getMonth()-i);
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
     months.push({ key: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleString('default',{month:'short'}), rev:0, count:0 });
   }
-  orders.forEach(o => {
+  allOrd.forEach(o => {
     const mk = (o.created_at||'').slice(0,7);
     const m  = months.find(x=>x.key===mk);
-    if (m) { m.rev += Number(o.amount||0); m.count++; }
+    if (m) { m.rev += o._amt; m.count++; }
   });
 
-  // Stats
-  const totalRev  = orders.reduce((s,o)=>s+Number(o.amount||0),0);
-  const pending   = orders.filter(o=>o.status==='pending'||o.status==='processing').length;
-  const completed = orders.filter(o=>o.status==='completed'||o.status==='delivered').length;
-  // Update static stat elements
+  const cancelled  = ['Cancelled','cancelled'];
+  const totalRev   = allOrd.filter(o=>!cancelled.includes(o.status)).reduce((s,o)=>s+o._amt,0);
+  const pending    = allOrd.filter(o=>['new','Processing','Printing','Pending'].includes(o.status)).length;
+  const completed  = allOrd.filter(o=>['Delivered','Completed','delivered','completed','Dispatched'].includes(o.status)).length;
   document.getElementById('an_rev_total').textContent = '₹'+totalRev.toLocaleString('en-IN');
-  document.getElementById('an_ord_total').textContent = orders.length;
+  document.getElementById('an_ord_total').textContent = allOrd.length;
   document.getElementById('an_completed').textContent = completed;
-  document.getElementById('an_pending').textContent = pending;
-  document.getElementById('an_consults').textContent = consults.length;
-  document.getElementById('an_avg').textContent = '₹'+(orders.length?Math.round(totalRev/orders.length).toLocaleString('en-IN'):0);
+  document.getElementById('an_pending').textContent   = pending;
+  document.getElementById('an_consults').textContent  = consults.length;
+  document.getElementById('an_avg').textContent       = '₹'+(allOrd.length?Math.round(totalRev/allOrd.length).toLocaleString('en-IN'):0);
 
-  // Revenue chart
   const maxRev = Math.max(...months.map(m=>m.rev),1);
   document.getElementById('an_rev_chart').innerHTML = months.map(m=>`
     <div class="chart-bar-col">
@@ -3574,7 +3608,6 @@ function renderAnalytics() {
       <div class="chart-bar-label">${m.label}</div>
     </div>`).join('');
 
-  // Orders chart
   const maxOrd = Math.max(...months.map(m=>m.count),1);
   document.getElementById('an_ord_chart').innerHTML = months.map(m=>`
     <div class="chart-bar-col">
@@ -3583,9 +3616,8 @@ function renderAnalytics() {
       <div class="chart-bar-label">${m.label}</div>
     </div>`).join('');
 
-  // Top services
   const svcCount = {};
-  orders.forEach(o => { const s=o.service||o.service_type||'Other'; svcCount[s]=(svcCount[s]||0)+1; });
+  allOrd.forEach(o=>{ const s=o._svc||'Other'; svcCount[s]=(svcCount[s]||0)+1; });
   const topSvcs = Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const maxSvc  = topSvcs[0]?.[1]||1;
   document.getElementById('an_top_services').innerHTML = topSvcs.length
@@ -3600,23 +3632,23 @@ function renderAnalytics() {
       </div>`).join('')
     : '<div style="text-align:center;padding:30px;color:var(--text3);">Abhi koi orders nahi hain</div>';
 
-  // Status breakdown
   const statuses = {};
-  orders.forEach(o=>{ const s=o.status||'unknown'; statuses[s]=(statuses[s]||0)+1; });
-  const statusColors = { pending:'#f59e0b', processing:'#60a5fa', completed:'#22c55e', delivered:'#10b981', cancelled:'#ef4444' };
+  allOrd.forEach(o=>{ const s=o.status||'new'; statuses[s]=(statuses[s]||0)+1; });
+  const statusColors = { new:'#f59e0b',Processing:'#60a5fa',Completed:'#22c55e',Delivered:'#10b981',Dispatched:'#10b981',Printing:'#818cf8',Cancelled:'#ef4444' };
+  const total2 = allOrd.length || 1;
   document.getElementById('an_status_break').innerHTML = Object.entries(statuses).length
     ? Object.entries(statuses).map(([s,c])=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="width:10px;height:10px;border-radius:50%;background:${statusColors[s]||'var(--text3)'}"></div>
-          <span style="font-size:13px;text-transform:capitalize;">${s}</span>
+          <span style="font-size:13px;">${s}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <strong style="font-size:13px;">${c}</strong>
-          <span style="font-size:11px;color:var(--text3);">${orders.length?Math.round(c/orders.length*100):0}%</span>
+          <span style="font-size:11px;color:var(--text3);">${Math.round(c/total2*100)}%</span>
         </div>
       </div>`).join('')
-    : '<div style="text-align:center;padding:30px;color:var(--text3);">Koi data nahi</div>';
+    : '<div style="text-align:center;padding:20px;color:var(--text3);">Koi data nahi</div>';
 }
 
 // ══════════════════════════════════════════
