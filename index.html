@@ -1146,17 +1146,40 @@
 <section class="section my-orders-section" id="my-orders">
   <div class="section-inner">
     <div class="section-label">Order Tracking</div>
-    <h2 class="section-title">My Orders</h2>
-    <p class="section-sub">Track your PVC card or document order. Enter your mobile number to view order status and Speed Post tracking number.</p>
+    <h2 class="section-title">My Orders & Profile</h2>
+    <p class="section-sub">Apne orders aur consultations track karein. Login hone ke baad sab automatically load hoga.</p>
 
-    <div class="orders-search-row">
+    <!-- If logged in — show profile header -->
+    <div id="profileHeader" style="display:none;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:none;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;" id="profileAvatar">H</div>
+        <div style="flex:1;">
+          <div style="font-size:18px;font-weight:700;color:var(--navy);" id="profileName">—</div>
+          <div style="font-size:13px;color:var(--slate);" id="profileEmail">—</div>
+          <div style="font-size:13px;color:var(--slate);" id="profileMobile">—</div>
+        </div>
+        <button onclick="signOutUser()" style="background:none;border:1px solid rgba(220,38,38,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;">🚪 Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Search row (shown when not logged in) -->
+    <div id="trackSearchRow" class="orders-search-row">
       <input class="form-input" id="trackMobile" type="tel" placeholder="Enter your 10-digit mobile number" maxlength="10" onkeydown="if(event.key==='Enter')trackOrders()"/>
       <button class="btn-track" onclick="trackOrders()">🔍 Track Orders</button>
     </div>
 
+    <!-- Tabs -->
+    <div id="ordersTabs" style="display:none;border-bottom:2px solid rgba(11,31,75,0.08);margin-bottom:20px;display:none;">
+      <div style="display:flex;gap:0;">
+        <button id="tab-orders" onclick="switchOrderTab('orders')" style="padding:10px 20px;background:none;border:none;border-bottom:3px solid var(--saffron);font-weight:700;font-size:14px;color:var(--navy);cursor:pointer;">📦 Orders</button>
+        <button id="tab-consults" onclick="switchOrderTab('consults')" style="padding:10px 20px;background:none;border:none;border-bottom:3px solid transparent;font-weight:600;font-size:14px;color:var(--slate);cursor:pointer;">📞 Consultations</button>
+      </div>
+    </div>
+
     <div class="order-track-result" id="orderTrackResult"></div>
-    
-    <!-- UTR Payment Form - shown only when needed -->
+    <div id="consultsTrackResult" style="display:none;"></div>
+
+    <!-- UTR Payment Form -->
     <div id="utrPaymentSection" style="display:none;max-width:520px;margin:24px auto 0;background:var(--white);border-radius:20px;padding:24px 28px;box-shadow:0 4px 24px rgba(11,31,75,0.08);border:2px solid rgba(232,103,26,0.2);">
       <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">💳 Payment Confirm Karein</h3>
       <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">UPI se payment kar di? UTR number darj karein — hum verify karke confirm karenge.</p>
@@ -1168,8 +1191,6 @@
         <button class="btn-primary" style="width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;" onclick="submitUTR()">✅ Submit UTR Number</button>
       </div>
     </div>
-
-
   </div>
 </section>
 
@@ -1629,7 +1650,12 @@
           <textarea class="form-input" id="f_notes" rows="2" placeholder="Anything specific you want us to know..." style="resize:vertical"></textarea>
         </div>
 
-        <!-- Coupon Code -->
+        <!-- Dynamic Form Builder Fields (loaded per product) -->
+        <div id="dynamicFormFields" style="display:none;">
+          <div style="border-top:2px dashed rgba(11,31,75,0.1);margin:18px 0 16px;"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;" id="dynamicFormTitle">📝 Service Details</div>
+          <div id="dynamicFieldsContainer"></div>
+        </div>
         <div style="margin-bottom:14px;">
           <div style="font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">🏷️ Coupon Code (Optional)</div>
           <div style="display:flex;gap:8px;">
@@ -2223,139 +2249,81 @@
   // ── MY ORDERS TRACKING ─────────────────────────────────────────
   async function trackOrders() {
     const mobile = document.getElementById('trackMobile')?.value.trim() || '';
-    const resultEl = document.getElementById('orderTrackResult');
-    if (!resultEl) return;
-
     if (!/^[6-9]\d{9}$/.test(mobile)) {
-      resultEl.style.display = 'block';
-      resultEl.style.marginTop = '20px';
-      resultEl.innerHTML = `<div class="track-empty">⚠️ Please enter a valid 10-digit Indian mobile number.</div>`;
+      const resultEl = document.getElementById('orderTrackResult');
+      if (resultEl) resultEl.innerHTML = `<div class="track-empty">⚠️ Valid 10-digit mobile number daalen.</div>`;
       return;
     }
-    resultEl.style.display = 'block';
-    resultEl.style.marginTop = '20px';
-    resultEl.innerHTML = `<div class="track-empty">🔄 Looking up your orders…</div>`;
+    // Show tabs
+    const tabs = document.getElementById('ordersTabs');
+    if (tabs) tabs.style.display = 'block';
+    switchOrderTab('orders');
+    await loadProfileOrders(mobile);
+    await loadProfileConsults(mobile);
+  }
 
-    let pvcOrders = [], mainOrders = [];
-    try {
-      // PVC Orders
-      const r1 = await fetch(
-        `${SUPABASE_URL}/rest/v1/pvc_orders?customer_phone=eq.${mobile}&select=order_ref,card_type,quantity,amount,status,payment_status,tracking_number,created_at&order=created_at.desc`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-      );
-      if (r1.ok) pvcOrders = await r1.json();
-      // Gazette + BPR Orders
-      const r2 = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?customer_phone=eq.${mobile}&select=order_ref,items,total_amount,status,payment_status,tracking_number,created_at&order=created_at.desc`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-      );
-      if (r2.ok) mainOrders = await r2.json();
-    } catch(e) {}
+  function renderOrderCard(o) {
+    const isPVC   = o._type === 'pvc';
+    const icon    = isPVC ? '🪪' : '📄';
+    const ref     = o.order_ref || '—';
+    const status  = o.status || 'new';
+    const display = status === 'new' ? 'Pending' : status;
+    const sIcon   = {Processing:'⏳',Printing:'🖨️',Dispatched:'📮',Delivered:'✅',new:'🆕',Cancelled:'❌',Completed:'✅'}[status] || '⏳';
+    const statusColor = {
+      new:'#d97706', Processing:'#3b82f6', Printing:'#8b5cf6',
+      Dispatched:'#0ea5e9', Delivered:'#16a34a', Completed:'#16a34a', Cancelled:'#dc2626'
+    }[status] || '#6b7280';
 
-    let localOrders = [];
-    try {
-      localOrders = JSON.parse(localStorage.getItem('hsc_pvc_orders') || '[]')
-        .filter(o => o.mobile === mobile);
-    } catch(e) {}
-
-    const allPVCRefs = new Set(pvcOrders.map(o => o.order_ref));
-    const merged = [
-      ...pvcOrders.map(o => ({
-        ref:            o.order_ref,
-        card:           o.card_type,
-        qty:            o.quantity,
-        amount:         o.amount,
-        status:         o.status === 'paid' ? 'Processing' : (o.status || 'new'),
-        payment_status: o.payment_status || 'pending',
-        tracking:       o.tracking_number,
-        date:           new Date(o.created_at).toLocaleDateString('en-IN'),
-        type:           'PVC'
-      })),
-      ...mainOrders.map(o => {
-        let serviceName = 'Order';
-        try { const it = typeof o.items==='string'?JSON.parse(o.items):o.items; serviceName = it[0]?.name || 'Order'; } catch{}
-        return {
-          ref:            o.order_ref,
-          card:           serviceName,
-          qty:            1,
-          amount:         o.total_amount,
-          status:         o.status || 'new',
-          payment_status: o.payment_status || 'pending',
-          tracking:       o.tracking_number,
-          date:           new Date(o.created_at).toLocaleDateString('en-IN'),
-          type:           'Service'
-        };
-      }),
-      ...localOrders.filter(o => !allPVCRefs.has(o.ref)).map(o => ({
-        ...o,
-        payment_status: o.payment_status || 'pending',
-        type: 'PVC'
-      }))
-    ];
-
-    if (merged.length === 0) {
-      resultEl.innerHTML = `
-        <div class="orders-empty-state">
-          <div class="oe-icon">📦</div>
-          <p>No orders found for <strong>${mobile}</strong>.<br/>If you just placed an order, it may take a few minutes to appear.</p>
-          <p style="margin-top:8px;font-size:13px">Need help? <a href="https://wa.me/${WHATSAPP_NUM}" target="_blank" style="color:var(--saffron);font-weight:600">WhatsApp us →</a></p>
-        </div>`;
-      const utrSec = document.getElementById('utrPaymentSection');
-      if (utrSec) utrSec.style.display = 'none';
-      return;
-    }
-    // Show UTR form if any order has pending payment
-    const hasPendingPayment = merged.some(o => 
-      o.status === 'new' || o.payment_status === 'Payment Not Received'
-    );
-    const utrSec = document.getElementById('utrPaymentSection');
-    if (utrSec) {
-      utrSec.style.display = hasPendingPayment ? 'block' : 'none';
-      const utrMob = document.getElementById('utrMobile');
-      if (utrMob) utrMob.value = mobile;
+    let serviceName = isPVC ? (o.card_type || 'PVC Card') : '—';
+    if (!isPVC) {
+      try {
+        const it = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+        serviceName = Array.isArray(it) ? it.map(i => i.name).join(', ') : String(it);
+      } catch(e) { serviceName = 'Order'; }
     }
 
-    // Build HTML safely without nested template literal issues
-    const orderCards = merged.map(o => {
-      const icon = o.type === 'Service' ? '📄' : '🪪';
-      const statusClass = o.status?.toLowerCase() === 'dispatched' ? 'dispatched' 
-                        : o.status?.toLowerCase() === 'delivered' ? 'delivered' : 'processing';
-      const sIcon = {Processing:'⏳',Printing:'🖨️',Dispatched:'📮',Delivered:'✅',new:'🆕',Cancelled:'❌'}[o.status] || '⏳';
-      const displayStatus = o.status === 'new' ? 'Pending' : (o.status || 'Processing');
+    const amount = Number(o.total_amount || o.amount || 0);
+    const date   = o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
 
-      let paymentBadge = '';
-      if (o.payment_status === 'Payment Not Received' && o.utr_number) {
-        paymentBadge = '<p style="font-size:12px;color:#d97706;margin-top:4px;">💰 UTR submitted — verification pending</p>';
-      } else if (o.payment_status === 'Payment Not Received' || o.status === 'new') {
-        paymentBadge = '<p style="font-size:12px;color:#dc2626;margin-top:4px;">⚠️ Payment pending</p>';
-      } else if (o.payment_status === 'Payment Received') {
-        paymentBadge = '<p style="font-size:12px;color:#15803d;margin-top:4px;">✅ Payment confirmed</p>';
-      } else if (o.payment_status === 'Partial Payment') {
-        paymentBadge = '<p style="font-size:12px;color:#d97706;margin-top:4px;">⚠️ Partial payment received</p>';
-      } else if (o.payment_status === 'Refunded') {
-        paymentBadge = '<p style="font-size:12px;color:#6366f1;margin-top:4px;">↩️ Refunded</p>';
-      }
+    let payHtml = '';
+    const ps = o.payment_status || '';
+    if (ps === 'Payment Received') payHtml = `<span style="color:#16a34a;font-size:12px;">✅ Payment received</span>`;
+    else if (ps === 'Payment Not Received' && o.utr_number) payHtml = `<span style="color:#d97706;font-size:12px;">💰 UTR submitted — verification pending</span>`;
+    else if (ps === 'Payment Not Received' || status === 'new') payHtml = `<span style="color:#dc2626;font-size:12px;">⚠️ Payment pending</span>`;
+    else if (ps === 'Partial Payment') payHtml = `<span style="color:#d97706;font-size:12px;">⚠️ Partial payment</span>`;
 
+    const trackHtml = o.tracking_number
+      ? `<div style="margin-top:8px;">
+           <span style="font-size:12px;color:var(--slate);">📮 Speed Post:</span>
+           <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-left:4px;">${o.tracking_number}</span>
+           <a href="https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx" target="_blank" style="display:block;font-size:12px;color:var(--saffron);font-weight:600;margin-top:2px;">Track on India Post →</a>
+         </div>`
+      : `<span style="font-size:12px;color:var(--slate);">Tracking akan update hoga dispatch ke baad</span>`;
 
-      let trackingHtml = '';
-      if (o.tracking) {
-        trackingHtml = '<div style="margin-top:10px"><span style="font-size:12px;color:var(--slate)">Speed Post Tracking:</span><div class="track-number-box">' + o.tracking + '</div><a href="https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx" target="_blank" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--saffron);font-weight:600">Track on India Post →</a></div>';
-      } else {
-        trackingHtml = '<p style="margin-top:4px;font-size:12px;color:var(--slate)">Tracking will appear here once dispatched.</p>';
-      }
+    // Show UTR form trigger if payment pending
+    const utrBtn = (ps === 'Payment Not Received' && !o.utr_number)
+      ? `<button onclick="document.getElementById('utrPaymentSection').style.display='block';document.getElementById('utrOrderRef').value='${ref}';document.getElementById('utrPaymentSection').scrollIntoView({behavior:'smooth'})"
+           style="margin-top:8px;background:var(--saffron);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">💳 Submit UTR / Payment Proof</button>`
+      : '';
 
-      return '<div class="order-hist-item">' +
-        '<div class="ohi-icon">' + icon + '</div>' +
-        '<div class="ohi-info">' +
-          '<h5>' + o.card + ' &times; ' + o.qty + ' &mdash; <span style="font-family:var(--font-mono);font-size:12px">' + o.ref + '</span></h5>' +
-          '<p>&#8377;' + Number(o.amount).toLocaleString('en-IN') + ' &middot; ' + o.date + '</p>' +
-          paymentBadge +
-          trackingHtml +
-        '</div>' +
-        '<span class="ohi-status ' + statusClass + '">' + sIcon + ' ' + displayStatus + '</span>' +
-      '</div>';
-    });
-    resultEl.innerHTML = '<div class="order-history-list">' + orderCards.join('') + '</div>';
+    return `<div style="background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:14px;padding:18px 20px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:24px;">${icon}</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--navy);">${serviceName}</div>
+            <div style="font-size:11px;font-family:var(--font-mono);color:var(--slate);">${ref} · ${date}</div>
+          </div>
+        </div>
+        <span style="background:rgba(0,0,0,0.06);color:${statusColor};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">${sIcon} ${display}</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;">₹${amount.toLocaleString('en-IN')}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        ${payHtml}
+        ${trackHtml}
+        ${utrBtn}
+      </div>
+    </div>`;
   }
 
   // ── CART STATE ────────────────────────────────────────────────
@@ -2446,6 +2414,7 @@
     if (getCartItems().length === 0) return;
     closeCart();
     autoFillCheckout();
+    loadFormBuilderFields();
     const items = getCartItems();
     const summary = document.getElementById('modalSummary');
     if (summary) {
@@ -2499,6 +2468,9 @@
     const total    = getFinalTotal();
     const orderRef = 'HSC-' + Date.now().toString(36).toUpperCase().slice(-6);
 
+    // Collect custom Form Builder field values
+    const customFields = getCustomFieldValues();
+
     // Save to Supabase
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
@@ -2520,6 +2492,7 @@
           total_amount:     total,
           discount_amount:  discount || null,
           coupon_code:      appliedCoupon?.code || null,
+          custom_fields:    Object.keys(customFields).length ? JSON.stringify(customFields) : null,
           payment_status:   'Payment Not Received',
           payment_source:   'Manual',
           status:           'new'
@@ -2778,7 +2751,274 @@ Please verify & confirm.`;
     if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
 
-  // ── COUPON SYSTEM ─────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════
+  //  FORM BUILDER → CHECKOUT INTEGRATION
+  // ══════════════════════════════════════════════════════
+  let _checkoutFormFields = []; // fields loaded for current cart
+
+  async function loadFormBuilderFields() {
+    const items = getCartItems();
+    if (!items.length) return;
+
+    // Get first product that has form fields (Gazette > BPR > others)
+    const priority = ['Gazette', 'BPR'];
+    let targetProduct = null;
+
+    // Try to find product from sbProducts
+    for (const item of items) {
+      const p = sbProducts[item.id];
+      if (p) { targetProduct = p; break; }
+    }
+
+    _checkoutFormFields = [];
+    const container = document.getElementById('dynamicFieldsContainer');
+    const wrap      = document.getElementById('dynamicFormFields');
+    const titleEl   = document.getElementById('dynamicFormTitle');
+    if (!container || !wrap) return;
+
+    // Try Supabase product_forms table
+    try {
+      let productId = targetProduct?.id;
+      // For Gazette/BPR — try to get by category too
+      if (!productId && items.length) productId = items[0].id;
+
+      if (productId) {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/product_forms?product_id=eq.${productId}`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          if (rows && rows[0]?.fields) {
+            try { _checkoutFormFields = JSON.parse(rows[0].fields); } catch(e) {}
+          }
+        }
+      }
+    } catch(e) { console.warn('loadFormBuilderFields fetch failed:', e); }
+
+    if (!_checkoutFormFields.length) { wrap.style.display = 'none'; return; }
+
+    if (titleEl && targetProduct) {
+      titleEl.textContent = `📝 ${targetProduct.name} — Details`;
+    }
+
+    container.innerHTML = _checkoutFormFields.map(f => renderCheckoutField(f)).join('');
+    wrap.style.display = 'block';
+  }
+
+  function renderCheckoutField(f) {
+    const req = f.required ? '<span style="color:#dc2626">*</span>' : '';
+    const id  = 'cf_' + f.id;
+    let input = '';
+
+    if (f.type === 'text' || f.type === 'tel' || f.type === 'number' || f.type === 'email') {
+      input = `<input class="form-input" id="${id}" type="${f.type}" placeholder="${f.placeholder||''}" ${f.required?'required':''}/>`;
+    } else if (f.type === 'date') {
+      input = `<input class="form-input" id="${id}" type="date" ${f.required?'required':''}/>`;
+    } else if (f.type === 'textarea' || f.type === 'Long Text') {
+      input = `<textarea class="form-input" id="${id}" rows="3" placeholder="${f.placeholder||''}" style="resize:vertical;" ${f.required?'required':''}></textarea>`;
+    } else if (f.type === 'select' || f.type === 'Dropdown') {
+      const opts = (f.options||[]).map(o => `<option>${o}</option>`).join('');
+      input = `<select class="form-input" id="${id}" ${f.required?'required':''}><option value="">— Select —</option>${opts}</select>`;
+    } else if (f.type === 'radio' || f.type === 'Radio Buttons') {
+      input = `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;">${(f.options||[]).map((o,i) =>
+        `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+          <input type="radio" name="${id}" value="${o}" ${i===0?'checked':''}/> ${o}
+        </label>`).join('')}</div>`;
+    } else if (f.type === 'checkbox' || f.type === 'Checkbox') {
+      input = `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;margin-top:4px;">
+        <input type="checkbox" id="${id}" ${f.required?'required':''}/> ${f.placeholder||f.label}
+      </label>`;
+    } else {
+      input = `<input class="form-input" id="${id}" type="text" placeholder="${f.placeholder||''}"/>`;
+    }
+
+    return `<div class="form-group" style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;color:var(--navy);display:block;margin-bottom:6px;">${f.label} ${req}</label>
+      ${input}
+    </div>`;
+  }
+
+  function getCustomFieldValues() {
+    const data = {};
+    _checkoutFormFields.forEach(f => {
+      const id = 'cf_' + f.id;
+      if (f.type === 'radio' || f.type === 'Radio Buttons') {
+        const checked = document.querySelector(`input[name="${id}"]:checked`);
+        data[f.label] = checked ? checked.value : '';
+      } else if (f.type === 'checkbox' || f.type === 'Checkbox') {
+        const el = document.getElementById(id);
+        data[f.label] = el ? (el.checked ? 'Yes' : 'No') : '';
+      } else {
+        const el = document.getElementById(id);
+        data[f.label] = el ? el.value.trim() : '';
+      }
+    });
+    return data;
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  MY PROFILE & ORDER HISTORY
+  // ══════════════════════════════════════════════════════
+  let _activeOrderTab = 'orders';
+
+  function switchOrderTab(tab) {
+    _activeOrderTab = tab;
+    const ordersDiv  = document.getElementById('orderTrackResult');
+    const consultsDiv= document.getElementById('consultsTrackResult');
+    const tabOrders  = document.getElementById('tab-orders');
+    const tabConsults= document.getElementById('tab-consults');
+
+    if (tab === 'orders') {
+      if (ordersDiv)  ordersDiv.style.display  = 'block';
+      if (consultsDiv) consultsDiv.style.display = 'none';
+      if (tabOrders)  { tabOrders.style.borderBottomColor = 'var(--saffron)'; tabOrders.style.color = 'var(--navy)'; tabOrders.style.fontWeight = '700'; }
+      if (tabConsults){ tabConsults.style.borderBottomColor = 'transparent'; tabConsults.style.color = 'var(--slate)'; tabConsults.style.fontWeight = '600'; }
+    } else {
+      if (ordersDiv)  ordersDiv.style.display  = 'none';
+      if (consultsDiv) consultsDiv.style.display = 'block';
+      if (tabConsults){ tabConsults.style.borderBottomColor = 'var(--saffron)'; tabConsults.style.color = 'var(--navy)'; tabConsults.style.fontWeight = '700'; }
+      if (tabOrders)  { tabOrders.style.borderBottomColor = 'transparent'; tabOrders.style.color = 'var(--slate)'; tabOrders.style.fontWeight = '600'; }
+    }
+  }
+
+  function updateProfileSection() {
+    if (!currentUser) {
+      const hdr = document.getElementById('profileHeader');
+      const row = document.getElementById('trackSearchRow');
+      const tabs= document.getElementById('ordersTabs');
+      if (hdr)  hdr.style.display  = 'none';
+      if (row)  row.style.display  = 'flex';
+      if (tabs) tabs.style.display = 'none';
+      return;
+    }
+    // Show profile header
+    const hdr = document.getElementById('profileHeader');
+    const row = document.getElementById('trackSearchRow');
+    const tabs= document.getElementById('ordersTabs');
+    if (hdr)  hdr.style.display  = 'flex';
+    if (row)  row.style.display  = 'none';
+    if (tabs) tabs.style.display = 'block';
+
+    const nameEl   = document.getElementById('profileName');
+    const emailEl  = document.getElementById('profileEmail');
+    const mobileEl = document.getElementById('profileMobile');
+    const avatarEl = document.getElementById('profileAvatar');
+    if (nameEl)   nameEl.textContent   = currentUser.name || '—';
+    if (emailEl)  emailEl.textContent  = currentUser.email || '—';
+    if (mobileEl) mobileEl.textContent = currentUser.mobile ? '📞 ' + currentUser.mobile : '';
+    if (avatarEl) avatarEl.textContent = (currentUser.name||'U').slice(0,1).toUpperCase();
+
+    // Auto-fill mobile and load orders
+    const trackInput = document.getElementById('trackMobile');
+    if (trackInput && currentUser.mobile) {
+      trackInput.value = currentUser.mobile;
+    }
+    if (currentUser.mobile) {
+      loadProfileOrders(currentUser.mobile);
+      loadProfileConsults(currentUser.mobile);
+    }
+  }
+
+  async function loadProfileOrders(mobile) {
+    const resultEl = document.getElementById('orderTrackResult');
+    if (!resultEl) return;
+    resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--slate);">⏳ Loading your orders…</div>';
+
+    try {
+      const [orders, pvcOrders] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/orders?customer_phone=eq.${mobile}&order=created_at.desc`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }).then(r => r.json()),
+        fetch(`${SUPABASE_URL}/rest/v1/pvc_orders?customer_phone=eq.${mobile}&order=created_at.desc`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }).then(r => r.json()).catch(() => [])
+      ]);
+
+      const all = [
+        ...(Array.isArray(orders) ? orders.map(o => ({ ...o, _type: 'order' })) : []),
+        ...(Array.isArray(pvcOrders) ? pvcOrders.map(o => ({ ...o, _type: 'pvc', order_ref: o.order_ref||('PVC-'+o.id), total_amount: o.amount })) : [])
+      ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (!all.length) {
+        resultEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--slate);">
+          <div style="font-size:36px;margin-bottom:12px;">📭</div>
+          <p>Koi orders nahi mila is number pe.</p>
+          <p style="font-size:13px;margin-top:8px;">Nayi order ke liye <a href="#services" style="color:var(--saffron);font-weight:700;">Services</a> dekhen.</p>
+        </div>`;
+        return;
+      }
+
+      resultEl.innerHTML = all.map(o => renderOrderCard(o)).join('');
+    } catch(e) {
+      resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);">❌ Load nahi ho sake — dobara try karein.</div>';
+    }
+  }
+
+  async function loadProfileConsults(mobile) {
+    const resultEl = document.getElementById('consultsTrackResult');
+    if (!resultEl) return;
+    resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--slate);">⏳ Loading consultations…</div>';
+
+    try {
+      const [gaz, bpr, exp] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/gazette_consults?mobile=eq.${mobile}&order=created_at.desc`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }).then(r => r.json()).catch(() => []),
+        fetch(`${SUPABASE_URL}/rest/v1/bpr_consults?mobile=eq.${mobile}&order=created_at.desc`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }).then(r => r.json()).catch(() => []),
+        fetch(`${SUPABASE_URL}/rest/v1/expert_consults?mobile=eq.${mobile}&order=created_at.desc`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }).then(r => r.json()).catch(() => [])
+      ]);
+
+      const all = [
+        ...(Array.isArray(gaz) ? gaz.map(c => ({ ...c, _svc: 'Gazette Notification' })) : []),
+        ...(Array.isArray(bpr) ? bpr.map(c => ({ ...c, _svc: 'Business Project Report' })) : []),
+        ...(Array.isArray(exp) ? exp.map(c => ({ ...c, _svc: c.product_name || 'Expert Advice' })) : [])
+      ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (!all.length) {
+        resultEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--slate);">
+          <div style="font-size:36px;margin-bottom:12px;">📭</div>
+          <p>Koi consultation nahi mila is number pe.</p>
+        </div>`;
+        return;
+      }
+
+      resultEl.innerHTML = all.map(c => `
+        <div style="background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:14px;padding:18px 20px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--navy);">📞 ${c._svc}</div>
+              <div style="font-size:12px;color:var(--slate);margin-top:2px;">${fmtDate(c.created_at)}</div>
+            </div>
+            ${consultStatusBadgeFront(c.status || 'Pending')}
+          </div>
+          ${c.admin_note ? `<div style="font-size:13px;color:var(--slate);background:var(--light);padding:8px 12px;border-radius:8px;border-left:3px solid var(--saffron);">💬 ${c.admin_note}</div>` : ''}
+        </div>`).join('');
+    } catch(e) {
+      resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);">❌ Load nahi ho sake.</div>';
+    }
+  }
+
+  function consultStatusBadgeFront(s) {
+    const map = {
+      'Pending':     { bg:'rgba(245,158,11,0.12)', color:'#d97706', label:'⏳ Pending' },
+      'In Progress': { bg:'rgba(96,165,250,0.12)', color:'#3b82f6', label:'⚙️ In Progress' },
+      'Agreed':      { bg:'rgba(34,197,94,0.12)',  color:'#16a34a', label:'✅ Agreed' },
+      'Completed':   { bg:'rgba(34,197,94,0.12)',  color:'#16a34a', label:'✅ Completed' },
+      'NotInterested':{ bg:'rgba(239,68,68,0.10)', color:'#dc2626', label:'❌ Not Interested' },
+    };
+    const st = map[s] || { bg:'rgba(100,100,100,0.1)', color:'var(--slate)', label: s };
+    return `<span style="background:${st.bg};color:${st.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">${st.label}</span>`;
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
   const CP_KEY = 'hsc_coupons_v1';
   let appliedCoupon = null;
 
@@ -3599,7 +3839,7 @@ Hum jald hi contact karenge.`);
   function initAuth() {
     const stored = localStorage.getItem('hsc_user');
     if (stored) {
-      try { currentUser = JSON.parse(stored); updateNavUser(); autoFillCheckout(); } catch {}
+      try { currentUser = JSON.parse(stored); updateNavUser(); autoFillCheckout(); updateProfileSection(); } catch {}
     }
     // Firebase auth state listener
     try {
@@ -3607,7 +3847,7 @@ Hum jald hi contact karenge.`);
         if (user && !currentUser) {
           currentUser = { name: user.displayName || 'Google User', email: user.email, mobile: user.phoneNumber || '', provider: 'google' };
           localStorage.setItem('hsc_user', JSON.stringify(currentUser));
-          updateNavUser(); autoFillCheckout();
+          updateNavUser(); autoFillCheckout(); updateProfileSection();
           saveCustomerToSupabase(currentUser);
         }
       });
@@ -3711,7 +3951,7 @@ Hum jald hi contact karenge.`);
     currentUser = { name: user.name, email: user.email, mobile: user.mobile, provider: 'email' };
     localStorage.setItem('hsc_user', JSON.stringify(currentUser));
     saveCustomerToSupabase(currentUser);
-    updateNavUser(); autoFillCheckout(); closeAuthModal();
+    updateNavUser(); autoFillCheckout(); updateProfileSection(); closeAuthModal();
     showAuthToast(`👋 Welcome back, ${user.name.split(' ')[0]}!`);
   }
 
@@ -3732,7 +3972,7 @@ Hum jald hi contact karenge.`);
     currentUser = { name, email, mobile, provider: 'email' };
     localStorage.setItem('hsc_user', JSON.stringify(currentUser));
     saveCustomerToSupabase(currentUser);
-    updateNavUser(); autoFillCheckout(); closeAuthModal();
+    updateNavUser(); autoFillCheckout(); updateProfileSection(); closeAuthModal();
     showAuthToast(`🎉 Account created! Welcome, ${name.split(' ')[0]}!`);
   }
 
@@ -3760,7 +4000,7 @@ Hum jald hi contact karenge.`);
         };
         localStorage.setItem('hsc_user', JSON.stringify(currentUser));
         saveCustomerToSupabase(currentUser);
-        updateNavUser(); autoFillCheckout(); closeAuthModal();
+        updateNavUser(); autoFillCheckout(); updateProfileSection(); closeAuthModal();
         showAuthToast(`👋 Welcome, ${currentUser.name.split(' ')[0]}!`);
       })
       .catch((error) => {
@@ -3774,6 +4014,13 @@ Hum jald hi contact karenge.`);
     currentUser = null;
     localStorage.removeItem('hsc_user');
     updateNavUser();
+    updateProfileSection();
+    // Clear profile UI
+    const resultEl = document.getElementById('orderTrackResult');
+    const consultsEl = document.getElementById('consultsTrackResult');
+    if (resultEl)  resultEl.innerHTML  = '';
+    if (consultsEl) consultsEl.innerHTML = '';
+    try { firebase.auth().signOut(); } catch(e) {}
     closeUserMenu();
     showAuthToast('👋 Signed out successfully.');
   }
@@ -3792,6 +4039,7 @@ Hum jald hi contact karenge.`);
   renderCart();
   loadProducts();
   loadReviewsOnSite();
+  updateProfileSection();
 </script>
 <script type="text/javascript">
   function googleTranslateElementInit() {
