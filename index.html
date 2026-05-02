@@ -1113,7 +1113,52 @@
   </div>
 </div>
 
-<!-- ── DELIVERY & TIMELINE ── -->
+<!-- ══════════════════════════════════════════════════
+     PVC CART MODAL — Card selector → adds to cart
+══════════════════════════════════════════════════ -->
+<div class="consult-modal-overlay" id="pvcCartModal" onclick="if(event.target===this)closePVCCartModal()">
+  <div class="consult-modal-box" style="max-width:500px;">
+    <div class="consult-modal-head">
+      <div class="consult-modal-head-info">
+        <h2>🪪 Select Card Type</h2>
+        <p>Choose card type and quantity — then checkout with your other items.</p>
+      </div>
+      <button class="close-btn" onclick="closePVCCartModal()">✕</button>
+    </div>
+    <div class="consult-modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'aadhaar','Aadhaar Card',99)" data-selected="true" style="border:2px solid var(--saffron);border-radius:12px;padding:14px;cursor:pointer;text-align:center;background:rgba(232,103,26,0.06);">
+          <div style="font-size:24px;">🪪</div><div style="font-size:13px;font-weight:700;margin-top:4px;">Aadhaar Card</div><div style="font-size:12px;color:var(--saffron);font-weight:700;">₹99/card</div>
+        </div>
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'pan','PAN Card',99)" style="border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;">💳</div><div style="font-size:13px;font-weight:700;margin-top:4px;">PAN Card</div><div style="font-size:12px;color:var(--slate);font-weight:700;">₹99/card</div>
+        </div>
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'voter','Voter ID Card',99)" style="border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;">🗳️</div><div style="font-size:13px;font-weight:700;margin-top:4px;">Voter ID Card</div><div style="font-size:12px;color:var(--slate);font-weight:700;">₹99/card</div>
+        </div>
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'driving','Driving Licence',99)" style="border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;">🚗</div><div style="font-size:13px;font-weight:700;margin-top:4px;">Driving Licence</div><div style="font-size:12px;color:var(--slate);font-weight:700;">₹99/card</div>
+        </div>
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'custom','Custom/Other Card',99)" style="border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;">🎴</div><div style="font-size:13px;font-weight:700;margin-top:4px;">Custom Card</div><div style="font-size:12px;color:var(--slate);font-weight:700;">₹99/card</div>
+        </div>
+        <div class="pvc-cart-option" onclick="selectPVCCartType(this,'ayushman','Ayushman Card',99)" style="border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;">
+          <div style="font-size:24px;">🏥</div><div style="font-size:13px;font-weight:700;margin-top:4px;">Ayushman Card</div><div style="font-size:12px;color:var(--slate);font-weight:700;">₹99/card</div>
+        </div>
+      </div>
+      <div style="background:rgba(232,103,26,0.06);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--slate);">
+        🎉 <strong>5+ cards pe 10% OFF</strong> automatically milta hai!
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <label style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;">Quantity:</label>
+        <input type="number" id="pvcCartQty" value="1" min="1" max="50" style="width:80px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;text-align:center;" oninput="updatePVCCartPrice()"/>
+        <div id="pvcCartPriceDisplay" style="font-size:15px;font-weight:700;color:var(--saffron);">₹99</div>
+      </div>
+      <div id="pvcCartSelected" style="font-size:12px;color:var(--slate);margin-bottom:14px;">Selected: <strong>Aadhaar Card</strong></div>
+      <button id="pvcCartAddBtn" onclick="confirmPVCCartAdd()" style="width:100%;background:linear-gradient(135deg,var(--saffron),var(--gold));color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">🛒 Add to Cart</button>
+    </div>
+  </div>
+</div> -->
 <section class="section">
   <div class="section-inner">
     <div class="section-label">Delivery & Process</div>
@@ -1423,6 +1468,7 @@
 
 <!-- Razorpay SDK -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <!-- ══════════════════════════════════════════════════
      PVC CARD ORDER MODAL
@@ -1985,7 +2031,70 @@
       document.body.style.overflow = 'hidden';
     }
   }
-  function openPVCOrder() { openPVCModal(); }
+  let _pvcCartSelected = { type: 'aadhaar', label: 'Aadhaar Card', price: 99 };
+
+  function selectPVCCartType(el, type, label, price) {
+    // Deselect all
+    document.querySelectorAll('.pvc-cart-option').forEach(o => {
+      o.style.border = '2px solid var(--border)';
+      o.style.background = '';
+      o.querySelector('div:last-child').style.color = 'var(--slate)';
+    });
+    // Select this one
+    el.style.border = '2px solid var(--saffron)';
+    el.style.background = 'rgba(232,103,26,0.06)';
+    el.querySelector('div:last-child').style.color = 'var(--saffron)';
+    _pvcCartSelected = { type, label, price };
+    const selEl = document.getElementById('pvcCartSelected');
+    if (selEl) selEl.innerHTML = `Selected: <strong>${label}</strong>`;
+    updatePVCCartPrice();
+  }
+
+  function updatePVCCartPrice() {
+    const qty = parseInt(document.getElementById('pvcCartQty')?.value || '1');
+    let total = _pvcCartSelected.price * qty;
+    if (qty >= 5) total = Math.round(total * 0.9);
+    const el = document.getElementById('pvcCartPriceDisplay');
+    if (el) el.textContent = `₹${total.toLocaleString('en-IN')}${qty >= 5 ? ' (10% OFF!)' : ''}`;
+  }
+
+  function confirmPVCCartAdd() {
+    const qty = parseInt(document.getElementById('pvcCartQty')?.value || '1');
+    if (qty < 1 || qty > 50) { showToast('⚠️ Quantity 1-50 ke beech honi chahiye', 'error'); return; }
+    let price = _pvcCartSelected.price;
+    if (qty >= 5) price = Math.round(price * 0.9);
+    addPVCToCart(_pvcCartSelected.type, _pvcCartSelected.label, price);
+  }
+
+  // PVC Cart Modal — simplified card selector that adds to cart
+  function openPVCCartModal() {
+    const modal = document.getElementById('pvcCartModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    // Reset selection
+    _pvcCartSelected = { type: 'aadhaar', label: 'Aadhaar Card', price: 99 };
+    document.querySelectorAll('.pvc-cart-option').forEach((o, i) => {
+      o.style.border = i === 0 ? '2px solid var(--saffron)' : '2px solid var(--border)';
+      o.style.background = i === 0 ? 'rgba(232,103,26,0.06)' : '';
+    });
+    const qtyEl = document.getElementById('pvcCartQty');
+    if (qtyEl) qtyEl.value = '1';
+    updatePVCCartPrice();
+  }
+  function closePVCCartModal() {
+    const modal = document.getElementById('pvcCartModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
+  }
+  function addPVCToCart(type, label, price) {
+    const id = 'pvc_' + type;
+    const qty = parseInt(document.getElementById('pvcCartQty')?.value || '1');
+    // Add each card as separate qty
+    if (cart[id]) { cart[id].qty += qty; }
+    else { cart[id] = { id, name: `PVC Card — ${label}`, price, emoji: '🪪', qty, isPVC: true, cardType: type }; }
+    renderCart();
+    closePVCCartModal();
+    openCartPanel();
+    showToast(`🪪 ${qty}× ${label} cart mein add hua!`, 'success');
+  }
 
   function closePVCModal() {
     const modal = document.getElementById('pvcModal');
@@ -2262,7 +2371,67 @@
     await loadProfileConsults(mobile);
   }
 
-  function renderOrderCard(o) {
+  function downloadCustomerInvoice(ref, customerName, amount, createdAt) {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a5' });
+      const W = doc.internal.pageSize.getWidth();
+      const today = createdAt ? new Date(createdAt).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+
+      // Header
+      doc.setFillColor(11, 31, 75);
+      doc.rect(0, 0, W, 28, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+      doc.text('Harsh CSC eMitra', W/2, 12, { align: 'center' });
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+      doc.text('Digital Documentation Services | harshcscemitra.vercel.app', W/2, 19, { align: 'center' });
+      doc.text(`WhatsApp: +91 7023029903 | harshcscemitra@gmail.com`, W/2, 24, { align: 'center' });
+
+      // Invoice title
+      doc.setTextColor(232, 103, 26);
+      doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+      doc.text('PAYMENT RECEIPT', W/2, 38, { align: 'center' });
+
+      // Order info box
+      doc.setDrawColor(232, 103, 26); doc.setLineWidth(0.3);
+      doc.roundedRect(10, 43, W-20, 28, 2, 2, 'S');
+      doc.setTextColor(50, 50, 50); doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');   doc.text('Order Ref:', 14, 51);
+      doc.setFont('helvetica', 'normal'); doc.text(ref, 50, 51);
+      doc.setFont('helvetica', 'bold');   doc.text('Date:', 14, 58);
+      doc.setFont('helvetica', 'normal'); doc.text(today, 50, 58);
+      doc.setFont('helvetica', 'bold');   doc.text('Customer:', 14, 65);
+      doc.setFont('helvetica', 'normal'); doc.text(customerName || 'Customer', 50, 65);
+
+      // Amount box
+      doc.setFillColor(11, 31, 75);
+      doc.rect(10, 78, W-20, 20, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+      doc.text('Amount Paid', W/2, 86, { align: 'center' });
+      doc.setFontSize(20); doc.setTextColor(232, 103, 26);
+      doc.text(`Rs. ${Number(amount).toLocaleString('en-IN')}`, W/2, 95, { align: 'center' });
+
+      // Thank you
+      doc.setTextColor(100, 100, 100); doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Thank you for choosing Harsh CSC eMitra!', W/2, 108, { align: 'center' });
+      doc.text('For queries: WhatsApp +91 7023029903', W/2, 113, { align: 'center' });
+
+      // Footer
+      doc.setFillColor(240, 240, 240);
+      doc.rect(0, 122, W, 16, 'F');
+      doc.setTextColor(150, 150, 150); doc.setFontSize(7);
+      doc.text('This is a computer-generated receipt and does not require a signature.', W/2, 128, { align: 'center' });
+      doc.text(`Generated on ${new Date().toLocaleString('en-IN')}`, W/2, 133, { align: 'center' });
+
+      doc.save(`Receipt_${ref}.pdf`);
+    } catch(e) {
+      alert('Invoice generate karne mein problem aai. Please admin se contact karein.');
+      console.error('Invoice error:', e);
+    }
+  }
     const isPVC   = o._type === 'pvc';
     const icon    = isPVC ? '🪪' : '📄';
     const ref     = o.order_ref || '—';
@@ -2306,6 +2475,11 @@
            style="margin-top:8px;background:var(--saffron);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">💳 Submit UTR / Payment Proof</button>`
       : '';
 
+    const invoiceBtn = isPaid2
+      ? `<button onclick="downloadCustomerInvoice('${ref}','${o.customer_name||''}',${amount},'${o.created_at||''}')"
+           style="margin-top:8px;background:var(--navy);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📄 Download Invoice</button>`
+      : '';
+
     return `<div style="background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:14px;padding:18px 20px;margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -2322,6 +2496,7 @@
         ${payHtml}
         ${trackHtml}
         ${utrBtn}
+        ${invoiceBtn}
       </div>
     </div>`;
   }
@@ -2529,6 +2704,18 @@
       `\n⏰ ${new Date().toLocaleString('en-IN')}`
     );
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
+
+    // Email notification to customer
+    if (email) {
+      sendOrderEmail('order_placed', email, {
+        order_ref:     orderRef,
+        customer_name: name,
+        items:         items.map(i => `${i.name} ×${i.qty}`).join(', '),
+        total_amount:  total,
+        discount:      discount || 0,
+        coupon:        appliedCoupon?.code || ''
+      });
+    }
 
     // Show payment options
     if (btn) { btn.textContent = '📋 Confirm Details & Choose Payment →'; btn.disabled = false; }
@@ -3019,6 +3206,18 @@ Please verify & confirm.`;
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
   }
+  // ── EMAIL NOTIFICATIONS ────────────────────────────────────────
+  async function sendOrderEmail(type, toEmail, data) {
+    if (!toEmail) return;
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ type, email: toEmail, order: data })
+      });
+    } catch(e) { console.warn('Email send failed:', e); }
+  }
+
   const CP_KEY = 'hsc_coupons_v1';
   let appliedCoupon = null;
 
