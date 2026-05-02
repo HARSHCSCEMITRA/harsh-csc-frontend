@@ -1505,27 +1505,45 @@ async function refreshAll() {
 }
 
 async function loadAllData() {
-  allOrders = await sbFetch('orders', 'select=*');
-  const gaz     = (await sbFetch('gazette_consults',  'select=*')).map(r => ({ ...r, service: 'Gazette' }));
-  const bpr     = (await sbFetch('bpr_consults',      'select=*')).map(r => ({ ...r, service: 'BPR' }));
-  // Generic expert consults from admin-added products
+  // Fetch all main orders (includes all product types — Gazette, BPR, Test Product etc.)
+  const rawOrders = await sbFetch('orders', 'select=*');
+  // Normalize — add _service for each
+  allOrders = (rawOrders || []).map(o => ({ ...o, _service: guessService(o) }));
+
+  // Gazette consults
+  const gaz = (await sbFetch('gazette_consults', 'select=*')).map(r => ({
+    ...r, service: 'Gazette', _isGazette: true
+  }));
+  // BPR consults
+  const bpr = (await sbFetch('bpr_consults', 'select=*')).map(r => ({
+    ...r, service: 'BPR', _isBPR: true
+  }));
+  // Generic expert consults (admin-added products)
   let expertC = [];
   try {
     const raw = await sbFetch('expert_consults', 'select=*');
     expertC = (raw || []).map(r => ({
       ...r,
-      service: r.product_name || 'Expert',
+      // Use exact product_name — NOT 'Gazette', NOT 'BPR'
+      service: r.product_name || r.service || 'Expert Advice',
       customer_name: r.customer_name,
       mobile: r.mobile,
       _isExpert: true
     }));
   } catch(e) {}
-  allConsults = [...gaz, ...bpr, ...expertC].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  allConsults = [...gaz, ...bpr, ...expertC]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
   allPVCOrders = await sbFetch('pvc_orders', 'select=*');
+
+  // Update nav badges
   const newO = allOrders.filter(o => o.status === 'new').length;
   const newC = allConsults.filter(c => !c.read).length;
-  document.getElementById('newOrderBadge').textContent = newO || '0';
-  document.getElementById('newConsultBadge').textContent = newC || '0';
+  const badge = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n || '0'; };
+  badge('newOrderBadge', newO);
+  badge('newConsultBadge', newC);
+
   window._cachedOrders   = allOrders;
   window._cachedConsults = allConsults;
 }
@@ -1667,28 +1685,49 @@ function deleteAllCancelled() {
 //  CONSULTATIONS TABLE
 // ══════════════════════════════════════════
 function renderConsultationsTable() {
-  const search = (document.getElementById('searchConsults')?.value || '').toLowerCase();
-  const fType = document.getElementById('filterConsultType')?.value || '';
+  const search  = (document.getElementById('searchConsults')?.value || '').toLowerCase();
+  const fType   = document.getElementById('filterConsultType')?.value || '';
   const fStatus = document.getElementById('filterConsultStatus')?.value || '';
+
   const filtered = allConsults.filter(c => {
-    const txt = `${c.customer_name || ''} ${c.mobile || ''}`.toLowerCase();
-    return (!search || txt.includes(search)) && (!fType || c.service === fType) && (!fStatus || (c.status || 'Pending') === fStatus);
+    const txt = `${c.customer_name||''} ${c.mobile||''} ${c.service||''}`.toLowerCase();
+    return (!search || txt.includes(search))
+        && (!fType   || c.service === fType)
+        && (!fStatus || (c.status||'Pending') === fStatus);
   });
+
+  // Dynamically update type filter with all unique services
+  const typeSelect = document.getElementById('filterConsultType');
+  if (typeSelect) {
+    const services = [...new Set(allConsults.map(c => c.service).filter(Boolean))].sort();
+    const curVal = typeSelect.value;
+    typeSelect.innerHTML = '<option value="">All Types</option>' +
+      services.map(s => `<option ${s===curVal?'selected':''}>${s}</option>`).join('');
+  }
+
   document.getElementById('consultsTbl').innerHTML = filtered.length
-    ? filtered.map(c => `<tr>
-        <td class="td-main">${c.customer_name || '—'}</td>
-        <td class="td-mono">${c.mobile || '—'}</td>
-        <td>${serviceTag(c.service)}</td>
-        <td style="color:var(--text2);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;">${c.reason || c.biz_type || '—'}</td>
-        <td>${consultStatusBadge(c.status || 'Pending')}</td>
-        <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
-        <td><div style="display:flex;gap:5px;">
-          <button class="btn-sm btn-blue" onclick="viewConsult('${c.id}','${c.service}')">👁</button>
-          <button class="btn-sm btn-orange" onclick="openConsultModal('${c.id}','${c.service}')">✏️ Status</button>
-          <button class="btn-sm btn-green" onclick="waNum('${c.mobile || ''}')"><img class="wa-icon-btn" src="" alt="WA" style="width:16px;height:16px;vertical-align:middle;border-radius:4px;"></button>
-          ${(c.status === 'NotInterested') ? `<button class="btn-sm btn-red" onclick="confirmDeleteConsult('${c.id}','${c.service}')">🗑️ Delete</button>` : ''}
-        </div></td>
-      </tr>`).join('')
+    ? filtered.map(c => {
+        // Reason/business column — works for all consult types
+        const reason = c.reason || c.biz_type || c.notes || c.city || '—';
+        const reasonDisplay = reason.length > 30 ? reason.slice(0,29)+'…' : reason;
+        // Safe IDs for onclick (escape quotes)
+        const safeId  = String(c.id).replace(/'/g, "\\'");
+        const safeSvc = (c.service||'').replace(/'/g, "\\'");
+        return `<tr>
+          <td class="td-main">${c.customer_name||'—'}</td>
+          <td class="td-mono">${c.mobile||'—'}</td>
+          <td>${serviceTag(c.service)}</td>
+          <td style="color:var(--text2);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${reason}">${reasonDisplay}</td>
+          <td>${consultStatusBadge(c.status||'Pending')}</td>
+          <td style="color:var(--text3);font-size:12px;">${fmtDate(c.created_at)}</td>
+          <td><div style="display:flex;gap:5px;">
+            <button class="btn-sm btn-blue" onclick="viewConsult('${safeId}','${safeSvc}')">👁</button>
+            <button class="btn-sm btn-orange" onclick="openConsultModal('${safeId}','${safeSvc}')">✏️ Status</button>
+            <button class="btn-sm btn-green" onclick="waNum('${c.mobile||''}')">💬</button>
+            ${c.status==='NotInterested' ? `<button class="btn-sm btn-red" onclick="confirmDeleteConsult('${safeId}','${safeSvc}')">🗑️</button>` : ''}
+          </div></td>
+        </tr>`;
+      }).join('')
     : '<tr><td colspan="7" class="empty-state"><div class="empty-icon">📞</div>No consultations found</td></tr>';
 }
 function filterConsults() { renderConsultationsTable(); }
@@ -2623,10 +2662,22 @@ function consultStatusBadge(s) {
   return `<span class="badge ${map[s] || 'badge-pending'}">${labels[s] || s || 'Pending'}</span>`;
 }
 function serviceTag(s) {
-  const map = { Gazette:'badge-gazette', BPR:'badge-bpr', PVC:'badge-pvc' };
-  const cls = map[s] || 'badge-processing';
-  const label = s && s.length > 14 ? s.slice(0,13)+'…' : (s||'?');
-  return `<span class="badge ${cls}" title="${s||''}">${label}</span>`;
+  if (!s) return '<span class="badge badge-pending">—</span>';
+  const map = {
+    'Gazette':  { cls: 'badge-gazette',    label: 'Gazette' },
+    'BPR':      { cls: 'badge-bpr',        label: 'BPR' },
+    'PVC':      { cls: 'badge-pvc',        label: 'PVC' },
+    'Order':    { cls: 'badge-processing', label: 'Order' },
+    'Expert':   { cls: 'badge-processing', label: 'Expert' },
+  };
+  const known = map[s];
+  if (known) return `<span class="badge ${known.cls}">${known.label}</span>`;
+  // Dynamic color for admin-added products — hash service name to a color
+  const colors = ['#f59e0b','#8b5cf6','#06b6d4','#10b981','#f43f5e','#3b82f6','#84cc16','#f97316'];
+  let hash = 0; for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) & 0xffff;
+  const color = colors[hash % colors.length];
+  const label = s.length > 14 ? s.slice(0,13)+'…' : s;
+  return `<span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44;" title="${s}">${label}</span>`;
 }
 function fmtDate(d) {
   if (!d) return '—';
