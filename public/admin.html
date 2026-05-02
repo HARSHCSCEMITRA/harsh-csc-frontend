@@ -1567,47 +1567,75 @@ function renderDashboard() {
 }
 
 function guessService(o) {
-  if (!o.items) return o._type || '?';
+  if (!o.items) return o._type || 'Order';
   try {
     const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-    return items[0]?.name?.includes('Gazette') ? 'Gazette' : 'BPR';
-  } catch { return '?'; }
+    if (!Array.isArray(items) || !items.length) return o._type || 'Order';
+    const name = (items[0]?.name || '').toLowerCase();
+    const id   = String(items[0]?.id || '').toLowerCase();
+    if (id === 'gazette' || name.includes('gazette'))                          return 'Gazette';
+    if (id === 'bpr'     || name.includes('project report') || name.includes('bpr')) return 'BPR';
+    if (id === 'pvc'     || name.includes('pvc') || name.includes('smart card'))     return 'PVC';
+    // Admin-added product — return actual product name (truncated to 20 chars)
+    const n = items[0]?.name || 'Order';
+    return n.length > 20 ? n.slice(0,19) + '…' : n;
+  } catch { return o._type || 'Order'; }
 }
 
 // ══════════════════════════════════════════
 //  ORDERS TABLE
 // ══════════════════════════════════════════
 function renderOrdersTable() {
-  const search = (document.getElementById('searchOrders')?.value || '').toLowerCase();
+  const search  = (document.getElementById('searchOrders')?.value || '').toLowerCase();
   const fStatus = document.getElementById('filterOrderStatus')?.value || '';
-  const fType = document.getElementById('filterOrderType')?.value || '';
+  const fType   = document.getElementById('filterOrderType')?.value || '';
+
   const combined = [
     ...allOrders.map(o => ({ ...o, _service: guessService(o), _amount: o.total_amount })),
     ...allPVCOrders.map(o => ({ ...o, _service: 'PVC', _amount: o.amount }))
   ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+  // Dynamically update service filter options
+  const typeSelect = document.getElementById('filterOrderType');
+  if (typeSelect) {
+    const services = [...new Set(combined.map(o => o._service).filter(Boolean))].sort();
+    const curVal = typeSelect.value;
+    typeSelect.innerHTML = '<option value="">All Types</option>' +
+      services.map(s => `<option ${s===curVal?'selected':''}>${s}</option>`).join('');
+  }
+
   const filtered = combined.filter(o => {
-    const txt = `${o.order_ref || ''} ${o.customer_name || ''} ${o.customer_phone || ''}`.toLowerCase();
-    return (!search || txt.includes(search)) && (!fStatus || (o.status || '').toLowerCase().includes(fStatus.toLowerCase())) && (!fType || o._service === fType);
+    const txt = `${o.order_ref||''} ${o.customer_name||''} ${o.customer_phone||''} ${o._service||''}`.toLowerCase();
+    return (!search || txt.includes(search))
+        && (!fStatus || (o.status||'').toLowerCase() === fStatus.toLowerCase())
+        && (!fType   || o._service === fType);
   });
 
   document.getElementById('ordersTbl').innerHTML = filtered.length
-    ? filtered.map(o => `<tr>
-        <td class="td-mono">${o.order_ref || '—'}</td>
-        <td class="td-main">${o.customer_name || '—'}</td>
-        <td class="td-mono">${o.customer_phone || '—'}</td>
-        <td>${serviceTag(o._service)}</td>
-        <td style="font-weight:700;color:var(--gold);">₹${Number(o._amount || 0).toLocaleString('en-IN')}</td>
-        <td>${statusBadge(o.status)}</td>
-        <td>${o.payment_source === 'Razorpay' ? '<span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);">⚡ Razorpay</span>' : '<span class="badge badge-pending">Manual</span>'}</td>
-        <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
-        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
-          <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','${o._service}')">👁</button>
-          <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','${o._service}','${o.status}','${o.tracking_number || ''}')">✏️</button>
-          <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone || ''}','${o.order_ref}','${o._service}','${o.status}','${o.tracking_number || ''}')"><img class="wa-icon-btn" src="" alt="WA" style="width:16px;height:16px;vertical-align:middle;border-radius:4px;"></button>
-          ${(o.status === 'Cancelled' || o.status === 'cancelled') ? `<button class="btn-sm btn-red" onclick="confirmDeleteOrder('${o.order_ref}','${o._service}')">🗑️</button>` : ''}
-        </div></td>
-      </tr>`).join('')
+    ? filtered.map(o => {
+        const isPaid = (o.payment_status||'').toLowerCase().includes('received');
+        const payBadge = isPaid
+          ? '<span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);">✅ Paid</span>'
+          : (o.utr_number
+            ? '<span class="badge badge-processing">💰 UTR Pending</span>'
+            : '<span class="badge badge-pending">⚠️ Unpaid</span>');
+        return `<tr>
+          <td class="td-mono">${o.order_ref||'—'}</td>
+          <td class="td-main">${o.customer_name||'—'}</td>
+          <td class="td-mono">${o.customer_phone||'—'}</td>
+          <td>${serviceTag(o._service)}</td>
+          <td style="font-weight:700;color:var(--gold);">₹${Number(o._amount||0).toLocaleString('en-IN')}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td>${payBadge}</td>
+          <td style="color:var(--text3);font-size:12px;">${fmtDate(o.created_at)}</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="btn-sm btn-blue" onclick="viewOrder('${o.order_ref}','${o._service}')">👁</button>
+            <button class="btn-sm btn-secondary" onclick="openStatusModal('${o.order_ref}','${o._service}','${o.status}','${o.tracking_number||''}')">✏️</button>
+            <button class="btn-sm btn-green" onclick="waOrder('${o.customer_phone||''}','${o.order_ref}','${o._service}','${o.status}','${o.tracking_number||''}')">💬</button>
+            ${(o.status==='Cancelled'||o.status==='cancelled') ? `<button class="btn-sm btn-red" onclick="confirmDeleteOrder('${o.order_ref}','${o._service}')">🗑️</button>` : ''}
+          </div></td>
+        </tr>`;
+      }).join('')
     : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📦</div>No orders found</td></tr>';
 }
 function filterOrders() { renderOrdersTable(); }
@@ -1874,36 +1902,105 @@ function filterPVC() { renderPVCTable(); }
 //  VIEW DETAIL MODALS
 // ══════════════════════════════════════════
 function viewOrder(ref, service) {
-  const o = service === 'PVC' ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
+  const o = service === 'PVC'
+    ? allPVCOrders.find(x => x.order_ref === ref)
+    : allOrders.find(x => x.order_ref === ref);
   if (!o) { showToast('Order not found', 'error'); return; }
   currentOrderId = { ref, service, id: o.id };
   document.getElementById('orderModalTitle').textContent = `📦 Order — ${ref}`;
-  const rows = service === 'PVC'
-    ? [['Order Ref', ref, true], ['Customer', o.customer_name], ['Mobile', o.customer_phone, true],
-       ['Card Type', o.card_type], ['Quantity', o.quantity], ['Amount', '₹' + Number(o.amount || 0).toLocaleString('en-IN')],
-       ['Status', statusBadge(o.status)], ['Payment ID', o.payment_id || '—', true],
-       ['Tracking #', o.tracking_number || 'Not assigned yet'], ['Address', o.address || '—'], ['Date', fmtDate(o.created_at)]]
-    : [['Order Ref', ref, true], ['Customer', o.customer_name], ['Mobile', o.customer_phone, true],
-       ['Email', o.customer_email || '—'], ['Amount', '₹' + Number(o.total_amount || 0).toLocaleString('en-IN')],
-       ['Status', statusBadge(o.status)], ['Payment', o.payment_status || 'Payment Not Received'],
-       ['Address', o.delivery_address || '—'], ['Notes', o.notes || '—'], ['Date', fmtDate(o.created_at)]];
+
+  let rows = [];
+  if (service === 'PVC') {
+    rows = [
+      ['Order Ref',   ref,                                                   true],
+      ['Customer',    o.customer_name],
+      ['Mobile',      o.customer_phone,                                      true],
+      ['Card Type',   o.card_type],
+      ['Quantity',    o.quantity],
+      ['Amount',      '₹' + Number(o.amount||0).toLocaleString('en-IN')],
+      ['Status',      statusBadge(o.status)],
+      ['Payment',     o.payment_status || 'Payment Not Received'],
+      ['UTR / TxnID', o.utr_number || '—',                                  true],
+      ['Tracking #',  o.tracking_number || 'Not assigned yet'],
+      ['Address',     o.address || '—'],
+      ['Date',        fmtDate(o.created_at)]
+    ];
+  } else {
+    // Parse items
+    let itemsStr = '—';
+    try {
+      const it = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+      if (Array.isArray(it) && it.length) {
+        itemsStr = it.map(i => `${i.name} ×${i.qty||1} = ₹${Number(i.price||0).toLocaleString('en-IN')}`).join('\n');
+      } else if (typeof it === 'string') {
+        itemsStr = it;
+      }
+    } catch(e) { itemsStr = String(o.items || '—'); }
+
+    // Parse custom fields
+    let customFieldsHtml = '';
+    try {
+      const cf = typeof o.custom_fields === 'string' ? JSON.parse(o.custom_fields) : o.custom_fields;
+      if (cf && typeof cf === 'object' && Object.keys(cf).length) {
+        customFieldsHtml = Object.entries(cf)
+          .filter(([k,v]) => v)
+          .map(([k,v]) => `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val">${v}</div></div>`)
+          .join('');
+      }
+    } catch(e) {}
+
+    rows = [
+      ['Order Ref',    ref,                                                         true],
+      ['Customer',     o.customer_name],
+      ['Mobile',       o.customer_phone,                                            true],
+      ['Email',        o.customer_email || '—'],
+      ['Service',      o._service || guessService(o)],
+      ['Items',        itemsStr],
+      ['Amount',       '₹' + Number(o.total_amount||0).toLocaleString('en-IN')],
+      ['Discount',     o.discount_amount ? '-₹' + Number(o.discount_amount).toLocaleString('en-IN') : '—'],
+      ['Coupon',       o.coupon_code || '—'],
+      ['Status',       statusBadge(o.status)],
+      ['Payment',      o.payment_status || 'Payment Not Received'],
+      ['UTR / TxnID',  o.utr_number || '—',                                        true],
+      ['Tracking #',   o.tracking_number || 'Not assigned yet'],
+      ['Address',      o.delivery_address || '—'],
+      ['Notes',        o.notes || '—'],
+      ['Date',         fmtDate(o.created_at)]
+    ];
+
+    // Append custom form fields at end
+    if (customFieldsHtml) {
+      document.getElementById('orderModalBody').innerHTML =
+        '<div class="detail-grid">' +
+        rows.map(([k,v,m]) => `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m?'mono':''}">${v||'—'}</div></div>`).join('') +
+        '<div class="detail-item" style="grid-column:1/-1;background:rgba(232,103,26,0.05);border-radius:8px;padding:10px;"><div class="detail-key" style="color:var(--saffron);margin-bottom:8px;">📝 Service Form Data</div></div>' +
+        customFieldsHtml +
+        '</div>';
+      document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone||'', ref, service, o.status, o.tracking_number||'');
+      document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number||''); };
+      document.getElementById('orderUpdateBtn').style.display = '';
+      const isPaid = (o.payment_status||'').toLowerCase().includes('received');
+      document.getElementById('invoiceBtn').style.display = isPaid ? 'inline-flex' : 'none';
+      if (isPaid) document.getElementById('invoiceBtn').onclick = () => generateInvoice(ref, service);
+      document.getElementById('payQRBtn').style.display = isPaid ? 'none' : 'inline-flex';
+      if (!isPaid) document.getElementById('payQRBtn').onclick = () => sendPaymentQR(ref, service);
+      openModal('orderModal');
+      return;
+    }
+  }
+
   document.getElementById('orderModalBody').innerHTML =
-    '<div class="detail-grid">' + rows.map(([k, v, m]) =>
-      `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m ? 'mono' : ''}">${v || '—'}</div></div>`
+    '<div class="detail-grid">' + rows.map(([k,v,m]) =>
+      `<div class="detail-item"><div class="detail-key">${k}</div><div class="detail-val ${m?'mono':''}">${v||'—'}</div></div>`
     ).join('') + '</div>';
-  document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone || '', ref, service, o.status, o.tracking_number || '');
-  document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number || ''); };
+  document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone||'', ref, service, o.status, o.tracking_number||'');
+  document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number||''); };
   document.getElementById('orderUpdateBtn').style.display = '';
-  // Invoice button sirf tab dikhao jab payment received ho
-  const invoiceBtn = document.getElementById('invoiceBtn');
-  const isPaid = (o.payment_status || '').toLowerCase().includes('received');
-  invoiceBtn.style.display = isPaid ? 'inline-flex' : 'none';
-  if (isPaid) invoiceBtn.onclick = () => generateInvoice(ref, service);
-  // Payment QR button — sirf tab dikhao jab payment pending ho
-  const payQRBtn = document.getElementById('payQRBtn');
-  const isUnpaid = !isPaid;
-  payQRBtn.style.display = isUnpaid ? 'inline-flex' : 'none';
-  if (isUnpaid) payQRBtn.onclick = () => sendPaymentQR(ref, service);
+  const isPaid2 = (o.payment_status||'').toLowerCase().includes('received');
+  document.getElementById('invoiceBtn').style.display = isPaid2 ? 'inline-flex' : 'none';
+  if (isPaid2) document.getElementById('invoiceBtn').onclick = () => generateInvoice(ref, service);
+  document.getElementById('payQRBtn').style.display = isPaid2 ? 'none' : 'inline-flex';
+  if (!isPaid2) document.getElementById('payQRBtn').onclick = () => sendPaymentQR(ref, service);
   openModal('orderModal');
 }
 
