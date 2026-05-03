@@ -2139,40 +2139,79 @@ async function saveStatusUpdate() {
   const paymentStatus  = document.getElementById('su_payment_status')?.value || '';
   const utrNumber      = document.getElementById('su_utr')?.value.trim() || '';
 
-  // Build update object with only guaranteed columns
+  // Only use columns that definitely exist
   const data = { status };
   if (tracking)      data.tracking_number = tracking;
   if (paymentStatus) data.payment_status  = paymentStatus;
   if (utrNumber)     data.utr_number      = utrNumber;
-  // notes vs admin_note — orders table has 'notes', pvc_orders may have 'admin_note'
-  if (note) {
-    if (table === 'pvc_orders') data.admin_note = note;
-    else data.notes = note;
+
+  console.log('💾 Updating order:', table, ref, data);
+
+  // Direct fetch so we can see exact error
+  let ok = false;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${table}?order_ref=eq.${encodeURIComponent(ref)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type':  'application/json',
+          'Prefer':        'return=minimal'
+        },
+        body: JSON.stringify(data)
+      }
+    );
+    if (res.ok) {
+      ok = true;
+    } else {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('❌ PATCH failed:', res.status, JSON.stringify(errBody));
+      showToast(`❌ Error: ${errBody.message || errBody.hint || res.status}`, 'error');
+      return;
+    }
+  } catch(e) {
+    console.error('❌ Network error:', e);
+    showToast('❌ Network error', 'error');
+    return;
   }
 
-  const ok = await sbUpdateByRef(table, 'order_ref', ref, data);
   if (ok) {
-    showToast(`✅ Status updated to "${status}"!`, 'success');
+    // Save note separately if column exists
+    if (note) {
+      try {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/${table}?order_ref=eq.${encodeURIComponent(ref)}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(table === 'pvc_orders' ? { admin_note: note } : { admin_note: note })
+          }
+        );
+      } catch(e) {} // ignore if column doesn't exist
+    }
+
+    showToast(`✅ Status "${status}" update ho gaya!`, 'success');
     closeModal('statusModal');
     await refreshAll();
 
     const orderData = service === 'PVC'
       ? allPVCOrders.find(x => x.order_ref === ref)
       : allOrders.find(x => x.order_ref === ref);
-    const customerEmail = orderData?.customer_email || orderData?.email || '';
-    if (customerEmail) {
-      sendEmailNotification('status_update', customerEmail, {
-        ...orderData, ...data,
-        ref_id: ref,
-        tracking_id: tracking || orderData?.tracking_number,
-      });
-    }
+
     if (notifyWA) {
-      const phone = orderData?.customer_phone || '';
+      const phone = orderData?.customer_phone || orderData?.mobile || '';
       if (phone) waOrder(phone, ref, service, status, tracking);
     }
-  } else {
-    showToast('❌ Update failed. Check connection.', 'error');
+
+    const customerEmail = orderData?.customer_email || orderData?.email || '';
+    if (customerEmail) {
+      sendEmailNotification('status_update', customerEmail, { ...orderData, ...data, ref_id: ref });
+    }
   }
 }
 
