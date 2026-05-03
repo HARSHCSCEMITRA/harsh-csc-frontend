@@ -1505,10 +1505,10 @@ async function refreshAll() {
 }
 
 async function loadAllData() {
-  // Fetch all main orders (includes all product types — Gazette, BPR, Test Product etc.)
+  // Fetch all main orders (includes all product types)
   const rawOrders = await sbFetch('orders', 'select=*');
-  // Normalize — add _service for each
   allOrders = (rawOrders || []).map(o => ({ ...o, _service: guessService(o) }));
+  console.log(`✅ Orders loaded: ${allOrders.length}`, allOrders.slice(0,3).map(o => o.order_ref));
 
   // Gazette consults
   const gaz = (await sbFetch('gazette_consults', 'select=*')).map(r => ({
@@ -1518,13 +1518,12 @@ async function loadAllData() {
   const bpr = (await sbFetch('bpr_consults', 'select=*')).map(r => ({
     ...r, service: 'BPR', _isBPR: true
   }));
-  // Generic expert consults (admin-added products)
+  // Generic expert consults
   let expertC = [];
   try {
     const raw = await sbFetch('expert_consults', 'select=*');
     expertC = (raw || []).map(r => ({
       ...r,
-      // Use exact product_name — NOT 'Gazette', NOT 'BPR'
       service: r.product_name || r.service || 'Expert Advice',
       customer_name: r.customer_name,
       mobile: r.mobile,
@@ -1534,8 +1533,10 @@ async function loadAllData() {
 
   allConsults = [...gaz, ...bpr, ...expertC]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  console.log(`✅ Consults loaded: ${allConsults.length}`);
 
   allPVCOrders = await sbFetch('pvc_orders', 'select=*');
+  console.log(`✅ PVC Orders loaded: ${allPVCOrders.length}`);
 
   // Update nav badges
   const newO = allOrders.filter(o => o.status === 'new').length;
@@ -2128,40 +2129,44 @@ function openStatusModal(ref, service, currentStatus, tracking = '') {
 }
 
 async function saveStatusUpdate() {
-  const ref = document.getElementById('su_ref').value;
-  const status = document.getElementById('su_status').value;
-  const tracking = document.getElementById('su_tracking').value.trim();
-  const note = document.getElementById('su_note').value.trim();
-  const notifyWA = document.getElementById('su_wa_toggle').classList.contains('on');
-  const { service } = currentOrderId;
-  const table = service === 'PVC' ? 'pvc_orders' : 'orders';
-  const paymentStatus = document.getElementById('su_payment_status')?.value || '';
-  const utrNumber = document.getElementById('su_utr')?.value.trim() || '';
+  const ref            = document.getElementById('su_ref').value;
+  const status         = document.getElementById('su_status').value;
+  const tracking       = document.getElementById('su_tracking').value.trim();
+  const note           = document.getElementById('su_note').value.trim();
+  const notifyWA       = document.getElementById('su_wa_toggle').classList.contains('on');
+  const { service }    = currentOrderId;
+  const table          = service === 'PVC' ? 'pvc_orders' : 'orders';
+  const paymentStatus  = document.getElementById('su_payment_status')?.value || '';
+  const utrNumber      = document.getElementById('su_utr')?.value.trim() || '';
+
+  // Build update object with only guaranteed columns
   const data = { status };
-  if (tracking) data.tracking_number = tracking;
-  if (note) data.admin_note = note;
-  if (paymentStatus) data.payment_status = paymentStatus;
-  if (utrNumber) data.utr_number = utrNumber;
+  if (tracking)      data.tracking_number = tracking;
+  if (paymentStatus) data.payment_status  = paymentStatus;
+  if (utrNumber)     data.utr_number      = utrNumber;
+  // notes vs admin_note — orders table has 'notes', pvc_orders may have 'admin_note'
+  if (note) {
+    if (table === 'pvc_orders') data.admin_note = note;
+    else data.notes = note;
+  }
+
   const ok = await sbUpdateByRef(table, 'order_ref', ref, data);
   if (ok) {
     showToast(`✅ Status updated to "${status}"!`, 'success');
     closeModal('statusModal');
     await refreshAll();
 
-    // ── AUTO EMAIL — status update ──────────────────────
     const orderData = service === 'PVC'
       ? allPVCOrders.find(x => x.order_ref === ref)
       : allOrders.find(x => x.order_ref === ref);
-    const customerEmail = orderData?.email || orderData?.customer_email || '';
+    const customerEmail = orderData?.customer_email || orderData?.email || '';
     if (customerEmail) {
       sendEmailNotification('status_update', customerEmail, {
         ...orderData, ...data,
         ref_id: ref,
         tracking_id: tracking || orderData?.tracking_number,
-        admin_note: note || orderData?.admin_note,
       });
     }
-    // ── WhatsApp ────────────────────────────────────────
     if (notifyWA) {
       const phone = orderData?.customer_phone || '';
       if (phone) waOrder(phone, ref, service, status, tracking);
