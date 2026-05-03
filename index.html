@@ -2711,10 +2711,11 @@
       customer_phone:   phone,
       delivery_address: address || 'N/A',
       notes:            notes || null,
-      items:            items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty })),
+      items:            JSON.stringify(items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty }))),
       total_amount:     Math.round(total),
       payment_status:   'Payment Not Received',
-      status:           'new'
+      status:           'new',
+      payment_source:   'Manual'
     };
 
     const optionalData = {};
@@ -2774,17 +2775,23 @@
       appliedCoupon = null;
     }
 
-    // Send WhatsApp notification to admin
-    const waText = encodeURIComponent(
-      `🆕 NEW ORDER — ${orderRef}\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n` +
-      (email ? `✉️ Email: ${email}\n` : '') +
-      `📍 Address: ${address}\n\n📦 Items:\n${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('\n')}\n\n` +
-      (discount > 0 ? `🏷️ Coupon (${appliedCoupon?.code || ''}): -₹${discount.toLocaleString('en-IN')}\n` : '') +
-      `💰 Total: ₹${total.toLocaleString('en-IN')}\n` +
-      (notes ? `📝 Notes: ${notes}\n` : '') +
-      `\n⏰ ${new Date().toLocaleString('en-IN')}`
-    );
-    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
+    // Send WhatsApp notification to admin — only if product has WA enabled
+    const firstItem = items[0];
+    const firstProduct = sbProducts[firstItem?.id] || {};
+    const waEnabled = firstProduct.whatsapp_enabled !== false; // default ON
+
+    if (waEnabled) {
+      const waText = encodeURIComponent(
+        `🆕 NEW ORDER — ${orderRef}\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n` +
+        (email ? `✉️ Email: ${email}\n` : '') +
+        `📍 Address: ${address}\n\n📦 Items:\n${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('\n')}\n\n` +
+        (discount > 0 ? `🏷️ Coupon: -₹${discount.toLocaleString('en-IN')}\n` : '') +
+        `💰 Total: ₹${total.toLocaleString('en-IN')}\n` +
+        (notes ? `📝 Notes: ${notes}\n` : '') +
+        `\n⏰ ${new Date().toLocaleString('en-IN')}`
+      );
+      window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
+    }
 
     // Email notification to customer
     if (email) {
