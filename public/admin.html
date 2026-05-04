@@ -2156,11 +2156,12 @@ async function saveStatusUpdate() {
   const paymentStatus  = document.getElementById('su_payment_status')?.value || '';
   const utrNumber      = document.getElementById('su_utr')?.value.trim() || '';
 
-  // Only use columns that definitely exist
+  // Only schema columns: status, tracking_number, payment_status, utr_number, admin_note
   const data = { status };
   if (tracking)      data.tracking_number = tracking;
   if (paymentStatus) data.payment_status  = paymentStatus;
   if (utrNumber)     data.utr_number      = utrNumber;
+  if (note)          data.admin_note      = note;
 
   console.log('💾 Updating order:', table, ref, data);
 
@@ -2195,23 +2196,6 @@ async function saveStatusUpdate() {
   }
 
   if (ok) {
-    // Save note separately if column exists
-    if (note) {
-      try {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/${table}?order_ref=eq.${encodeURIComponent(ref)}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-              'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(table === 'pvc_orders' ? { admin_note: note } : { admin_note: note })
-          }
-        );
-      } catch(e) {} // ignore if column doesn't exist
-    }
-
     showToast(`✅ Status "${status}" update ho gaya!`, 'success');
     closeModal('statusModal');
     await refreshAll();
