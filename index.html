@@ -2704,64 +2704,58 @@
     // Collect custom Form Builder field values
     const customFields = getCustomFieldValues();
 
-    // Core order data
-    const coreData = {
+    // ── SAVE ORDER TO SUPABASE ────────────────────────────────
+    // ONLY columns that exist in orders table per schema:
+    // order_ref, customer_name, customer_phone, customer_email,
+    // delivery_address, notes, items, total_amount, status,
+    // payment_status, discount_amount, admin_note, utr_number,
+    // tracking_number, service_type, source, custom_fields
+    const orderData = {
       order_ref:        orderRef,
       customer_name:    name,
       customer_phone:   phone,
       delivery_address: address || 'N/A',
-      notes:            notes || null,
       items:            JSON.stringify(items.map(i => ({ id:i.id, name:i.name, price:i.price, qty:i.qty }))),
       total_amount:     Math.round(total),
       payment_status:   'Payment Not Received',
       status:           'new',
-      payment_source:   'Manual'
+      source:           'website'
     };
-
-    const optionalData = {};
-    if (email)                            optionalData.customer_email  = email;
-    if (discount > 0)                     optionalData.discount_amount = Math.round(discount);
-    if (appliedCoupon?.code)              optionalData.coupon_code     = appliedCoupon.code;
-    if (Object.keys(customFields).length) optionalData.custom_fields   = JSON.stringify(customFields);
-    optionalData.payment_source = 'Manual';
+    if (email)                            orderData.customer_email  = email;
+    if (discount > 0)                     orderData.discount_amount = Math.round(discount);
+    if (notes)                            orderData.notes           = notes;
+    if (Object.keys(customFields).length) orderData.custom_fields   = JSON.stringify(customFields);
+    // service_type from first cart item
+    if (items[0]) orderData.service_type = items[0].name?.slice(0, 50) || 'Service';
 
     let orderSaved = false;
-
-    const doInsert = async (data) => {
+    try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
+          'apikey':        SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Prefer': 'return=minimal'
+          'Prefer':        'return=minimal'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(orderData)
       });
-      if (!res.ok) {
+      if (res.ok) {
+        orderSaved = true;
+        console.log('✅ Order saved:', orderRef);
+      } else {
         const err = await res.json().catch(() => ({}));
-        console.error('❌ Insert failed:', res.status, err);
+        console.error('❌ Order insert failed:', res.status, JSON.stringify(err));
       }
-      return res.ok;
-    };
-
-    try {
-      // Try 1: full data
-      orderSaved = await doInsert({ ...coreData, ...optionalData });
-      if (!orderSaved) {
-        // Try 2: core only (no optional columns)
-        console.warn('⚠️ Retrying with core fields only');
-        orderSaved = await doInsert(coreData);
-      }
-      if (orderSaved) console.log('✅ Order saved:', orderRef);
-      else console.error('❌ Order completely failed to save');
-    } catch(err) { console.error('❌ Network error:', err); }
+    } catch(e) {
+      console.error('❌ Order network error:', e);
+    }
 
     // Store context for payment steps
     checkoutContext = { name, phone, email, address, notes, items, total, orderRef };
     upiOrderContext = { amount: total, orderRef, isCart: true };
 
-    // Track coupon usage in localStorage
+    // Track coupon
     if (appliedCoupon) {
       try {
         const cps = JSON.parse(localStorage.getItem(CP_KEY) || '[]');
@@ -2775,18 +2769,30 @@
       appliedCoupon = null;
     }
 
-    // Send WhatsApp to admin — check product's whatsapp_enabled setting
-    const firstItem    = items[0];
-    const firstProduct = sbProducts[firstItem?.id] || null;
-    // Only send WA if explicitly enabled (or product not found in sbProducts = use default ON)
-    const waEnabled = firstProduct ? (firstProduct.whatsapp_enabled !== false) : true;
+    // ── WHATSAPP NOTIFY ────────────────────────────────────────
+    // Check whatsapp_enabled from Supabase product data
+    // sbProducts is keyed by product id (string from Supabase)
+    const firstItem = items[0];
+    let waEnabled = true; // default ON
+    if (firstItem) {
+      // Try to find product in sbProducts by id match
+      const sbProd = Object.values(sbProducts).find(p =>
+        String(p.id) === String(firstItem.id) ||
+        (p.name || '').toLowerCase() === (firstItem.name || '').toLowerCase()
+      );
+      if (sbProd && sbProd.whatsapp_enabled === false) {
+        waEnabled = false;
+      }
+    }
 
     if (waEnabled) {
       const waText = encodeURIComponent(
-        `🆕 NEW ORDER — ${orderRef}\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n` +
+        `🆕 *NEW ORDER — ${orderRef}*\n\n` +
+        `👤 Name: ${name}\n📞 Phone: ${phone}\n` +
         (email ? `✉️ Email: ${email}\n` : '') +
-        `📍 Address: ${address}\n\n📦 Items:\n${items.map(i => '  • ' + i.name + ' ×' + i.qty + ' = ₹' + (i.price*i.qty).toLocaleString('en-IN')).join('\n')}\n\n` +
-        (discount > 0 ? `🏷️ Coupon: -₹${discount.toLocaleString('en-IN')}\n` : '') +
+        `📍 Address: ${address}\n\n` +
+        `📦 Items:\n${items.map(i => `  • ${i.name} ×${i.qty} = ₹${(i.price*i.qty).toLocaleString('en-IN')}`).join('\n')}\n\n` +
+        (discount > 0 ? `🏷️ Discount: -₹${discount.toLocaleString('en-IN')}\n` : '') +
         `💰 Total: ₹${total.toLocaleString('en-IN')}\n` +
         (notes ? `📝 Notes: ${notes}\n` : '') +
         `\n⏰ ${new Date().toLocaleString('en-IN')}`
@@ -2794,15 +2800,12 @@
       window.open(`https://wa.me/${WHATSAPP_NUM}?text=${waText}`, '_blank');
     }
 
-    // Email notification to customer
+    // Email
     if (email) {
       sendOrderEmail('order_placed', email, {
-        order_ref:     orderRef,
-        customer_name: name,
-        items:         items.map(i => `${i.name} ×${i.qty}`).join(', '),
-        total_amount:  total,
-        discount:      discount || 0,
-        coupon:        appliedCoupon?.code || ''
+        order_ref: orderRef, customer_name: name,
+        items: items.map(i => `${i.name} ×${i.qty}`).join(', '),
+        total_amount: total
       });
     }
 
@@ -3156,38 +3159,33 @@ Please verify & confirm.`;
   }
 
   function updateProfileSection() {
+    const hdr  = document.getElementById('profileHeader');
+    const row  = document.getElementById('trackSearchRow');
+    const tabs = document.getElementById('ordersTabs');
+
     if (!currentUser) {
-      const hdr = document.getElementById('profileHeader');
-      const row = document.getElementById('trackSearchRow');
-      const tabs= document.getElementById('ordersTabs');
-      if (hdr)  hdr.style.display  = 'none';
-      if (row)  row.style.display  = 'flex';
-      if (tabs) tabs.style.display = 'none';
+      if (hdr)  hdr.setAttribute('style','display:none');
+      if (row)  row.setAttribute('style','display:flex');
+      if (tabs) tabs.setAttribute('style','display:none');
       return;
     }
-    // Show profile header
-    const hdr = document.getElementById('profileHeader');
-    const row = document.getElementById('trackSearchRow');
-    const tabs= document.getElementById('ordersTabs');
-    if (hdr)  { hdr.style.display  = 'flex'; hdr.style.removeProperty('display'); hdr.style.display = 'flex'; }
-    if (row)  row.style.display  = 'none';
-    if (tabs) { tabs.style.display = 'block'; tabs.style.removeProperty('display'); tabs.style.display = 'block'; }
+
+    // Logged in
+    if (hdr)  hdr.setAttribute('style','display:flex;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;align-items:center;gap:16px;flex-wrap:wrap;');
+    if (row)  row.setAttribute('style','display:none');
+    if (tabs) tabs.setAttribute('style','display:block;border-bottom:2px solid rgba(11,31,75,0.08);margin-bottom:20px;');
 
     const nameEl   = document.getElementById('profileName');
     const emailEl  = document.getElementById('profileEmail');
     const mobileEl = document.getElementById('profileMobile');
     const avatarEl = document.getElementById('profileAvatar');
-    if (nameEl)   nameEl.textContent   = currentUser.name || '—';
-    if (emailEl)  emailEl.textContent  = currentUser.email || '—';
-    if (mobileEl) mobileEl.textContent = currentUser.mobile ? '📞 ' + currentUser.mobile : '';
-    if (avatarEl) avatarEl.textContent = (currentUser.name||'U').slice(0,1).toUpperCase();
+    if (nameEl)   nameEl.textContent   = currentUser.name   || '—';
+    if (emailEl)  emailEl.textContent  = currentUser.email  || '—';
+    if (mobileEl) mobileEl.textContent = currentUser.mobile ? `📞 ${currentUser.mobile}` : '';
+    if (avatarEl) avatarEl.textContent = (currentUser.name || 'U').slice(0,1).toUpperCase();
 
-    // Auto-fill mobile and load orders
-    const trackInput = document.getElementById('trackMobile');
-    if (trackInput && currentUser.mobile) {
-      trackInput.value = currentUser.mobile;
-    }
     if (currentUser.mobile) {
+      switchOrderTab('orders');
       loadProfileOrders(currentUser.mobile);
       loadProfileConsults(currentUser.mobile);
     }
