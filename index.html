@@ -2775,10 +2775,11 @@
       appliedCoupon = null;
     }
 
-    // Send WhatsApp notification to admin — only if product has WA enabled
-    const firstItem = items[0];
-    const firstProduct = sbProducts[firstItem?.id] || {};
-    const waEnabled = firstProduct.whatsapp_enabled !== false; // default ON
+    // Send WhatsApp to admin — check product's whatsapp_enabled setting
+    const firstItem    = items[0];
+    const firstProduct = sbProducts[firstItem?.id] || null;
+    // Only send WA if explicitly enabled (or product not found in sbProducts = use default ON)
+    const waEnabled = firstProduct ? (firstProduct.whatsapp_enabled !== false) : true;
 
     if (waEnabled) {
       const waText = encodeURIComponent(
@@ -3168,9 +3169,9 @@ Please verify & confirm.`;
     const hdr = document.getElementById('profileHeader');
     const row = document.getElementById('trackSearchRow');
     const tabs= document.getElementById('ordersTabs');
-    if (hdr)  hdr.style.display  = 'flex';
+    if (hdr)  { hdr.style.display  = 'flex'; hdr.style.removeProperty('display'); hdr.style.display = 'flex'; }
     if (row)  row.style.display  = 'none';
-    if (tabs) tabs.style.display = 'block';
+    if (tabs) { tabs.style.display = 'block'; tabs.style.removeProperty('display'); tabs.style.display = 'block'; }
 
     const nameEl   = document.getElementById('profileName');
     const emailEl  = document.getElementById('profileEmail');
