@@ -2090,40 +2090,57 @@ function viewConsult(id, service) {
 //  ORDER STATUS UPDATE
 // ══════════════════════════════════════════
 function openStatusModal(ref, service, currentStatus, tracking = '') {
-  document.getElementById('su_ref').value = ref;
-  document.getElementById('su_status').value = currentStatus;
-  document.getElementById('su_tracking').value = tracking || '';
-  document.getElementById('su_note').value = '';
-  // Set current payment status
-  const o = service === 'PVC' ? allPVCOrders.find(x => x.order_ref === ref) : allOrders.find(x => x.order_ref === ref);
-  const ps = document.getElementById('su_payment_status');
+  document.getElementById('su_ref').value     = ref;
+  document.getElementById('su_status').value  = currentStatus;
+  document.getElementById('su_tracking').value= tracking || '';
+  document.getElementById('su_note').value    = '';
+
+  const o = service === 'PVC'
+    ? allPVCOrders.find(x => x.order_ref === ref)
+    : allOrders.find(x => x.order_ref === ref);
+
+  const ps         = document.getElementById('su_payment_status');
+  const utrRow     = document.getElementById('utrRow');
+  const utrInput   = document.getElementById('su_utr');
   const isRazorpay = (o?.payment_source || '') === 'Razorpay';
+
+  // Set payment status
   if (ps) {
-    ps.value = o?.payment_status || 'Payment Not Received';
-    ps.disabled = isRazorpay; // Razorpay payments auto-verified
-    ps.title = isRazorpay ? 'Auto-verified by Razorpay' : '';
+    ps.value    = o?.payment_status || 'Payment Not Received';
+    ps.disabled = isRazorpay;
+    ps.title    = isRazorpay ? 'Auto-verified by Razorpay' : '';
     ps.onchange = () => {
-      const utrRow = document.getElementById('utrRow');
-      if (utrRow) utrRow.style.display = (ps.value === 'Payment Received' && !isRazorpay) ? 'grid' : 'none';
+      if (utrRow) utrRow.style.display = 'grid'; // Always show UTR row
     };
-    const utrRow = document.getElementById('utrRow');
-    if (utrRow) utrRow.style.display = ((o?.payment_status||'') === 'Payment Received' && !isRazorpay) ? 'grid' : 'none';
   }
-  // Razorpay info
-  const rzpEl = document.getElementById('utrRow');
-  if (isRazorpay && rzpEl) {
-    rzpEl.style.display = 'grid';
-    const utrInput = document.getElementById('su_utr');
-    if (utrInput) {
-      utrInput.value = o?.razorpay_payment_id || '';
+
+  // Always show UTR row — customer UTR + Razorpay ID both shown here
+  if (utrRow) utrRow.style.display = 'grid';
+  if (utrInput) {
+    if (isRazorpay) {
+      utrInput.value    = o?.razorpay_payment_id || '';
       utrInput.readOnly = true;
       utrInput.style.opacity = '0.7';
-      utrInput.previousElementSibling && (utrInput.previousElementSibling.textContent = 'Razorpay Payment ID (Auto)');
+      utrInput.style.background = 'rgba(255,255,255,0.05)';
+      const lbl = utrInput.closest('.f-group')?.querySelector('label');
+      if (lbl) lbl.textContent = 'Razorpay Payment ID (Auto-verified)';
+    } else {
+      // Show customer UTR if submitted
+      utrInput.value    = o?.utr_number || '';
+      utrInput.readOnly = false;
+      utrInput.style.opacity = '1';
+      utrInput.style.background = '';
+      const lbl = utrInput.closest('.f-group')?.querySelector('label');
+      if (lbl) lbl.innerHTML = 'UTR / Transaction Number <span style="color:var(--green);font-size:10px;">(Customer se milta hai)</span>';
+      // Highlight if customer submitted UTR
+      if (o?.utr_number) {
+        utrInput.style.border = '2px solid var(--green)';
+        const hint = utrInput.nextElementSibling;
+        if (hint) hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Customer ne UTR submit kiya hai — verify karein: <strong>${o.utr_number}</strong></span>`;
+      }
     }
-  } else {
-    const utrInput = document.getElementById('su_utr');
-    if (utrInput) { utrInput.value = o?.utr_number || ''; utrInput.readOnly = false; utrInput.style.opacity = '1'; }
   }
+
   currentOrderId = { ref, service };
   openModal('statusModal');
 }
