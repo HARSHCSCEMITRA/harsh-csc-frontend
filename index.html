@@ -2935,7 +2935,6 @@ Please verify & confirm.`;
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id:   response.razorpay_order_id || '',
               payment_status:      'Payment Received',
-              payment_source:      'Razorpay',
               status:              'Processing'
             })
           });
@@ -4122,15 +4121,21 @@ Hum jald hi contact karenge.`);
   function initAuth() {
     const stored = localStorage.getItem('hsc_user');
     if (stored) {
-      try { currentUser = JSON.parse(stored); updateNavUser(); autoFillCheckout(); updateProfileSection(); } catch {}
+      try {
+        currentUser = JSON.parse(stored);
+        updateNavUser();
+        autoFillCheckout();
+        // Delay so DOM is fully loaded
+        setTimeout(() => updateProfileSection(), 300);
+      } catch(e) {}
     }
-    // Firebase auth state listener
     try {
       firebase.auth().onAuthStateChanged(user => {
         if (user && !currentUser) {
           currentUser = { name: user.displayName || 'Google User', email: user.email, mobile: user.phoneNumber || '', provider: 'google' };
           localStorage.setItem('hsc_user', JSON.stringify(currentUser));
-          updateNavUser(); autoFillCheckout(); updateProfileSection();
+          updateNavUser(); autoFillCheckout();
+          setTimeout(() => updateProfileSection(), 300);
           saveCustomerToSupabase(currentUser);
         }
       });
