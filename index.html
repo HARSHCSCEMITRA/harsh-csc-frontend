@@ -1195,7 +1195,7 @@
     <p class="section-sub">Apne orders aur consultations track karein. Login hone ke baad sab automatically load hoga.</p>
 
     <!-- If logged in — show profile header -->
-    <div id="profileHeader" style="display:none;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:none;">
+    <div id="profileHeader" style="display:none;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;" id="profileAvatar">H</div>
         <div style="flex:1;">
@@ -1214,7 +1214,7 @@
     </div>
 
     <!-- Tabs -->
-    <div id="ordersTabs" style="display:none;border-bottom:2px solid rgba(11,31,75,0.08);margin-bottom:20px;display:none;">
+    <div id="ordersTabs" style="display:none;border-bottom:2px solid rgba(11,31,75,0.08);margin-bottom:20px;">
       <div style="display:flex;gap:0;">
         <button id="tab-orders" onclick="switchOrderTab('orders')" style="padding:10px 20px;background:none;border:none;border-bottom:3px solid var(--saffron);font-weight:700;font-size:14px;color:var(--navy);cursor:pointer;">📦 Orders</button>
         <button id="tab-consults" onclick="switchOrderTab('consults')" style="padding:10px 20px;background:none;border:none;border-bottom:3px solid transparent;font-weight:600;font-size:14px;color:var(--slate);cursor:pointer;">📞 Consultations</button>
@@ -3161,19 +3161,22 @@ Please verify & confirm.`;
     const hdr  = document.getElementById('profileHeader');
     const row  = document.getElementById('trackSearchRow');
     const tabs = document.getElementById('ordersTabs');
+    const resultEl = document.getElementById('orderTrackResult');
+    const consultsEl = document.getElementById('consultsTrackResult');
 
     if (!currentUser) {
-      if (hdr)  hdr.setAttribute('style','display:none');
-      if (row)  row.setAttribute('style','display:flex');
-      if (tabs) tabs.setAttribute('style','display:none');
+      if (hdr)  hdr.style.display  = 'none';
+      if (row)  row.style.display  = 'flex';
+      if (tabs) tabs.style.display = 'none';
       return;
     }
 
-    // Logged in
-    if (hdr)  hdr.setAttribute('style','display:flex;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;align-items:center;gap:16px;flex-wrap:wrap;');
-    if (row)  row.setAttribute('style','display:none');
-    if (tabs) tabs.setAttribute('style','display:block;border-bottom:2px solid rgba(11,31,75,0.08);margin-bottom:20px;');
+    // Logged in — show profile
+    if (hdr)  hdr.style.display  = 'block';
+    if (row)  row.style.display  = 'none';
+    if (tabs) tabs.style.display = 'block';
 
+    // Fill profile info
     const nameEl   = document.getElementById('profileName');
     const emailEl  = document.getElementById('profileEmail');
     const mobileEl = document.getElementById('profileMobile');
@@ -3183,11 +3186,32 @@ Please verify & confirm.`;
     if (mobileEl) mobileEl.textContent = currentUser.mobile ? `📞 ${currentUser.mobile}` : '';
     if (avatarEl) avatarEl.textContent = (currentUser.name || 'U').slice(0,1).toUpperCase();
 
+    // Show loading state immediately
+    if (resultEl)  resultEl.innerHTML  = '<div style="text-align:center;padding:30px;color:var(--slate);">⏳ Loading your orders…</div>';
+    if (consultsEl) consultsEl.innerHTML = '';
+
+    // Load orders if mobile available
     if (currentUser.mobile) {
       switchOrderTab('orders');
       loadProfileOrders(currentUser.mobile);
       loadProfileConsults(currentUser.mobile);
+    } else {
+      // No mobile — show message to search
+      if (resultEl) resultEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--slate);">
+        <p>📞 Orders dekhne ke liye apna mobile number enter karein:</p>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
+          <input class="form-input" id="profileMobileInput" type="tel" placeholder="10-digit mobile" maxlength="10" style="max-width:200px;"/>
+          <button onclick="loadOrdersByMobileInput()" style="background:var(--saffron);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Search</button>
+        </div>
+      </div>`;
     }
+  }
+
+  function loadOrdersByMobileInput() {
+    const mobile = document.getElementById('profileMobileInput')?.value.trim();
+    if (!/^[6-9]\d{9}$/.test(mobile)) { alert('Valid 10-digit mobile number daalen'); return; }
+    loadProfileOrders(mobile);
+    loadProfileConsults(mobile);
   }
 
   async function loadProfileOrders(mobile) {
