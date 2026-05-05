@@ -1632,12 +1632,13 @@ function renderOrdersTable() {
 
   document.getElementById('ordersTbl').innerHTML = filtered.length
     ? filtered.map(o => {
-        const isPaid = (o.payment_status||'').toLowerCase().includes('received');
+        const isPaid   = o.payment_status === 'Payment Received';
+        const isUTR    = !isPaid && !!o.utr_number;
         const payBadge = isPaid
           ? '<span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);">✅ Paid</span>'
-          : (o.utr_number
-            ? '<span class="badge badge-processing">💰 UTR Pending</span>'
-            : '<span class="badge badge-pending">⚠️ Unpaid</span>');
+          : isUTR
+          ? '<span class="badge badge-processing">💰 UTR Pending</span>'
+          : '<span class="badge badge-pending">⚠️ Unpaid</span>';
         return `<tr>
           <td class="td-mono">${o.order_ref||'—'}</td>
           <td class="td-main">${o.customer_name||'—'}</td>
@@ -2019,7 +2020,7 @@ function viewOrder(ref, service) {
       document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone||'', ref, service, o.status, o.tracking_number||'');
       document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number||''); };
       document.getElementById('orderUpdateBtn').style.display = '';
-      const isPaid = (o.payment_status||'').toLowerCase().includes('received');
+      const isPaid = o.payment_status === 'Payment Received';
       document.getElementById('invoiceBtn').style.display = isPaid ? 'inline-flex' : 'none';
       if (isPaid) document.getElementById('invoiceBtn').onclick = () => generateInvoice(ref, service);
       document.getElementById('payQRBtn').style.display = isPaid ? 'none' : 'inline-flex';
@@ -2036,7 +2037,7 @@ function viewOrder(ref, service) {
   document.getElementById('orderWABtn').onclick = () => waOrder(o.customer_phone||'', ref, service, o.status, o.tracking_number||'');
   document.getElementById('orderUpdateBtn').onclick = () => { closeModal('orderModal'); openStatusModal(ref, service, o.status, o.tracking_number||''); };
   document.getElementById('orderUpdateBtn').style.display = '';
-  const isPaid2 = (o.payment_status||'').toLowerCase().includes('received');
+  const isPaid2 = o.payment_status === 'Payment Received';
   document.getElementById('invoiceBtn').style.display = isPaid2 ? 'inline-flex' : 'none';
   if (isPaid2) document.getElementById('invoiceBtn').onclick = () => generateInvoice(ref, service);
   document.getElementById('payQRBtn').style.display = isPaid2 ? 'none' : 'inline-flex';
@@ -2894,7 +2895,7 @@ function generateInvoice(ref, service) {
   const now = new Date();
   const invoiceDate = now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
   const dueDate = new Date(now.getTime() + 7*24*60*60*1000).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-  const isPaid = (o.payment_status || '').toLowerCase().includes('received');
+  const isPaid = o.payment_status === 'Payment Received';
 
   // ── Generate Serial Invoice Number ──
   const seq = String(Math.floor(Math.random()*900)+100);
