@@ -1248,10 +1248,11 @@ harshcscemitra.vercel.app
           <option value="Refunded">↩️ Refunded</option>
         </select>
       </div></div>
+      <!-- Customer UTR — read only display (customer ne submit kiya hua) -->
       <div class="form-row single" id="utrRow" style="display:none;"><div class="f-group">
-        <label>UTR / Transaction Number <span style="color:var(--green);font-size:10px;">(Customer se milta hai)</span></label>
-        <input class="f-input" id="su_utr" placeholder="e.g. 406123456789 or UPI Ref No..."/>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;">Customer ka payment screenshot aane ke baad yahan enter karein</div>
+        <label style="color:var(--green);font-weight:700;">💰 Customer ka UTR / Transaction Number</label>
+        <div id="su_utr_display" style="background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);letter-spacing:.05em;">—</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">Customer ne yeh UTR submit kiya hai — apne bank statement se verify karein phir Payment Received mark karein</div>
       </div></div>
       <div class="form-row single"><div class="f-group"><label>Tracking Number (if dispatched)</label><input class="f-input" id="su_tracking" placeholder="Speed Post number"/></div></div>
       <div class="form-row single"><div class="f-group"><label>Internal Note</label><textarea class="f-textarea" id="su_note" rows="2" placeholder="Optional note…"></textarea></div></div>
@@ -1637,7 +1638,7 @@ function renderOrdersTable() {
         const payBadge = isPaid
           ? '<span class="badge" style="background:rgba(34,197,94,0.15);color:var(--green);">✅ Paid</span>'
           : isUTR
-          ? '<span class="badge badge-processing">💰 UTR Pending</span>'
+          ? `<span class="badge badge-processing" title="UTR: ${o.utr_number}">💰 UTR: ${o.utr_number.slice(0,8)}…</span>`
           : '<span class="badge badge-pending">⚠️ Unpaid</span>';
         return `<tr>
           <td class="td-mono">${o.order_ref||'—'}</td>
@@ -2002,7 +2003,9 @@ function viewOrder(ref, service) {
       ['Coupon',       o.coupon_code || '—'],
       ['Status',       statusBadge(o.status)],
       ['Payment',      o.payment_status || 'Payment Not Received'],
-      ['UTR / TxnID',  o.utr_number || '—',                                        true],
+      ['UTR / TxnID',  o.utr_number
+        ? `<span style="background:rgba(34,197,94,0.1);color:var(--green);padding:4px 10px;border-radius:6px;font-family:var(--mono);font-weight:700;">${o.utr_number}</span>`
+        : '<span style="color:var(--text3);">—</span>'],
       ['Tracking #',   o.tracking_number || 'Not assigned yet'],
       ['Address',      o.delivery_address || '—'],
       ['Notes',        o.notes || '—'],
@@ -2115,30 +2118,27 @@ function openStatusModal(ref, service, currentStatus, tracking = '') {
     };
   }
 
-  // Always show UTR row — customer UTR + Razorpay ID both shown here
+  // Always show UTR row — show customer submitted UTR
   if (utrRow) utrRow.style.display = 'grid';
-  if (utrInput) {
+  const utrDisplay = document.getElementById('su_utr_display');
+  if (utrDisplay) {
     if (isRazorpay) {
-      utrInput.value    = o?.razorpay_payment_id || '';
-      utrInput.readOnly = true;
-      utrInput.style.opacity = '0.7';
-      utrInput.style.background = 'rgba(255,255,255,0.05)';
-      const lbl = utrInput.closest('.f-group')?.querySelector('label');
-      if (lbl) lbl.textContent = 'Razorpay Payment ID (Auto-verified)';
+      utrDisplay.textContent = o?.razorpay_payment_id || '—';
+      utrDisplay.style.color = '#60a5fa';
+      utrDisplay.style.borderColor = 'rgba(96,165,250,0.3)';
+      utrDisplay.style.background  = 'rgba(96,165,250,0.08)';
+      const lbl = utrRow.querySelector('label');
+      if (lbl) lbl.innerHTML = '⚡ Razorpay Payment ID <span style="color:#60a5fa;font-size:10px;">(Auto-verified)</span>';
+    } else if (o?.utr_number) {
+      utrDisplay.textContent = o.utr_number;
+      utrDisplay.style.color = 'var(--green)';
+      utrDisplay.style.borderColor = 'rgba(34,197,94,0.3)';
+      utrDisplay.style.background  = 'rgba(34,197,94,0.08)';
     } else {
-      // Show customer UTR if submitted
-      utrInput.value    = o?.utr_number || '';
-      utrInput.readOnly = false;
-      utrInput.style.opacity = '1';
-      utrInput.style.background = '';
-      const lbl = utrInput.closest('.f-group')?.querySelector('label');
-      if (lbl) lbl.innerHTML = 'UTR / Transaction Number <span style="color:var(--green);font-size:10px;">(Customer se milta hai)</span>';
-      // Highlight if customer submitted UTR
-      if (o?.utr_number) {
-        utrInput.style.border = '2px solid var(--green)';
-        const hint = utrInput.nextElementSibling;
-        if (hint) hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Customer ne UTR submit kiya hai — verify karein: <strong>${o.utr_number}</strong></span>`;
-      }
+      utrDisplay.textContent = 'Customer ne abhi UTR submit nahi kiya';
+      utrDisplay.style.color = 'var(--text3)';
+      utrDisplay.style.borderColor = 'var(--border)';
+      utrDisplay.style.background  = 'transparent';
     }
   }
 
@@ -2157,11 +2157,10 @@ async function saveStatusUpdate() {
   const paymentStatus  = document.getElementById('su_payment_status')?.value || '';
   const utrNumber      = document.getElementById('su_utr')?.value.trim() || '';
 
-  // Only schema columns: status, tracking_number, payment_status, utr_number, admin_note
+  // Only schema columns: status, tracking_number, payment_status, admin_note
   const data = { status };
   if (tracking)      data.tracking_number = tracking;
   if (paymentStatus) data.payment_status  = paymentStatus;
-  if (utrNumber)     data.utr_number      = utrNumber;
   if (note)          data.admin_note      = note;
 
   console.log('💾 Updating order:', table, ref, data);
