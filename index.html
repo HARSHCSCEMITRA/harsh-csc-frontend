@@ -2386,12 +2386,11 @@
       if (resultEl) resultEl.innerHTML = `<div class="track-empty">⚠️ Valid 10-digit mobile number daalen.</div>`;
       return;
     }
-    // Show tabs
     const tabs = document.getElementById('ordersTabs');
     if (tabs) tabs.style.display = 'block';
     switchOrderTab('orders');
-    await loadProfileOrders(mobile);
-    await loadProfileConsults(mobile);
+    await loadAllProfileOrders(mobile, null);
+    await loadAllProfileConsults(mobile, null);
   }
 
   function downloadCustomerInvoice(ref, customerName, amount, createdAt) {
@@ -3158,11 +3157,10 @@ Please verify & confirm.`;
   }
 
   function updateProfileSection() {
-    const hdr  = document.getElementById('profileHeader');
-    const row  = document.getElementById('trackSearchRow');
-    const tabs = document.getElementById('ordersTabs');
+    const hdr      = document.getElementById('profileHeader');
+    const row      = document.getElementById('trackSearchRow');
+    const tabs     = document.getElementById('ordersTabs');
     const resultEl = document.getElementById('orderTrackResult');
-    const consultsEl = document.getElementById('consultsTrackResult');
 
     if (!currentUser) {
       if (hdr)  hdr.style.display  = 'none';
@@ -3171,12 +3169,11 @@ Please verify & confirm.`;
       return;
     }
 
-    // Logged in — show profile
+    // Logged in — show profile, hide search
     if (hdr)  hdr.style.display  = 'block';
     if (row)  row.style.display  = 'none';
     if (tabs) tabs.style.display = 'block';
 
-    // Fill profile info
     const nameEl   = document.getElementById('profileName');
     const emailEl  = document.getElementById('profileEmail');
     const mobileEl = document.getElementById('profileMobile');
@@ -3186,32 +3183,124 @@ Please verify & confirm.`;
     if (mobileEl) mobileEl.textContent = currentUser.mobile ? `📞 ${currentUser.mobile}` : '';
     if (avatarEl) avatarEl.textContent = (currentUser.name || 'U').slice(0,1).toUpperCase();
 
-    // Show loading state immediately
-    if (resultEl)  resultEl.innerHTML  = '<div style="text-align:center;padding:30px;color:var(--slate);">⏳ Loading your orders…</div>';
-    if (consultsEl) consultsEl.innerHTML = '';
+    if (resultEl) resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--slate);">⏳ Loading your orders…</div>';
 
-    // Load orders if mobile available
-    if (currentUser.mobile) {
-      switchOrderTab('orders');
-      loadProfileOrders(currentUser.mobile);
-      loadProfileConsults(currentUser.mobile);
-    } else {
-      // No mobile — show message to search
-      if (resultEl) resultEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--slate);">
-        <p>📞 Orders dekhne ke liye apna mobile number enter karein:</p>
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
-          <input class="form-input" id="profileMobileInput" type="tel" placeholder="10-digit mobile" maxlength="10" style="max-width:200px;"/>
-          <button onclick="loadOrdersByMobileInput()" style="background:var(--saffron);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Search</button>
-        </div>
-      </div>`;
+    switchOrderTab('orders');
+    // Fetch by mobile AND/OR email — whichever is available
+    loadAllProfileOrders(currentUser.mobile, currentUser.email);
+    loadAllProfileConsults(currentUser.mobile, currentUser.email);
+  }
+
+  // Fetch orders by mobile + email combined (deduped by order_ref)
+  async function loadAllProfileOrders(mobile, email) {
+    const resultEl = document.getElementById('orderTrackResult');
+    if (!resultEl) return;
+
+    try {
+      const fetches = [];
+
+      if (mobile) {
+        fetches.push(
+          fetch(`${SUPABASE_URL}/rest/v1/orders?customer_phone=eq.${mobile}&order=created_at.desc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          }).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${SUPABASE_URL}/rest/v1/pvc_orders?customer_phone=eq.${mobile}&order=created_at.desc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          }).then(r => r.ok ? r.json() : []).catch(() => [])
+        );
+      }
+      if (email) {
+        fetches.push(
+          fetch(`${SUPABASE_URL}/rest/v1/orders?customer_email=eq.${encodeURIComponent(email)}&order=created_at.desc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          }).then(r => r.ok ? r.json() : []).catch(() => [])
+        );
+      }
+
+      const results = await Promise.all(fetches);
+      const seen = new Set();
+      const all = [];
+
+      results.flat().forEach(o => {
+        const key = o.order_ref || o.id;
+        if (!seen.has(key)) {
+          seen.add(key);
+          all.push({ ...o, _type: o.card_type ? 'pvc' : 'order', total_amount: o.total_amount || o.amount });
+        }
+      });
+
+      all.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (!all.length) {
+        resultEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--slate);">
+          <div style="font-size:36px;margin-bottom:12px;">📭</div>
+          <p style="font-weight:600;">Koi orders nahi mile abhi tak.</p>
+          <a href="#services" style="color:var(--saffron);font-weight:700;font-size:14px;">Browse Services →</a>
+        </div>`;
+        return;
+      }
+
+      resultEl.innerHTML = all.map(o => renderOrderCard(o)).join('');
+
+    } catch(e) {
+      resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);">❌ Load nahi ho sake — refresh karein.</div>';
     }
   }
 
-  function loadOrdersByMobileInput() {
-    const mobile = document.getElementById('profileMobileInput')?.value.trim();
-    if (!/^[6-9]\d{9}$/.test(mobile)) { alert('Valid 10-digit mobile number daalen'); return; }
-    loadProfileOrders(mobile);
-    loadProfileConsults(mobile);
+  // Fetch consults by mobile + email combined
+  async function loadAllProfileConsults(mobile, email) {
+    const resultEl = document.getElementById('consultsTrackResult');
+    if (!resultEl) return;
+
+    try {
+      const tables = ['gazette_consults','bpr_consults','expert_consults'];
+      const svcMap = { gazette_consults:'Gazette Notification', bpr_consults:'Business Project Report' };
+      const fetches = [];
+
+      tables.forEach(t => {
+        if (mobile) fetches.push(
+          fetch(`${SUPABASE_URL}/rest/v1/${t}?mobile=eq.${mobile}&order=created_at.desc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          }).then(r => r.ok ? r.json().then(d => d.map(c => ({...c, _svc: svcMap[t] || c.product_name || 'Expert Advice'}))) : []).catch(() => [])
+        );
+        if (email) fetches.push(
+          fetch(`${SUPABASE_URL}/rest/v1/${t}?email=eq.${encodeURIComponent(email)}&order=created_at.desc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          }).then(r => r.ok ? r.json().then(d => d.map(c => ({...c, _svc: svcMap[t] || c.product_name || 'Expert Advice'}))) : []).catch(() => [])
+        );
+      });
+
+      const results = await Promise.all(fetches);
+      const seen = new Set();
+      const all = [];
+      results.flat().forEach(c => {
+        if (!seen.has(c.id)) { seen.add(c.id); all.push(c); }
+      });
+      all.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (!all.length) {
+        resultEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--slate);">
+          <div style="font-size:36px;margin-bottom:12px;">📭</div>
+          <p>Koi consultation nahi mili abhi tak.</p>
+        </div>`;
+        return;
+      }
+
+      resultEl.innerHTML = all.map(c => `
+        <div style="background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:14px;padding:18px 20px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--navy);">📞 ${c._svc}</div>
+              <div style="font-size:12px;color:var(--slate);margin-top:2px;">${fmtDate(c.created_at)}</div>
+            </div>
+            ${consultStatusBadgeFront(c.status || 'Pending')}
+          </div>
+          ${c.admin_note ? `<div style="font-size:13px;color:var(--slate);background:var(--light);padding:8px 12px;border-radius:8px;border-left:3px solid var(--saffron);">💬 ${c.admin_note}</div>` : ''}
+        </div>`).join('');
+
+    } catch(e) {
+      resultEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--red);">❌ Load nahi ho sake.</div>';
+    }
   }
 
   async function loadProfileOrders(mobile) {
