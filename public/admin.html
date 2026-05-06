@@ -314,23 +314,20 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
       <button class="nav-item" id="nav-orders" onclick="showPage('orders',this)"><span class="nav-icon">📦</span>All Orders <span class="nav-badge" id="newOrderBadge">0</span></button>
       <button class="nav-item" id="nav-consultations" onclick="showPage('consultations',this)"><span class="nav-icon">📞</span>Consultations <span class="nav-badge" id="newConsultBadge">0</span></button>
-      <div class="nav-section">Services</div>
-      <button class="nav-item" id="nav-gazette" onclick="showPage('gazette',this)"><span class="nav-icon">📰</span>Gazette Orders</button>
-      <button class="nav-item" id="nav-bpr" onclick="showPage('bpr',this)"><span class="nav-icon">📊</span>Project Reports</button>
-      <button class="nav-item" id="nav-pvc" onclick="showPage('pvc',this)"><span class="nav-icon">🪪</span>PVC Cards</button>
       <div class="nav-section">Products & Services</div>
       <button class="nav-item" id="nav-products" onclick="showPage('products',this)"><span class="nav-icon">🛍️</span>Manage Products</button>
       <button class="nav-item" id="nav-formbuilder" onclick="showPage('formbuilder',this)"><span class="nav-icon">📝</span>Form Builder</button>
       <div class="nav-section">Tools</div>
       <button class="nav-item" id="nav-analytics" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span>Analytics</button>
       <button class="nav-item" id="nav-coupons" onclick="showPage('coupons',this)"><span class="nav-icon">🏷️</span>Coupons</button>
-      <button class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="nav-icon">👥</span>Staff Access</button>
       <button class="nav-item" id="nav-customers" onclick="showPage('customers',this)"><span class="nav-icon">🧑‍💼</span>Customers</button>
+      <button class="nav-item" id="nav-carts" onclick="showPage('carts',this)"><span class="nav-icon">🛒</span>Saved Carts</button>
       <button class="nav-item" id="nav-reviews" onclick="showPage('reviews',this)"><span class="nav-icon">⭐</span>Reviews</button>
+      <button class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="nav-icon">👥</span>Staff Access</button>
       <button class="nav-item" id="nav-docs" onclick="showPage('docs',this)"><span class="nav-icon">📁</span>Documents</button>
       <div class="nav-section">Manage</div>
       <button class="nav-item" id="nav-tracking" onclick="showPage('tracking',this)"><span class="nav-icon">📮</span>Add Tracking</button>
-      <button class="nav-item" id="nav-messages" onclick="showPage('messages',this)"><span class="nav-icon"><img class="wa-icon-nav" src="" alt="WA" style="width:16px;height:16px;vertical-align:middle;border-radius:4px;"></span>Send WhatsApp</button>
+      <button class="nav-item" id="nav-messages" onclick="showPage('messages',this)"><span class="nav-icon">💬</span>Send WhatsApp</button>
       <button class="nav-item" id="nav-settings" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
     </nav>
     <div class="sidebar-footer">
@@ -904,6 +901,34 @@ harshcscemitra.vercel.app
           <div class="modal-footer">
             <button class="btn-sm btn-secondary" onclick="closeModal('reviewModal')">Cancel</button>
             <button class="btn-sm btn-primary" onclick="saveReview()">💾 Save Review</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVED CARTS PAGE -->
+      <div class="page" id="page-carts" style="display:none;">
+        <div class="page-content">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:700;margin:0;">🛒 Saved Carts</h2>
+              <div style="font-size:13px;color:var(--text3);margin-top:4px;">Customers ke saved/abandoned carts — offer ya coupon dekar convert karo</div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="loadSavedCarts()">🔄 Refresh</button>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;min-width:700px;">
+              <thead><tr style="background:var(--surface2);">
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Customer</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Mobile/Email</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Items</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Value</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Last Updated</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);">Actions</th>
+              </tr></thead>
+              <tbody id="cartsTbl">
+                <tr><td colspan="6" class="empty-state"><div class="empty-icon">🛒</div>Click Refresh to load</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -2644,11 +2669,12 @@ function showPage(name, btn) {
   const page = document.getElementById('page-' + name);
   if (page) page.classList.add('active');
   if (btn) btn.classList.add('active');
-  const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents', customers:'🧑‍💼 Customers', reviews:'⭐ Reviews' };
+  const titles = { dashboard:'Dashboard', orders:'All Orders', consultations:'Consultations', gazette:'Gazette Orders', bpr:'Project Reports', pvc:'PVC Cards', tracking:'Add Tracking', messages:'Send WhatsApp', settings:'Settings', products:'🛍️ Manage Products', formbuilder:'📝 Form Builder', analytics:'📈 Analytics', coupons:'🏷️ Coupons', staff:'👥 Staff Access', docs:'📁 Documents', customers:'🧑‍💼 Customers', reviews:'⭐ Reviews', carts:'🛒 Saved Carts' };
   document.getElementById('pageTitle').textContent = titles[name] || name;
 
   if (name === 'products')   { renderProductsPage(); loadProductsFromSupabase().then(() => renderProductsPage()); }
   if (name === 'customers') { loadCustomers(); }
+  if (name === 'carts')     { loadSavedCarts(); }
   if (name === 'reviews')   { loadReviews(); }
   if (name === 'messages')  { loadBulkRecipients(); }
   if (name === 'analytics')  renderAnalytics();
@@ -4282,6 +4308,77 @@ function startBulkWA() {
       });
     }
   );
+}
+
+// ══════════════════════════════════════════
+//  SAVED CARTS
+// ══════════════════════════════════════════
+let allSavedCarts = [];
+
+async function loadSavedCarts() {
+  document.getElementById('cartsTbl').innerHTML =
+    '<tr><td colspan="6" class="empty-state"><div class="empty-icon">⏳</div>Loading…</td></tr>';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/customer_carts?order=updated_at.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    allSavedCarts = await res.json();
+    renderSavedCarts();
+  } catch(e) {
+    document.getElementById('cartsTbl').innerHTML =
+      '<tr><td colspan="6" class="empty-state"><div class="empty-icon">❌</div>Load failed — customer_carts table SQL se banao</td></tr>';
+  }
+}
+
+function renderSavedCarts() {
+  const tbl = document.getElementById('cartsTbl');
+  if (!allSavedCarts.length) {
+    tbl.innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-icon">🛒</div>Koi saved carts nahi hain</td></tr>';
+    return;
+  }
+  tbl.innerHTML = allSavedCarts.map(c => {
+    let items = [];
+    try { items = JSON.parse(c.cart_items || '[]'); } catch(e) {}
+    const itemNames = items.map(i => `${i.name} ×${i.qty}`).join(', ');
+    const contact = c.customer_mobile || c.customer_email || c.customer_key || '—';
+    return `<tr>
+      <td class="td-main">${c.customer_name || '—'}</td>
+      <td class="td-mono" style="font-size:12px;">${contact}</td>
+      <td style="font-size:12px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemNames}">${itemNames || '—'}</td>
+      <td style="font-weight:700;color:var(--gold);">₹${Number(c.total_value||0).toLocaleString('en-IN')}</td>
+      <td style="font-size:12px;color:var(--text3);">${fmtDate(c.updated_at)}</td>
+      <td><div style="display:flex;gap:5px;">
+        <button class="btn-sm btn-green" onclick="waNum('${c.customer_mobile||''}')">💬 WA</button>
+        <button class="btn-sm btn-secondary" onclick="sendCouponToCart('${c.customer_key}','${c.customer_name||''}')">🏷️ Coupon</button>
+        <button class="btn-sm btn-red" onclick="deleteSavedCart('${c.customer_key}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function sendCouponToCart(key, name) {
+  const coupons = JSON.parse(localStorage.getItem('hsc_coupons_v1') || '[]');
+  if (!coupons.length) { showToast('⚠️ Pehle Coupons page se coupon banao', 'error'); return; }
+  const code = coupons[0].code;
+  const cart = allSavedCarts.find(c => c.customer_key === key);
+  const mobile = cart?.customer_mobile || '';
+  if (!mobile) { showToast('⚠️ Customer ka mobile number nahi hai', 'error'); return; }
+  const msg = `🎉 ${name || 'Namaskar'}! Aapke cart mein rakhe items ke liye special offer!\n\nCoupon Code: *${code}*\n\nAbhi order karein: harshcscemitra.vercel.app\n\n— Harsh CSC eMitra`;
+  window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function deleteSavedCart(key) {
+  showConfirm('🗑️', 'Delete Cart?', 'Yeh saved cart delete ho jayegi!', async () => {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/customer_carts?customer_key=eq.${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' }
+      });
+      showToast('🗑️ Cart deleted!', 'info');
+      await loadSavedCarts();
+    } catch(e) { showToast('❌ Delete failed', 'error'); }
+  });
 }
 
 // ══════════════════════════════════════════
