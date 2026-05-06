@@ -539,8 +539,41 @@
     .footer-top{grid-template-columns:1fr;gap:28px;}
     .steps-grid::before{display:none;}
     .hero-stats{gap:20px;}
-    .use-cases-grid{grid-template-columns:1fr;}
+    .use-cases-grid{grid-template-columns:1fr 1fr;}
     .ann-bar{font-size:10px;padding:6px 12px;gap:6px;}
+    .products-grid{grid-template-columns:1fr!important;}
+    .product-card{padding:20px;}
+    .section-inner{padding:0 16px;}
+    .section{padding:48px 0;}
+    .hero-section{padding:80px 0 48px;}
+    .hero-title{font-size:clamp(28px,8vw,52px);}
+    .hero-sub{font-size:15px;}
+    .section-title{font-size:clamp(24px,6vw,40px);}
+    .loan-tags{gap:6px;}
+    .loan-tag{font-size:11px;padding:4px 10px;}
+    .pvc-cart-option{padding:10px;}
+    .nav-right{gap:6px;}
+    .cart-btn{padding:8px 12px;font-size:13px;}
+    .orders-search-row{flex-direction:column;}
+    .btn-track{width:100%;}
+    .modal-box{margin:10px;border-radius:16px;}
+    .checkout-grid{grid-template-columns:1fr!important;}
+    #payStep2 .pay-options{flex-direction:column;}
+    .consult-modal-box{margin:10px;border-radius:16px;max-height:95vh;}
+    .pvc-cart-option div:first-child{font-size:20px;}
+    .faq-grid{grid-template-columns:1fr!important;}
+    .team-grid{grid-template-columns:1fr 1fr!important;}
+    .reviews-grid{grid-template-columns:1fr!important;}
+    #reviewsContainer{grid-template-columns:1fr!important;}
+  }
+  @media(max-width:480px){
+    .use-cases-grid{grid-template-columns:1fr;}
+    .team-grid{grid-template-columns:1fr!important;}
+    .hero-stats{flex-direction:column;align-items:flex-start;gap:12px;}
+    .nav-logo-text h1{font-size:15px;}
+    .nav-logo-text p{display:none;}
+    .product-card{padding:16px;}
+    .cart-sidebar{width:100vw;}
   }
 
   /* ── UPI QR PAYMENT MODAL ── */
@@ -2393,64 +2426,116 @@
     await loadAllProfileConsults(mobile, null);
   }
 
-  function downloadCustomerInvoice(ref, customerName, amount, createdAt) {
+  function downloadCustomerInvoice(ref, customerName, amount, createdAt, items) {
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'mm', format: 'a5' });
-      const W = doc.internal.pageSize.getWidth();
-      const today = createdAt ? new Date(createdAt).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+      const doc  = new jsPDF({ unit: 'mm', format: 'a5' });
+      const W    = doc.internal.pageSize.getWidth();
+      const date = createdAt ? new Date(createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : new Date().toLocaleDateString('en-IN');
+      const invoiceNo = `INV-${ref}`;
+
+      // GST rates per service category
+      const getGST = (name) => {
+        const n = (name||'').toLowerCase();
+        if (n.includes('gazette') || n.includes('government') || n.includes('document')) return 0;
+        if (n.includes('pvc') || n.includes('card') || n.includes('printing')) return 18;
+        if (n.includes('project report') || n.includes('bpr')) return 18;
+        return 18; // default GST
+      };
 
       // Header
-      doc.setFillColor(11, 31, 75);
-      doc.rect(0, 0, W, 28, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-      doc.text('Harsh CSC eMitra', W/2, 12, { align: 'center' });
-      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      doc.text('Digital Documentation Services | harshcscemitra.vercel.app', W/2, 19, { align: 'center' });
-      doc.text(`WhatsApp: +91 7023029903 | harshcscemitra@gmail.com`, W/2, 24, { align: 'center' });
+      doc.setFillColor(11,31,75);
+      doc.rect(0,0,W,32,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(15); doc.setFont('helvetica','bold');
+      doc.text('Harsh CSC eMitra',W/2,11,{align:'center'});
+      doc.setFontSize(7); doc.setFont('helvetica','normal');
+      doc.text('Digital Documentation Services | harshcscemitra.vercel.app',W/2,17,{align:'center'});
+      doc.text('📞 +91 7023029903 | harshcscemitra@gmail.com | Bikaner, Rajasthan',W/2,22,{align:'center'});
+      doc.text('GSTIN: Not Applicable (Below threshold)',W/2,27,{align:'center'});
 
-      // Invoice title
-      doc.setTextColor(232, 103, 26);
-      doc.setFontSize(13); doc.setFont('helvetica', 'bold');
-      doc.text('PAYMENT RECEIPT', W/2, 38, { align: 'center' });
+      // Invoice title bar
+      doc.setFillColor(232,103,26);
+      doc.rect(0,32,W,8,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(10); doc.setFont('helvetica','bold');
+      doc.text('TAX INVOICE / RECEIPT',W/2,37.5,{align:'center'});
 
-      // Order info box
-      doc.setDrawColor(232, 103, 26); doc.setLineWidth(0.3);
-      doc.roundedRect(10, 43, W-20, 28, 2, 2, 'S');
-      doc.setTextColor(50, 50, 50); doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');   doc.text('Order Ref:', 14, 51);
-      doc.setFont('helvetica', 'normal'); doc.text(ref, 50, 51);
-      doc.setFont('helvetica', 'bold');   doc.text('Date:', 14, 58);
-      doc.setFont('helvetica', 'normal'); doc.text(today, 50, 58);
-      doc.setFont('helvetica', 'bold');   doc.text('Customer:', 14, 65);
-      doc.setFont('helvetica', 'normal'); doc.text(customerName || 'Customer', 50, 65);
+      // Invoice details
+      doc.setTextColor(50,50,50);
+      doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+      doc.text(`Invoice No: ${invoiceNo}`,12,46);
+      doc.text(`Date: ${date}`,W-12,46,{align:'right'});
+      doc.text(`Order Ref: ${ref}`,12,52);
+      doc.setFont('helvetica','normal');
+      doc.text(`Bill To: ${customerName||'Customer'}`,12,58);
 
-      // Amount box
-      doc.setFillColor(11, 31, 75);
-      doc.rect(10, 78, W-20, 20, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('Amount Paid', W/2, 86, { align: 'center' });
-      doc.setFontSize(20); doc.setTextColor(232, 103, 26);
-      doc.text(`Rs. ${Number(amount).toLocaleString('en-IN')}`, W/2, 95, { align: 'center' });
+      // Divider
+      doc.setDrawColor(200,200,200); doc.setLineWidth(0.3);
+      doc.line(10,61,W-10,61);
 
-      // Thank you
-      doc.setTextColor(100, 100, 100); doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Thank you for choosing Harsh CSC eMitra!', W/2, 108, { align: 'center' });
-      doc.text('For queries: WhatsApp +91 7023029903', W/2, 113, { align: 'center' });
+      // Items table header
+      doc.setFillColor(240,242,245);
+      doc.rect(10,63,W-20,7,'F');
+      doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(60,60,60);
+      doc.text('Service / Item',13,68);
+      doc.text('Amt (₹)',W-42,68,{align:'right'});
+      doc.text('GST%',W-28,68,{align:'right'});
+      doc.text('GST (₹)',W-14,68,{align:'right'});
+
+      // Items
+      let y = 76;
+      let subtotal = 0;
+      let totalGST = 0;
+
+      const lineItems = Array.isArray(items) && items.length > 0
+        ? items
+        : [{name: ref.includes('PVC') ? 'Smart Card & PVC Printing' : 'Professional Service', price: amount, qty: 1}];
+
+      lineItems.forEach(item => {
+        const baseAmt = Math.round(Number(item.price||0) * Number(item.qty||1));
+        const gstPct  = getGST(item.name);
+        const gstAmt  = Math.round(baseAmt * gstPct / 118); // GST inclusive
+        const netAmt  = baseAmt - gstAmt;
+        subtotal += netAmt;
+        totalGST += gstAmt;
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(50,50,50);
+        const nameStr = (item.name||'Service').length > 32 ? (item.name||'Service').slice(0,31)+'…' : (item.name||'Service');
+        doc.text(nameStr,13,y);
+        doc.text(`₹${netAmt.toLocaleString('en-IN')}`,W-42,y,{align:'right'});
+        doc.text(gstPct === 0 ? 'Exempt' : `${gstPct}%`,W-28,y,{align:'right'});
+        doc.text(gstAmt === 0 ? '—' : `₹${gstAmt.toLocaleString('en-IN')}`,W-14,y,{align:'right'});
+        y += 7;
+        doc.setDrawColor(230,230,230); doc.line(10,y-2,W-10,y-2);
+      });
+
+      // Totals
+      y += 2;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      doc.text('Subtotal (excl. GST):',W-55,y,{align:'left'}); doc.text(`₹${subtotal.toLocaleString('en-IN')}`,W-12,y,{align:'right'});
+      y += 7;
+      doc.text('GST:',W-55,y,{align:'left'}); doc.text(totalGST === 0 ? 'Exempt' : `₹${totalGST.toLocaleString('en-IN')}`,W-12,y,{align:'right'});
+      y += 2;
+      doc.setDrawColor(11,31,75); doc.setLineWidth(0.5); doc.line(W-60,y,W-10,y);
+      y += 5;
+      doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.setTextColor(11,31,75);
+      doc.text('TOTAL AMOUNT PAID:',W-60,y,{align:'left'});
+      doc.text(`₹${Number(amount).toLocaleString('en-IN')}`,W-12,y,{align:'right'});
 
       // Footer
-      doc.setFillColor(240, 240, 240);
-      doc.rect(0, 122, W, 16, 'F');
-      doc.setTextColor(150, 150, 150); doc.setFontSize(7);
-      doc.text('This is a computer-generated receipt and does not require a signature.', W/2, 128, { align: 'center' });
-      doc.text(`Generated on ${new Date().toLocaleString('en-IN')}`, W/2, 133, { align: 'center' });
+      y += 12;
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+      doc.text('Thank you for choosing Harsh CSC eMitra!',W/2,y,{align:'center'});
+      y += 5;
+      doc.text('This is a computer-generated invoice. For queries: +91 7023029903',W/2,y,{align:'center'});
+      y += 5;
+      doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`,W/2,y,{align:'center'});
 
-      doc.save(`Receipt_${ref}.pdf`);
+      doc.save(`Invoice_${ref}.pdf`);
     } catch(e) {
-      alert('Invoice generate karne mein problem aai. Please admin se contact karein.');
+      alert('Invoice generate karne mein problem. Please refresh karein.');
       console.error('Invoice error:', e);
     }
   }
@@ -2501,7 +2586,7 @@
       : '';
 
     const invoiceBtn = isPaid2
-      ? `<button onclick="downloadCustomerInvoice('${ref}','${o.customer_name||''}',${amount},'${o.created_at||''}')"
+      ? `<button onclick="downloadCustomerInvoice('${ref}','${(o.customer_name||'Customer').replace(/'/g,'`')}',${amount},'${o.created_at||''}')"
            style="margin-top:8px;background:var(--navy);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📄 Download Invoice</button>`
       : '';
 
@@ -2574,7 +2659,7 @@
       if (footerEl) footerEl.style.display = 'none';
     } else {
       if (emptyEl) emptyEl.style.display = 'none';
-      if (footerEl) { footerEl.style.display = 'block'; }
+      if (footerEl) footerEl.style.display = 'block';
       const totalEl = document.getElementById('cartTotal');
       if (totalEl) { totalEl.textContent = '₹' + getTotal().toLocaleString('en-IN'); }
       updateCartTotal();
@@ -2583,14 +2668,83 @@
           <div class="cart-item-icon">${item.emoji}</div>
           <div class="cart-item-info">
             <h4>${item.name}</h4>
-            <p>Qty: ${item.qty} × ₹${item.price.toLocaleString('en-IN')}</p>
+            <p>₹${item.price.toLocaleString('en-IN')} per unit</p>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
             <span class="cart-item-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</span>
-            <button class="remove-btn" onclick="removeFromCart('${item.id}')">🗑</button>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="changeQty('${item.id}',-1)" style="width:26px;height:26px;border:1.5px solid var(--border);background:var(--light);border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+              <span style="font-size:14px;font-weight:700;min-width:20px;text-align:center;">${item.qty}</span>
+              <button onclick="changeQty('${item.id}',1)" style="width:26px;height:26px;border:1.5px solid var(--border);background:var(--light);border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+              <button onclick="removeFromCart('${item.id}')" style="width:26px;height:26px;border:none;background:rgba(220,38,38,0.08);color:#dc2626;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">🗑</button>
+            </div>
           </div>
         </div>`).join('');
     }
+    // Save cart to Supabase if logged in
+    if (currentUser?.email || currentUser?.mobile) {
+      saveCartToSupabase();
+    }
+  }
+
+  function changeQty(id, delta) {
+    if (!cart[id]) return;
+    cart[id].qty = Math.max(1, (cart[id].qty || 1) + delta);
+    renderCart();
+  }
+
+  // Save cart to Supabase customers_carts table
+  async function saveCartToSupabase() {
+    if (!currentUser) return;
+    const key = currentUser.email || currentUser.mobile;
+    if (!key) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/customer_carts`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({
+          customer_key:  key,
+          customer_name: currentUser.name  || '',
+          customer_email:currentUser.email || null,
+          customer_mobile:currentUser.mobile || null,
+          cart_items:    JSON.stringify(getCartItems()),
+          item_count:    getTotalQty(),
+          total_value:   getTotal(),
+          updated_at:    new Date().toISOString()
+        })
+      });
+    } catch(e) {} // Silently fail if table doesn't exist yet
+  }
+
+  // Load cart from Supabase on login
+  async function loadCartFromSupabase() {
+    if (!currentUser) return;
+    const key = currentUser.email || currentUser.mobile;
+    if (!key) return;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/customer_carts?customer_key=eq.${encodeURIComponent(key)}&limit=1`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data[0]?.cart_items) {
+        try {
+          const savedItems = JSON.parse(data[0].cart_items);
+          if (Array.isArray(savedItems) && savedItems.length > 0) {
+            // Merge saved cart with current cart
+            savedItems.forEach(item => {
+              if (!cart[item.id]) cart[item.id] = item;
+            });
+            renderCart();
+          }
+        } catch(e) {}
+      }
+    } catch(e) {}
   }
 
   // ── CART PANEL ────────────────────────────────────────────────
@@ -4214,19 +4368,26 @@ Hum jald hi contact karenge.`);
 
   // Save customer profile to Supabase customers table
   async function saveCustomerToSupabase(user) {
+    if (!user) return;
     try {
+      const body = {
+        name:          user.name  || '',
+        mobile:        user.mobile || null,
+        auth_provider: user.provider || 'email',
+        last_login:    new Date().toISOString()
+      };
+      // email is unique key — only add if exists
+      if (user.email) body.email = user.email;
+
       await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
         method: 'POST',
         headers: {
-          'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates,return=minimal'
         },
-        body: JSON.stringify({
-          name: user.name, email: user.email || null,
-          mobile: user.mobile || null, auth_provider: user.provider || 'email',
-          last_login: new Date().toISOString()
-        })
+        body: JSON.stringify(body)
       });
     } catch(e) { console.warn('saveCustomerToSupabase failed:', e); }
   }
@@ -4234,13 +4395,7 @@ Hum jald hi contact karenge.`);
   function initAuth() {
     const stored = localStorage.getItem('hsc_user');
     if (stored) {
-      try {
-        currentUser = JSON.parse(stored);
-        updateNavUser();
-        autoFillCheckout();
-        // Delay so DOM is fully loaded
-        setTimeout(() => updateProfileSection(), 300);
-      } catch(e) {}
+      try { currentUser = JSON.parse(stored); updateNavUser(); autoFillCheckout(); setTimeout(() => { updateProfileSection(); loadCartFromSupabase(); }, 300); } catch(e) {}
     }
     try {
       firebase.auth().onAuthStateChanged(user => {
