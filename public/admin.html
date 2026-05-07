@@ -671,7 +671,121 @@ harshcscemitra.vercel.app
           </div>
           <div>
             <div class="card">
-              <div class="card-head"><div class="card-title">🗄️ Database Status</div></div>
+              <div class="card-head"><div class="card-title">🧾 Billing & Invoice Settings</div></div>
+              <div style="padding:16px 20px;">
+
+                <!-- Business Info on Invoice -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin-bottom:10px;">📋 Invoice Business Details</div>
+                <div class="form-row">
+                  <div class="f-group"><label>Business Name</label><input class="f-input" id="inv_biz_name" placeholder="Harsh CSC eMitra"/></div>
+                  <div class="f-group"><label>GSTIN (optional)</label><input class="f-input" id="inv_gstin" placeholder="e.g. 08XXXXX1234Z1"/></div>
+                </div>
+                <div class="form-row">
+                  <div class="f-group"><label>Address Line 1</label><input class="f-input" id="inv_addr1" placeholder="Shop No., Street"/></div>
+                  <div class="f-group"><label>Address Line 2</label><input class="f-input" id="inv_addr2" placeholder="City, District, PIN"/></div>
+                </div>
+                <div class="form-row">
+                  <div class="f-group"><label>Phone</label><input class="f-input" id="inv_phone" placeholder="+91 7023029903"/></div>
+                  <div class="f-group"><label>Email</label><input class="f-input" id="inv_email" placeholder="harshcscemitra@gmail.com"/></div>
+                </div>
+                <div class="f-group" style="margin-bottom:14px;">
+                  <label>Website</label>
+                  <input class="f-input" id="inv_website" placeholder="harshcscemitra.vercel.app"/>
+                </div>
+
+                <!-- GST Global Settings -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin:16px 0 10px;">⚙️ GST Global Settings</div>
+                <div class="form-row">
+                  <div class="f-group">
+                    <label>GST Mode</label>
+                    <select class="f-select" id="inv_gst_mode">
+                      <option value="none">❌ No GST (All invoices without GST)</option>
+                      <option value="inclusive">✅ GST Inclusive (Price includes GST)</option>
+                      <option value="exclusive">➕ GST Exclusive (GST added on top)</option>
+                    </select>
+                  </div>
+                  <div class="f-group">
+                    <label>Default GST Rate (%)</label>
+                    <select class="f-select" id="inv_default_gst">
+                      <option value="0">0% (Exempt)</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18" selected>18%</option>
+                      <option value="28">28%</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="f-group">
+                    <label>GST Type</label>
+                    <select class="f-select" id="inv_gst_type">
+                      <option value="igst">IGST (Inter-state)</option>
+                      <option value="cgst_sgst" selected>CGST + SGST (Intra-state)</option>
+                    </select>
+                  </div>
+                  <div class="f-group">
+                    <label>Invoice Prefix</label>
+                    <input class="f-input" id="inv_prefix" placeholder="INV" value="INV"/>
+                  </div>
+                </div>
+
+                <!-- Per-Product GST Rates -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin:16px 0 10px;">🏷️ Per-Product GST Rates</div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Har product/service ke liye alag GST rate set karo. Yeh global setting ko override karega.</div>
+                <div id="productGstRates" style="display:flex;flex-direction:column;gap:8px;">
+                  <!-- Populated by JS -->
+                </div>
+                <button class="btn-sm btn-secondary" style="margin-top:10px;width:100%;" onclick="addCustomGstRow()">+ Add Custom GST Rule</button>
+
+                <!-- Invoice Footer Text -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin:16px 0 10px;">📝 Invoice Footer / Terms</div>
+                <div class="f-group" style="margin-bottom:10px;">
+                  <label>Terms & Conditions</label>
+                  <textarea class="f-input" id="inv_terms" rows="3" style="resize:vertical;" placeholder="e.g. Payment is non-refundable. Service will be delivered within stated timeframe."></textarea>
+                </div>
+                <div class="f-group" style="margin-bottom:14px;">
+                  <label>Footer Note</label>
+                  <input class="f-input" id="inv_footer" placeholder="Thank you for choosing Harsh CSC eMitra!"/>
+                </div>
+
+                <!-- Invoice Options -->
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin:16px 0 10px;">🖨️ Invoice Options</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show Logo on Invoice</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle on" id="inv_show_logo" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show GST Breakdown</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle on" id="inv_show_gst_break" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show Bank Details</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle on" id="inv_show_bank" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show UPI QR Code</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle" id="inv_show_qr" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show Order Reference</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle on" id="inv_show_ref" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                  <div class="f-group">
+                    <label style="font-size:12px;">Show Signature Line</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><div class="toggle on" id="inv_show_sign" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;">Show</span></div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;">
+                  <button class="btn-sm btn-primary" style="flex:1;padding:11px;" onclick="saveBillingSettings()">💾 Save Billing Settings</button>
+                  <button class="btn-sm btn-secondary" style="padding:11px 16px;" onclick="previewSampleInvoice()">👁 Preview Invoice</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
               <div style="padding:16px 20px;">
                 <div id="dbStatus"><div class="spinner"></div> Checking connection…</div>
                 <button class="btn-sm btn-blue" style="margin-top:12px;width:100%;" onclick="testDB()">🔌 Test Connection</button>
@@ -2677,10 +2791,12 @@ function showPage(name, btn) {
   if (name === 'carts')     { loadSavedCarts(); }
   if (name === 'reviews')   { loadReviews(); }
   if (name === 'messages')  { loadBulkRecipients(); }
-  if (name === 'analytics')  renderAnalytics();
-  if (name === 'coupons')    renderCoupons();
-  if (name === 'staff')      renderStaff();
-  if (name === 'docs')       renderDocs();
+  if (name === 'analytics') { renderAnalytics(); }
+  if (name === 'coupons')   { renderCoupons(); }
+  if (name === 'staff')     { renderStaff(); }
+  if (name === 'docs')      { renderDocs(); }
+  if (name === 'formbuilder') { fbLoadAllFromSupabase(); fbRenderProductList(); fbRenderAddPanel(); }
+  if (name === 'settings')  { loadBillingSettings(); loadPaymentSettings(); }
   closeSidebar();
 }
 function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
@@ -4435,6 +4551,170 @@ function renderCustomersTable() {
         </div></td>
       </tr>`).join('')
     : '<tr><td colspan="6" class="empty-state"><div class="empty-icon">🧑‍💼</div>No customers found</td></tr>';
+}
+
+// ══════════════════════════════════════════
+//  BILLING & INVOICE SETTINGS
+// ══════════════════════════════════════════
+const BILLING_KEY = 'hsc_billing_v1';
+
+function getBillingSettings() {
+  try { return JSON.parse(localStorage.getItem(BILLING_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function loadBillingSettings() {
+  const s = getBillingSettings();
+  const set = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
+  const setToggle = (id, val) => { const el = document.getElementById(id); if(el) { if(val) el.classList.add('on'); else el.classList.remove('on'); } };
+
+  set('inv_biz_name', s.biz_name || 'Harsh CSC eMitra');
+  set('inv_gstin',    s.gstin    || '');
+  set('inv_addr1',    s.addr1    || 'Bikaner, Rajasthan');
+  set('inv_addr2',    s.addr2    || '');
+  set('inv_phone',    s.phone    || '+91 7023029903');
+  set('inv_email',    s.email    || 'harshcscemitra@gmail.com');
+  set('inv_website',  s.website  || 'harshcscemitra.vercel.app');
+  set('inv_gst_mode', s.gst_mode || 'inclusive');
+  set('inv_default_gst', s.default_gst || '18');
+  set('inv_gst_type', s.gst_type || 'cgst_sgst');
+  set('inv_prefix',   s.prefix   || 'INV');
+  set('inv_terms',    s.terms    || 'Payment is non-refundable once service is initiated.');
+  set('inv_footer',   s.footer   || 'Thank you for choosing Harsh CSC eMitra!');
+  setToggle('inv_show_logo',      s.show_logo      !== false);
+  setToggle('inv_show_gst_break', s.show_gst_break !== false);
+  setToggle('inv_show_bank',      s.show_bank      !== false);
+  setToggle('inv_show_qr',        !!s.show_qr);
+  setToggle('inv_show_ref',       s.show_ref       !== false);
+  setToggle('inv_show_sign',      s.show_sign      !== false);
+
+  // Render per-product GST rates
+  renderProductGstRates(s.product_gst || []);
+}
+
+function renderProductGstRates(rates) {
+  const products = getProducts();
+  const container = document.getElementById('productGstRates');
+  if (!container) return;
+
+  // Default rates for known products
+  const defaultRates = {
+    'Gazette': { rate: 0,  label: 'Gazette Notification', exempt: true },
+    'BPR':     { rate: 18, label: 'Business Project Report' },
+    'PVC':     { rate: 18, label: 'PVC Card Printing' },
+  };
+
+  // Build rows — Supabase products + default categories
+  const allItems = [
+    ...Object.entries(defaultRates).map(([cat, d]) => ({ id: 'cat_' + cat, name: d.label, category: cat, defaultRate: d.rate })),
+    ...products.filter(p => !['Gazette','BPR','PVC'].includes(p.category)).map(p => ({ id: p.id, name: p.name, category: p.category, defaultRate: 18 }))
+  ];
+
+  container.innerHTML = allItems.map(item => {
+    const saved = rates.find(r => r.id === item.id);
+    const rate  = saved?.rate ?? item.defaultRate;
+    const exempt= saved?.exempt ?? (item.defaultRate === 0);
+    return `<div style="display:grid;grid-template-columns:1fr 100px 80px;gap:8px;align-items:center;background:var(--surface2);padding:8px 10px;border-radius:8px;">
+      <div style="font-size:12px;font-weight:600;">${item.name}<br/><span style="font-size:10px;color:var(--text3);">${item.category}</span></div>
+      <select class="f-select" id="gst_rate_${item.id}" style="font-size:12px;padding:6px;">
+        <option value="0"  ${rate===0?'selected':''}>0% Exempt</option>
+        <option value="5"  ${rate===5?'selected':''}>5%</option>
+        <option value="12" ${rate===12?'selected':''}>12%</option>
+        <option value="18" ${rate===18?'selected':''}>18%</option>
+        <option value="28" ${rate===28?'selected':''}>28%</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div class="toggle ${exempt?'on':''}" id="gst_exempt_${item.id}" onclick="this.classList.toggle('on')" title="Exempt"></div>
+        <span style="font-size:10px;color:var(--text3);">Exempt</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addCustomGstRow() {
+  const container = document.getElementById('productGstRates');
+  const id = 'custom_' + Date.now();
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 100px 80px 32px;gap:8px;align-items:center;background:var(--surface2);padding:8px 10px;border-radius:8px;';
+  div.innerHTML = `
+    <input class="f-input" placeholder="Service/Product name" style="font-size:12px;" id="gst_name_${id}"/>
+    <select class="f-select" id="gst_rate_${id}" style="font-size:12px;padding:6px;">
+      <option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option>
+    </select>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div class="toggle" id="gst_exempt_${id}" onclick="this.classList.toggle('on')"></div>
+      <span style="font-size:10px;color:var(--text3);">Exempt</span>
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:rgba(220,38,38,0.1);color:var(--red);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>`;
+  container.appendChild(div);
+}
+
+function saveBillingSettings() {
+  const g = (id) => document.getElementById(id)?.value?.trim() || '';
+  const t = (id) => document.getElementById(id)?.classList.contains('on') || false;
+
+  // Collect per-product GST rates
+  const products  = getProducts();
+  const allItems  = [
+    ...['Gazette','BPR','PVC'].map(cat => ({ id: 'cat_' + cat })),
+    ...products.filter(p => !['Gazette','BPR','PVC'].includes(p.category)).map(p => ({ id: p.id }))
+  ];
+  const productGst = allItems.map(item => ({
+    id:     item.id,
+    rate:   Number(document.getElementById('gst_rate_' + item.id)?.value || 18),
+    exempt: document.getElementById('gst_exempt_' + item.id)?.classList.contains('on') || false
+  })).filter(r => document.getElementById('gst_rate_' + r.id));
+
+  const settings = {
+    biz_name:       g('inv_biz_name'),
+    gstin:          g('inv_gstin'),
+    addr1:          g('inv_addr1'),
+    addr2:          g('inv_addr2'),
+    phone:          g('inv_phone'),
+    email:          g('inv_email'),
+    website:        g('inv_website'),
+    gst_mode:       g('inv_gst_mode'),
+    default_gst:    g('inv_default_gst'),
+    gst_type:       g('inv_gst_type'),
+    prefix:         g('inv_prefix'),
+    terms:          g('inv_terms'),
+    footer:         g('inv_footer'),
+    show_logo:      t('inv_show_logo'),
+    show_gst_break: t('inv_show_gst_break'),
+    show_bank:      t('inv_show_bank'),
+    show_qr:        t('inv_show_qr'),
+    show_ref:       t('inv_show_ref'),
+    show_sign:      t('inv_show_sign'),
+    product_gst:    productGst,
+    saved_at:       new Date().toISOString()
+  };
+
+  localStorage.setItem(BILLING_KEY, JSON.stringify(settings));
+  showToast('✅ Billing settings save ho gayi!', 'success');
+}
+
+function getGSTForProduct(productName, category) {
+  const s = getBillingSettings();
+  if (!s || s.gst_mode === 'none') return { rate: 0, exempt: true };
+  const rates = s.product_gst || [];
+
+  // Check category-level setting
+  const catKey = 'cat_' + (category || '');
+  const catRule = rates.find(r => r.id === catKey);
+  if (catRule) return catRule;
+
+  // Check name match in custom rules
+  const nameRule = rates.find(r => r.id?.startsWith('custom_') &&
+    document.getElementById('gst_name_' + r.id)?.value?.toLowerCase() === (productName||'').toLowerCase()
+  );
+  if (nameRule) return nameRule;
+
+  // Default
+  return { rate: Number(s.default_gst || 18), exempt: false };
+}
+
+function previewSampleInvoice() {
+  saveBillingSettings();
+  generateInvoiceWithSettings('PREVIEW-001', 'orders', null, true);
 }
 
 // ══════════════════════════════════════════
