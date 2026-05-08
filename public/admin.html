@@ -3023,369 +3023,338 @@ function generatePaymentQRPDF(ref, customerName, amount) {
 // ══════════════════════════════════════════
 //  INVOICE GENERATOR
 // ══════════════════════════════════════════
-function generateInvoice(ref, service) {
-  const o = service === 'PVC'
+function generateInvoice(ref, service, orderOverride, isPreview) {
+  const o = orderOverride || (service === 'PVC'
     ? allPVCOrders.find(x => x.order_ref === ref)
-    : allOrders.find(x => x.order_ref === ref);
-  if (!o) { showToast('Order not found', 'error'); return; }
+    : allOrders.find(x => x.order_ref === ref));
+  if (!o && !isPreview) { showToast('Order not found', 'error'); return; }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const W = 210, M = 14;
-  const total = service === 'PVC' ? (o.amount || 0) : (o.total_amount || 0);
-  const now = new Date();
-  const invoiceDate = now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-  const dueDate = new Date(now.getTime() + 7*24*60*60*1000).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-  const isPaid = o.payment_status === 'Payment Received';
+  const B = getBillingSettings(); // billing settings
+  const gstMode   = B.gst_mode   || 'none';   // none | inclusive | exclusive
+  const showGST   = gstMode !== 'none';
+  const gstType   = B.gst_type   || 'cgst_sgst';
+  const invPrefix = B.prefix     || 'INV';
+  const bizName   = B.biz_name   || 'Harsh CSC eMitra';
+  const gstin     = B.gstin      || '';
+  const addr1     = B.addr1      || 'Bikaner, Rajasthan';
+  const addr2     = B.addr2      || '';
+  const phone     = B.phone      || '+91 7023029903';
+  const bizEmail  = B.email      || 'harshcscemitra@gmail.com';
+  const website   = B.website    || 'harshcscemitra.vercel.app';
+  const terms     = B.terms      || 'Payment is non-refundable once service is initiated.';
+  const footer    = B.footer     || `Thank you for choosing ${bizName}!`;
+  const showBank  = B.show_bank  !== false;
+  const showSign  = B.show_sign  !== false;
+  const showRef   = B.show_ref   !== false;
+  const showGSTBreak = showGST && (B.show_gst_break !== false);
 
-  // ── Generate Serial Invoice Number ──
-  const seq = String(Math.floor(Math.random()*900)+100);
-  const invoiceNo = `HARSH/${now.getFullYear()}/${seq}`;
+  // ── Sample data for preview ──
+  const ord = isPreview ? {
+    customer_name: 'SAMPLE CUSTOMER', customer_phone: '9999999999',
+    customer_email: 'sample@email.com', delivery_address: 'Sample Address, City - 000000',
+    order_ref: 'HSC-PREVIEW', payment_status: 'Payment Received',
+    items: JSON.stringify([{id:'gazette', name:'Gazette Notification Service', price:5100, qty:1}]),
+    total_amount: 5100
+  } : o;
 
-  // ── Amount in words helper ──
+  const total   = Number(service === 'PVC' ? (ord?.amount||0) : (ord?.total_amount||0));
+  const isPaid  = (ord?.payment_status||'') === 'Payment Received';
+  const now     = new Date();
+  const invDate = now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const seq     = String(Date.now()).slice(-4);
+  const invoiceNo = `${invPrefix}/${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}/${seq}`;
+  const docTitle  = showGST ? 'TAX INVOICE' : 'BILL OF SUPPLY';
+
+  // ── Amount in words ──
   function amtWords(n) {
+    n = Math.round(n);
     const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
     const b=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-    if(n===0) return 'Zero';
-    if(n<20) return a[n];
-    if(n<100) return b[Math.floor(n/10)]+(n%10?' '+a[n%10]:'');
-    if(n<1000) return a[Math.floor(n/100)]+' Hundred'+(n%100?' '+amtWords(n%100):'');
-    if(n<100000) return amtWords(Math.floor(n/1000))+' Thousand'+(n%1000?' '+amtWords(n%1000):'');
+    if(n===0)return'Zero'; if(n<0)return'Minus '+amtWords(-n);
+    if(n<20)return a[n]; if(n<100)return b[Math.floor(n/10)]+(n%10?' '+a[n%10]:'');
+    if(n<1000)return a[Math.floor(n/100)]+' Hundred'+(n%100?' '+amtWords(n%100):'');
+    if(n<100000)return amtWords(Math.floor(n/1000))+' Thousand'+(n%1000?' '+amtWords(n%1000):'');
     return amtWords(Math.floor(n/100000))+' Lakh'+(n%100000?' '+amtWords(n%100000):'');
   }
-  const totalWords = amtWords(Number(total)) + ' Rupees Only';
+  const totalWords = amtWords(total) + ' Rupees Only';
 
-  // ─────────────────────────────────────
-  //  HEADER BAND
-  // ─────────────────────────────────────
-  doc.setFillColor(10, 28, 72);
-  doc.rect(0, 0, W, 38, 'F');
-  doc.setFillColor(232, 103, 26);
-  doc.rect(0, 0, 4, 38, 'F');
-  doc.rect(0, 34, W, 4, 'F');
-
-  // Logo
-  try { doc.addImage(ICON_LOGO, 'PNG', M, 4, 28, 28); } catch(e) {}
-
-  // Business name & details
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(17);
-  doc.setFont('helvetica','bold');
-  doc.text('HARSH CSC eMITRA', M+32, 13);
-  doc.setFontSize(8);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(190,205,235);
-  doc.text('Digital Government Services | Piplantri, Rajsamand, Rajasthan - 313324', M+32, 19);
-  doc.text('Ph: +91 70230 29903  |  harshcscemitra@gmail.com  |  harshcscemitra.vercel.app', M+32, 25);
-  doc.text('CSC VLE Certified  |  HDFC Bank Current A/C  |  Est. 2017', M+32, 31);
-
-  // TAX INVOICE label
-  doc.setFillColor(232,103,26);
-  doc.rect(148, 4, 48, 12, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica','bold');
-  doc.text('TAX INVOICE', 172, 13, { align:'center' });
-
-  let y = 44;
-
-  // ─────────────────────────────────────
-  //  INVOICE META + CLIENT BOX
-  // ─────────────────────────────────────
-  // Left: Bill To
-  doc.setFillColor(247,250,255);
-  doc.setDrawColor(210,220,240);
-  doc.roundedRect(M, y, 90, 44, 2, 2, 'FD');
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(232,103,26);
-  doc.text('BILL TO', M+4, y+7);
-  doc.setDrawColor(232,103,26);
-  doc.line(M+4, y+9, M+86, y+9);
-
-  doc.setFontSize(11);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(10,28,72);
-  doc.text((o.customer_name||'Customer').toUpperCase(), M+4, y+17);
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(55,65,95);
-  let by = y+24;
-  if(o.customer_phone||o.mobile){ doc.text('Mobile: '+(o.customer_phone||o.mobile), M+4, by); by+=6; }
-  if(o.customer_email){ doc.text('Email: '+o.customer_email, M+4, by); by+=6; }
-  const addr=(o.delivery_address||o.address||'').replace('N/A','').trim();
-  if(addr){ doc.text('Address: '+addr.substring(0,38), M+4, by); }
-
-  // Right: Invoice Details
-  doc.setFillColor(247,250,255);
-  doc.roundedRect(110, y, 86, 44, 2, 2, 'FD');
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(232,103,26);
-  doc.text('INVOICE DETAILS', 116, y+7);
-  doc.line(116, y+9, 190, y+9);
-
-  const metaRows = [
-    ['Invoice No.', invoiceNo],
-    ['Invoice Date', invoiceDate],
-    ['Due Date', dueDate],
-    ['Order Ref', ref],
-    ['Payment', o.payment_status||'Not Received'],
-  ];
-  doc.setFontSize(8.5);
-  metaRows.forEach((r,i)=>{
-    const ry = y+17+i*5.5;
-    doc.setFont('helvetica','bold'); doc.setTextColor(60,70,100);
-    doc.text(r[0]+':', 116, ry);
-    doc.setFont('helvetica','normal'); doc.setTextColor(20,30,60);
-    doc.text(String(r[1]).substring(0,24), 144, ry);
-  });
-
-  y += 52;
-
-  // ─────────────────────────────────────
-  //  ITEMS TABLE
-  // ─────────────────────────────────────
-  // Header
-  doc.setFillColor(10,28,72);
-  doc.rect(M, y, W-M*2, 9, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica','bold');
-  const tCols = [
-    [M+3,   'S.No'],
-    [M+11,  'Description of Service'],
-    [M+94,  'HSN/SAC'],
-    [M+114, 'Qty'],
-    [M+124, 'Rate (Rs.)'],
-    [M+148, 'Tax. Value'],
-    [M+163, 'GST%'],
-    [M+175, 'Amount (Rs.)'],
-  ];
-  tCols.forEach(([x,lbl])=> doc.text(lbl, x, y+6));
-  y += 9;
-
-  // Items
+  // ── Items ──
   let items = [];
-  if(service==='PVC'){
-    items=[{name:'PVC Smart Card - '+(o.card_type||'Standard'), hsn:'8523', qty:o.quantity||1, rate:o.amount||0}];
+  if (service==='PVC') {
+    items = [{name:'PVC Smart Card - '+(ord?.card_type||'Standard'), hsn:'8523', qty:ord?.quantity||1, price:ord?.amount||total}];
   } else {
-    try{ items=typeof o.items==='string'?JSON.parse(o.items):(o.items||[]); }catch{ items=[]; }
-    if(!items.length) items=[{
-      name: service==='Gazette' ? 'Gazette Notification - Name Change in Rajasthan Rajpatra' : 'Business Project Report / DPR for Bank Loan',
-      hsn: service==='Gazette' ? '998319' : '998311',
-      qty:1, rate:total
+    try { items = typeof ord?.items==='string' ? JSON.parse(ord.items) : (ord?.items||[]); } catch(e) { items=[]; }
+    if (!items.length) items = [{
+      name: service==='Gazette' ? 'Gazette Notification - Rajasthan Rajpatra' : service==='BPR' ? 'Business Project Report / DPR' : 'Professional Service',
+      hsn: service==='Gazette' ? '998319' : '998311', qty:1, price:total
     }];
   }
 
-  // GST calc (18% included)
-  const gstRate = 18;
-  let subtotal = 0;
+  // ── GST per item from billing settings ──
+  function getItemGST(itemName, cat) {
+    const rates = B.product_gst || [];
+    const catKey = 'cat_'+(cat||'');
+    const rule = rates.find(r=>r.id===catKey) || rates.find(r=>r.id===('cat_'+service));
+    if (rule) return rule.exempt ? 0 : (rule.rate||0);
+    return Number(B.default_gst||18);
+  }
+
+  // ── PDF Setup ──
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=14;
+  let y=0;
+
+  // ═══════════════════════════════════════
+  //  HEADER
+  // ═══════════════════════════════════════
+  doc.setFillColor(10,28,72);
+  doc.rect(0,0,W,36,'F');
+  doc.setFillColor(232,103,26);
+  doc.rect(0,0,5,36,'F');
+  doc.rect(0,32,W,4,'F');
+
+  // Logo
+  try { doc.addImage(ICON_LOGO,'PNG',M+2,4,26,26); } catch(e) {}
+
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text(bizName.toUpperCase(), M+32, 13);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.setTextColor(190,210,240);
+  doc.text(addr1+(addr2?', '+addr2:''), M+32, 20);
+  doc.text(`Ph: ${phone}  |  ${bizEmail}  |  ${website}`, M+32, 26);
+  if (gstin) doc.text('GSTIN: '+gstin, M+32, 31);
+
+  // Document type label
+  doc.setFillColor(232,103,26);
+  doc.roundedRect(148,5,48,13,1,1,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(docTitle, 172, 13.5, {align:'center'});
+  if (!showGST) {
+    doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text('(No Tax)', 172, 17.5, {align:'center'});
+  }
+
+  y = 44;
+
+  // ═══════════════════════════════════════
+  //  BILL TO + INVOICE DETAILS
+  // ═══════════════════════════════════════
+  doc.setFillColor(248,250,255); doc.setDrawColor(210,220,245);
+  doc.roundedRect(M, y, 92, 46, 2, 2, 'FD');
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(232,103,26);
+  doc.text('BILL TO', M+4, y+7);
+  doc.setDrawColor(232,103,26); doc.line(M+4,y+9,M+88,y+9);
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(10,28,72);
+  doc.text((ord?.customer_name||'Customer').toUpperCase().substring(0,22), M+4, y+17);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(50,60,90);
+  let by=y+24;
+  const ph=(ord?.customer_phone||ord?.mobile||'');
+  if(ph){doc.text('Mobile: '+ph,M+4,by);by+=6;}
+  if(ord?.customer_email){doc.text('Email: '+ord.customer_email.substring(0,30),M+4,by);by+=6;}
+  const addr=(ord?.delivery_address||ord?.address||'').replace(/^N\/A$/i,'').trim();
+  if(addr){doc.text('Address: '+addr.substring(0,34),M+4,by);}
+
+  doc.setFillColor(248,250,255); doc.setDrawColor(210,220,245);
+  doc.roundedRect(112, y, 84, 46, 2, 2, 'FD');
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(232,103,26);
+  doc.text('INVOICE DETAILS', 118, y+7);
+  doc.setDrawColor(232,103,26); doc.line(118,y+9,190,y+9);
+  const meta = [
+    ['Invoice No.', invoiceNo],
+    ['Date', invDate],
+    showRef ? ['Order Ref', ref||ord?.order_ref||'—'] : null,
+    ['Payment Status', isPaid ? 'PAID ✓' : 'PENDING'],
+  ].filter(Boolean);
+  meta.forEach((r,i)=>{
+    const ry=y+17+i*6;
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(60,70,100);
+    doc.text(r[0]+':', 118, ry);
+    doc.setFont('helvetica','normal'); doc.setTextColor(10,20,60);
+    doc.text(String(r[1]).substring(0,26), 148, ry);
+  });
+  y += 54;
+
+  // ═══════════════════════════════════════
+  //  ITEMS TABLE
+  // ═══════════════════════════════════════
+  // Table header
+  doc.setFillColor(10,28,72);
+  doc.rect(M,y,W-M*2,9,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+  doc.text('#',      M+3,  y+6);
+  doc.text('Description of Service / Item', M+10, y+6);
+  if(showGST) doc.text('HSN/SAC', M+102, y+6);
+  doc.text('Qty',    M+122, y+6);
+  doc.text('Rate',   M+133, y+6);
+  if(showGST){
+    doc.text('Taxable', M+150, y+6);
+    doc.text('GST%',    M+166, y+6);
+  }
+  doc.text('Amount', W-M-2, y+6, {align:'right'});
+  y+=9;
+
+  let grandTotal=0, totalTaxable=0, totalGSTAmt=0;
+
   items.forEach((item,i)=>{
-    const qty = item.qty||1;
-    const rate = item.price||item.rate||0;
-    const lineTotal = qty * rate;
-    const taxableVal = Math.round(lineTotal / 1.18);
-    const gstAmt = lineTotal - taxableVal;
-    subtotal += lineTotal;
+    const qty   = Number(item.qty||1);
+    const price = Number(item.price||item.rate||0);
+    const lineTotal = qty * price;
+    const gstPct = showGST ? getItemGST(item.name, item.category) : 0;
+    let taxable=lineTotal, gstAmt=0;
+    if(showGST && gstPct>0){
+      if(gstMode==='inclusive'){
+        taxable = Math.round(lineTotal*100/(100+gstPct));
+        gstAmt  = lineTotal - taxable;
+      } else {
+        taxable = lineTotal;
+        gstAmt  = Math.round(lineTotal*gstPct/100);
+      }
+    }
+    const rowTotal = gstMode==='exclusive' ? lineTotal+gstAmt : lineTotal;
+    grandTotal  += rowTotal;
+    totalTaxable+= taxable;
+    totalGSTAmt += gstAmt;
 
-    doc.setFillColor(i%2===0?255:248, i%2===0?255:250, i%2===0?255:255);
-    doc.rect(M, y, W-M*2, 10, 'F');
-    doc.setDrawColor(225,230,245);
-    doc.line(M, y+10, W-M, y+10);
-
-    doc.setTextColor(40,50,80);
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica','normal');
-    doc.text(String(i+1), M+4, y+7);
-    doc.text(String(item.name||'').substring(0,48), M+11, y+7);
-    doc.text(String(item.hsn||'998319'), M+94, y+7);
-    doc.text(String(qty), M+118, y+7);
-    doc.text('Rs.'+Number(rate).toLocaleString('en-IN'), M+124, y+7);
-    doc.text('Rs.'+Number(taxableVal).toLocaleString('en-IN'), M+148, y+7);
-    doc.text(gstRate+'%', M+165, y+7);
+    doc.setFillColor(i%2===0?255:249, i%2===0?255:251, i%2===0?255:255);
+    doc.rect(M,y,W-M*2,10,'F');
+    doc.setDrawColor(225,230,245); doc.line(M,y+10,W-M,y+10);
+    doc.setTextColor(40,50,80); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.text(String(i+1),          M+4,   y+7);
+    doc.text(String(item.name||'').substring(0,46), M+10, y+7);
+    if(showGST) doc.text(String(item.hsn||'998319'), M+102, y+7);
+    doc.text(String(qty),          M+124, y+7);
+    doc.text('₹'+Number(price).toLocaleString('en-IN'), M+133, y+7);
+    if(showGST){
+      doc.text('₹'+taxable.toLocaleString('en-IN'), M+150, y+7);
+      doc.text(gstPct===0?'Exempt':gstPct+'%', M+168, y+7);
+    }
     doc.setFont('helvetica','bold');
-    doc.text('Rs.'+Number(lineTotal).toLocaleString('en-IN'), W-M-2, y+7, {align:'right'});
+    doc.text('₹'+rowTotal.toLocaleString('en-IN'), W-M-2, y+7, {align:'right'});
     y+=10;
   });
 
-  // Totals
-  const taxableTotal = Math.round(subtotal/1.18);
-  const totalGST = subtotal - taxableTotal;
-  const cgst = Math.round(totalGST/2);
-  const sgst = totalGST - cgst;
+  // ═══════════════════════════════════════
+  //  TOTALS
+  // ═══════════════════════════════════════
+  y+=2;
+  doc.setDrawColor(200,215,240); doc.setLineWidth(0.3);
+  doc.line(M,y,W-M,y); y+=4;
 
-  y += 2;
-  const totLine = (lbl, val, bold, highlight) => {
-    if(highlight){
-      doc.setFillColor(10,28,72);
-      doc.rect(M, y-1, W-M*2, 9, 'F');
+  const tRow=(lbl,val,bold,bg)=>{
+    if(bg){
+      doc.setFillColor(10,28,72); doc.rect(M,y-1,W-M*2,10,'F');
       doc.setTextColor(255,255,255);
     } else {
-      doc.setTextColor(bold?10:80, bold?28:88, bold?72:115);
+      doc.setTextColor(bold?10:70, bold?28:80, bold?72:110);
     }
-    doc.setFontSize(bold?10:8.5);
-    doc.setFont('helvetica', bold?'bold':'normal');
-    doc.text(lbl, W-M-60, y+6, {align:'right'});
-    doc.text(val, W-M-2, y+6, {align:'right'});
-    y+=9;
+    doc.setFontSize(bold?10.5:8.5); doc.setFont('helvetica',bold?'bold':'normal');
+    doc.text(lbl, W-M-65, y+6.5, {align:'right'});
+    doc.text(val, W-M-2,  y+6.5, {align:'right'});
+    y+=10;
   };
-  doc.setDrawColor(200,212,238);
-  doc.line(M, y, W-M, y); y+=4;
-  totLine('Taxable Amount:', 'Rs.'+Number(taxableTotal).toLocaleString('en-IN'), false, false);
-  totLine('CGST @ 9%:', 'Rs.'+Number(cgst).toLocaleString('en-IN'), false, false);
-  totLine('SGST @ 9%:', 'Rs.'+Number(sgst).toLocaleString('en-IN'), false, false);
-  doc.setDrawColor(10,28,72);
-  doc.line(M, y, W-M, y); y+=2;
-  totLine('GRAND TOTAL:', 'Rs.'+Number(subtotal).toLocaleString('en-IN'), true, true);
-  y += 4;
+
+  if(showGST && showGSTBreak && totalGSTAmt>0){
+    tRow('Taxable Amount:', '₹'+totalTaxable.toLocaleString('en-IN'), false, false);
+    if(gstType==='cgst_sgst'){
+      const cgst=Math.round(totalGSTAmt/2), sgst=totalGSTAmt-cgst;
+      tRow('CGST:', '₹'+cgst.toLocaleString('en-IN'), false, false);
+      tRow('SGST:', '₹'+sgst.toLocaleString('en-IN'), false, false);
+    } else {
+      tRow('IGST:', '₹'+totalGSTAmt.toLocaleString('en-IN'), false, false);
+    }
+    doc.setDrawColor(10,28,72); doc.setLineWidth(0.5);
+    doc.line(M,y,W-M,y); y+=2;
+  }
+  tRow('GRAND TOTAL:', '₹'+grandTotal.toLocaleString('en-IN'), true, true);
+  y+=6;
 
   // Amount in words
-  doc.setFillColor(255,252,244);
-  doc.setDrawColor(240,220,190);
-  doc.roundedRect(M, y, W-M*2, 9, 1, 1, 'FD');
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(10,28,72);
-  doc.text('Amount in Words: ', M+3, y+6);
+  doc.setFillColor(255,252,240); doc.setDrawColor(235,210,170);
+  doc.roundedRect(M,y,W-M*2,10,1,1,'FD');
+  doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(10,28,72);
+  doc.text('Amount in Words: ', M+3, y+7);
   doc.setFont('helvetica','normal');
-  doc.text(totalWords, M+38, y+6);
-  y += 15;
+  doc.text(totalWords.substring(0,70), M+42, y+7);
+  y+=16;
 
-  // ─────────────────────────────────────
-  //  PAYMENT STATUS BANNER
-  // ─────────────────────────────────────
-  doc.setFillColor(isPaid?220:255, isPaid?252:240, isPaid?231:240);
-  doc.setDrawColor(isPaid?34:239, isPaid?197:68, isPaid?94:68);
-  doc.roundedRect(M, y, W-M*2, 10, 1, 1, 'FD');
-  doc.setFontSize(9.5);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(isPaid?22:185, isPaid?163:28, isPaid?74:28);
-  doc.text(isPaid ? '✓  PAYMENT RECEIVED — Thank You for your payment!' : '⚠  PAYMENT PENDING — Please pay before the due date: '+dueDate, W/2, y+7, {align:'center'});
-  y += 16;
+  // Payment status banner
+  if(isPaid){
+    doc.setFillColor(220,252,231); doc.setDrawColor(34,197,94);
+  } else {
+    doc.setFillColor(255,243,235); doc.setDrawColor(232,103,26);
+  }
+  doc.roundedRect(M,y,W-M*2,10,1,1,'FD');
+  doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+  doc.setTextColor(isPaid?22:180, isPaid?163:50, isPaid?74:0);
+  doc.text(isPaid?'✓  PAYMENT RECEIVED — Thank you!':'⚠  PAYMENT PENDING', W/2, y+7, {align:'center'});
+  y+=16;
 
-  // ─────────────────────────────────────
-  //  BANK + QR + SIGN
-  // ─────────────────────────────────────
-  // Bank Details (left)
-  doc.setFillColor(247,250,255);
-  doc.setDrawColor(210,222,245);
-  doc.roundedRect(M, y, 82, 62, 2, 2, 'FD');
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(232,103,26);
-  doc.text('BANK & PAYMENT DETAILS', M+4, y+8);
-  doc.setDrawColor(232,103,26);
-  doc.line(M+4, y+10, M+78, y+10);
-  const bankRows = [
-    ['Bank', BANK_DETAILS.bank],
-    ['A/C Holder', BANK_DETAILS.holder],
-    ['A/C Number', BANK_DETAILS.account],
-    ['IFSC Code', BANK_DETAILS.ifsc],
-    ['Branch', BANK_DETAILS.branch],
-    ['A/C Type', BANK_DETAILS.type],
-    ['UPI ID', BANK_DETAILS.upi],
-    ['WhatsApp Pay', '+91 70230 29903'],
-  ];
-  bankRows.forEach((r,i)=>{
-    doc.setFont('helvetica','bold'); doc.setTextColor(70,80,110);
-    doc.text(r[0]+':', M+4, y+18+i*5.5);
-    doc.setFont('helvetica','normal'); doc.setTextColor(15,25,60);
-    doc.text(String(r[1]).substring(0,20), M+30, y+18+i*5.5);
-  });
+  // Bank details + Signature
+  if(showBank){
+    const PS = JSON.parse(localStorage.getItem(PAY_SETTINGS_KEY)||'{}');
+    const BD = { bank:PS.bank||BANK_DETAILS.bank, holder:PS.holder||BANK_DETAILS.holder, account:PS.account||BANK_DETAILS.account, ifsc:PS.ifsc||BANK_DETAILS.ifsc, upi:PS.upi_id||UPI_ID };
+    doc.setFillColor(248,250,255); doc.setDrawColor(210,222,245);
+    doc.roundedRect(M,y,showSign?110:170,60,2,2,'FD');
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(232,103,26);
+    doc.text('BANK & PAYMENT DETAILS', M+4, y+8);
+    doc.setDrawColor(232,103,26); doc.line(M+4,y+10,M+106,y+10);
+    [['Bank',BD.bank],['A/C Holder',BD.holder],['A/C No.',BD.account],['IFSC',BD.ifsc],['UPI ID',BD.upi]].forEach((r,i)=>{
+      doc.setFont('helvetica','bold'); doc.setTextColor(60,70,100);
+      doc.text(r[0]+':', M+4, y+18+i*7);
+      doc.setFont('helvetica','normal'); doc.setTextColor(10,20,60);
+      doc.text(String(r[1]||'—').substring(0,26), M+28, y+18+i*7);
+    });
+  }
 
-  // QR Code (center)
-  doc.setFillColor(255,255,255);
-  doc.setDrawColor(210,222,245);
-  doc.roundedRect(102, y, 52, 62, 2, 2, 'FD');
-  doc.setFontSize(8);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(10,28,72);
-  doc.text('Scan & Pay (UPI)', 128, y+8, {align:'center'});
-  try { doc.addImage(PAYMENT_QR_B64, 'JPEG', 106, y+10, 44, 44); } catch(e){}
-  doc.setFontSize(7);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(100,110,140);
-  doc.text('GPay | PhonePe | Paytm | BHIM', 128, y+57, {align:'center'});
+  if(showSign){
+    const sx = showBank ? W-M-44 : M;
+    doc.setFillColor(252,250,246); doc.setDrawColor(220,210,195);
+    doc.roundedRect(sx,y,44,60,2,2,'FD');
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(10,28,72);
+    doc.text('For', sx+22, y+8, {align:'center'});
+    doc.text(bizName.substring(0,16), sx+22, y+14, {align:'center'});
+    doc.setDrawColor(150,160,180);
+    doc.line(sx+4,y+46,sx+40,y+46);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(80,90,110);
+    doc.text('Authorized Signatory', sx+22, y+52, {align:'center'});
+    doc.text('Stamp & Sign', sx+22, y+57, {align:'center'});
+  }
+  y+=66;
 
-  // Authorized Signatory (right)
-  doc.setFillColor(252,250,246);
-  doc.setDrawColor(230,215,195);
-  doc.roundedRect(160, y, 36, 62, 2, 2, 'FD');
-  doc.setFontSize(8);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(10,28,72);
-  doc.text('For', 178, y+8, {align:'center'});
-  doc.text('Harsh CSC eMitra', 178, y+14, {align:'center'});
-  // Signature line
-  doc.setDrawColor(150,160,180);
-  doc.line(164, y+48, 192, y+48);
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(80,90,110);
-  doc.text('Authorized Signatory', 178, y+54, {align:'center'});
-  doc.text('Stamp & Sign', 178, y+59, {align:'center'});
-  y += 68;
+  // Terms
+  if(terms){
+    doc.setFillColor(250,250,252); doc.setDrawColor(218,225,242);
+    doc.roundedRect(M,y,W-M*2,18,1,1,'FD');
+    doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(10,28,72);
+    doc.text('Terms & Conditions:', M+3, y+6);
+    doc.setFont('helvetica','normal'); doc.setTextColor(60,70,100);
+    const tLines = doc.splitTextToSize(terms, W-M*2-8);
+    tLines.slice(0,2).forEach((l,i)=>doc.text(l, M+3, y+12+i*5));
+    y+=22;
+  }
 
-  // ─────────────────────────────────────
-  //  TERMS & CONDITIONS
-  // ─────────────────────────────────────
-  doc.setFillColor(250,250,252);
-  doc.setDrawColor(218,225,240);
-  doc.roundedRect(M, y, W-M*2, 22, 1, 1, 'FD');
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(10,28,72);
-  doc.text('TERMS & CONDITIONS:', M+3, y+6);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(60,68,90);
-  const terms = [
-    '1. Payment is due within 7 days from invoice date.',
-    '2. Documents/deliverables will be sent via WhatsApp after payment confirmation.',
-    '3. No refund will be issued once processing/work has been started.',
-    '4. This is a computer generated invoice and does not require physical signature if digitally signed.',
-    '5. All disputes are subject to Rajsamand jurisdiction only.',
-  ];
-  terms.forEach((t,i)=>{
-    const tx = i < 3 ? M+3 : M+3 + (i===3?0:0);
-    doc.text(t, M+3, y+12+i*3.8);
-  });
-  y += 26;
+  // Footer
+  doc.setFillColor(10,28,72); doc.rect(0,y,W,8,'F');
+  doc.setFillColor(232,103,26); doc.rect(0,y,W,2,'F');
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(190,210,240);
+  doc.text(footer, W/2, y+6, {align:'center'});
 
-  // ─────────────────────────────────────
-  //  FOOTER
-  // ─────────────────────────────────────
-  doc.setFillColor(10,28,72);
-  doc.rect(0, y, W, 14, 'F');
-  doc.setFillColor(232,103,26);
-  doc.rect(0, y, 4, 14, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica','bold');
-  doc.text('Thank you for choosing Harsh CSC eMitra! We value your trust.', W/2, y+6, {align:'center'});
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(180,195,230);
-  doc.text('Harsh CSC eMitra | Piplantri, Rajsamand, Rajasthan 313324 | +91 70230 29903 | harshcscemitra.vercel.app', W/2, y+11, {align:'center'});
-
-  // Save
-  const fname = 'Invoice_'+invoiceNo.replace(/\//g,'-')+'_'+(o.customer_name||'Customer').replace(/\s+/g,'_')+'.pdf';
+  const fname = isPreview ? 'Invoice_PREVIEW.pdf' : `Invoice_${ref}.pdf`;
   doc.save(fname);
-  showToast('Invoice downloaded! File: '+fname, 'success');
+}
 
-  setTimeout(()=>{
-    const phone = o.customer_phone||o.mobile||'';
-    if(phone){
-      const clean = phone.replace(/\D/g,'').replace(/^91/,'');
-      const msg = 'Namaste '+(o.customer_name||'')+' ji!\n\nYour Invoice is ready.\nInvoice No: '+invoiceNo+'\nOrder Ref: '+ref+'\nAmount: Rs.'+Number(total).toLocaleString('en-IN')+'\nDue Date: '+dueDate+'\n\nPlease find the Invoice PDF in attachment.\n\nThank you!\n- Harsh CSC eMitra\n+91 70230 29903';
-      if(confirm('Invoice downloaded!\n\nSend WhatsApp message to customer?')){
-        window.open('https://wa.me/91'+clean+'?text='+encodeURIComponent(msg),'_blank');
-      }
-    }
-  }, 600);
+// Preview from settings
+function previewSampleInvoice() {
+  saveBillingSettings();
+  generateInvoice('PREVIEW', 'order', null, true);
+}
+
+// Generate invoice with settings (alias)
+function generateInvoiceWithSettings(ref, service, orderOverride, isPreview) {
+  generateInvoice(ref, service, orderOverride, isPreview);
 }
 
 // ══════════════════════════════════════════
