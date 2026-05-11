@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Cafe Panel — Harsh CSC eMitra</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -920,7 +920,20 @@ body {
 // ============ SUPABASE CONFIG ============
 const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc'; // <-- apni anon key yahan dalein
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Safe Supabase init — ye page standalone bhi kaam karega aur main site ke saath bhi
+let _supabase;
+(function() {
+  // Agar window.supabase available hai (CDN loaded) to use karo
+  if (window.supabase && window.supabase.createClient) {
+    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else {
+    // CDN load karo dynamically
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    s.onload = () => { _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); init(); };
+    document.head.appendChild(s);
+  }
+})();
 
 // ============ STATE ============
 let allUpdates = [];
@@ -953,7 +966,7 @@ async function loadBranding() {
     applyBranding();
   }
   // Phir Supabase se sync karo
-  const { data } = await supabase
+  const { data } = await _supabase
     .from('cafe_branding')
     .select('*')
     .eq('session_key', sessionKey)
@@ -1037,7 +1050,7 @@ async function saveBranding() {
   };
 
   // Save to Supabase
-  const { error } = await supabase
+  const { error } = await _supabase
     .from('cafe_branding')
     .upsert(newBranding, { onConflict: 'session_key' });
 
@@ -1131,13 +1144,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('input', updateLivePreview);
   });
 
-  init();
+  // Init sirf tab call karo jab _supabase ready ho
+  if (_supabase) init();
+  // Agar nahi hai to dynamic CDN load pe init call hoga
 });
 
 // ============ NEWS & UPDATES ============
 async function loadUpdates() {
   document.getElementById('last-updated-txt').textContent = 'Updating...';
-  const { data, error } = await supabase
+  const { data, error } = await _supabase
     .from('gov_updates')
     .select('*')
     .order('published_at', { ascending: false })
@@ -1340,7 +1355,7 @@ function downloadImage() {
 
 async function logShare(type) {
   if (!currentUpdate) return;
-  await supabase.from('share_logs').insert({
+  await _supabase.from('share_logs').insert({
     update_id: currentUpdate.id,
     session_key: sessionKey,
     share_type: type
