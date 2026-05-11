@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Cafe Panel — Harsh CSC eMitra</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -917,24 +919,15 @@ body {
 
 <script>
 // ============ SUPABASE CONFIG ============
-const SUPABASE_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
-
-// Conflict-free Supabase client
-// Naya variable naam use karo jo kisi se clash na kare
-var _ccpSB = null;
-function getCCPClient() {
-  if (_ccpSB) return _ccpSB;
-  if (window.supabase && window.supabase.createClient) {
-    _ccpSB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  }
-  return _ccpSB;
-}
-// Alias for backward compat in this file
-Object.defineProperty(window, '_supabase', {
-  get: function() { return getCCPClient(); },
-  configurable: true
-});
+const CCP_SB_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
+const CCP_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
+// Unique DB client - no conflicts
+var _ccpDB = (function() {
+  try {
+    return window.supabase.createClient(CCP_SB_URL, CCP_SB_KEY);
+  } catch(e) { return null; }
+})();
+function getCCPClient() { return _ccpDB; }
 
 // ============ STATE ============
 let allUpdates = [];
@@ -1145,7 +1138,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('input', updateLivePreview);
   });
 
-  init();
+  // Wait for supabase to init
+  setTimeout(function() {
+    if (!_ccpDB && window.supabase) {
+      _ccpDB = window.supabase.createClient(CCP_SB_URL, CCP_SB_KEY);
+    }
+    init();
+  }, 300);
 });
 
 // ============ NEWS & UPDATES ============
