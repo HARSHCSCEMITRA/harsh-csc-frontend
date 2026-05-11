@@ -1,11 +1,50 @@
-// /api/fetch-updates.js — ES Module format
-import { createClient } from '@supabase/supabase-js';
+// /api/fetch-updates.js
+// NO external packages — pure fetch() se Supabase REST API use karta hai
+// Vercel ES Module compatible
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// ── Supabase REST helpers ──────────────────────────────
+async function sbSelect(table, params = '') {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  return res.json();
+}
+
+async function sbInsert(table, data) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  return res.ok;
+}
+
+async function sbUpdate(table, match, data) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${match}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  return res.ok;
+}
+
+// ── Helpers ───────────────────────────────────────────
 function detectCategory(title = '') {
   const t = title.toLowerCase();
   if (t.match(/result|परिणाम/)) return 'result';
@@ -17,22 +56,22 @@ function detectCategory(title = '') {
 }
 
 function cleanHtml(str = '') {
-  return str.replace(/<[^>]+>/g, ' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+  return str.replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
 }
 
-function makeSummary(text = '', maxLen = 300) {
-  const clean = cleanHtml(text);
-  return clean.length > maxLen ? clean.substring(0, maxLen) + '...' : clean;
+function makeSummary(text = '', max = 300) {
+  const c = cleanHtml(text);
+  return c.length > max ? c.substring(0, max) + '...' : c;
 }
 
 async function isDuplicate(title, sourceId) {
-  const { data } = await supabase
-    .from('gov_updates').select('id')
-    .eq('title', title.substring(0, 200))
-    .eq('source_id', sourceId).limit(1);
-  return data && data.length > 0;
+  const data = await sbSelect('gov_updates',
+    `select=id&title=eq.${encodeURIComponent(title.substring(0,200))}&source_id=eq.${sourceId}&limit=1`
+  );
+  return Array.isArray(data) && data.length > 0;
 }
 
+// ── RSS Fetch ─────────────────────────────────────────
 async function fetchRSS(source) {
   try {
     const res = await fetch(source.url, {
@@ -71,11 +110,12 @@ async function fetchRSS(source) {
     }
     return items.slice(0, 25);
   } catch (e) {
-    console.error(`RSS failed: ${source.url}`, e.message);
+    console.error(`RSS failed: ${source.name}`, e.message);
     return [];
   }
 }
 
+// ── Telegram Fetch ────────────────────────────────────
 async function fetchTelegram(source) {
   try {
     const url = source.url.includes('/s/') ? source.url : source.url.replace('t.me/', 't.me/s/');
@@ -95,8 +135,7 @@ async function fetchTelegram(source) {
       const lines = text.split('\n').filter(l => l.trim().length > 4);
       const title = lines[0]?.substring(0, 200) || text.substring(0, 100);
       items.push({
-        title,
-        summary: lines.slice(1).join(' ').substring(0, 300),
+        title, summary: lines.slice(1).join(' ').substring(0, 300),
         full_content: text.substring(0, 3000),
         original_url: allLinks[i]?.[1] || url,
         category: source.category !== 'other' ? source.category : detectCategory(title),
@@ -108,11 +147,12 @@ async function fetchTelegram(source) {
     });
     return items;
   } catch (e) {
-    console.error(`Telegram failed: ${source.url}`, e.message);
+    console.error(`Telegram failed: ${source.name}`, e.message);
     return [];
   }
 }
 
+// ── Google Doc Fetch ──────────────────────────────────
 async function fetchGoogleDoc(source) {
   try {
     const res = await fetch(source.url, {
@@ -141,29 +181,31 @@ async function fetchGoogleDoc(source) {
     });
     return items;
   } catch (e) {
-    console.error(`GoogleDoc failed: ${source.url}`, e.message);
+    console.error(`GoogleDoc failed: ${source.name}`, e.message);
     return [];
   }
 }
 
+// ── Main Handler ──────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   const secret = req.headers['x-cron-secret'] || req.query.secret;
   if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+  if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Supabase env vars missing' });
 
   const results = { rss: 0, telegram: 0, google_doc: 0, total: 0, errors: [] };
 
   try {
-    const { data: sources, error: srcErr } = await supabase
-      .from('gov_sources').select('*').eq('is_active', true);
-    if (srcErr) throw srcErr;
-    if (!sources?.length) return res.status(200).json({ message: 'No active sources', results });
+    const sources = await sbSelect('gov_sources', 'is_active=eq.true');
+    if (!Array.isArray(sources) || sources.length === 0) {
+      return res.status(200).json({ message: 'No active sources', results });
+    }
 
     for (const source of sources) {
       let items = [];
       try {
-        if (source.source_type === 'rss') items = await fetchRSS(source);
-        else if (source.source_type === 'telegram') items = await fetchTelegram(source);
+        if (source.source_type === 'rss')             items = await fetchRSS(source);
+        else if (source.source_type === 'telegram')   items = await fetchTelegram(source);
         else if (source.source_type === 'google_doc') items = await fetchGoogleDoc(source);
         else continue;
       } catch(e) {
@@ -172,17 +214,19 @@ export default async function handler(req, res) {
       }
 
       for (const item of items) {
-        if (await isDuplicate(item.title, source.id)) continue;
-        const { error } = await supabase.from('gov_updates').insert(item);
-        if (!error) {
-          results[source.source_type === 'google_doc' ? 'google_doc' : source.source_type]++;
-          results.total++;
-        }
+        try {
+          if (await isDuplicate(item.title, source.id)) continue;
+          const ok = await sbInsert('gov_updates', item);
+          if (ok) {
+            results[source.source_type === 'google_doc' ? 'google_doc' : source.source_type]++;
+            results.total++;
+          }
+        } catch(e) { /* skip single item error */ }
       }
 
-      await supabase.from('gov_sources')
-        .update({ last_fetched_at: new Date().toISOString() })
-        .eq('id', source.id);
+      await sbUpdate('gov_sources', `id=eq.${source.id}`, {
+        last_fetched_at: new Date().toISOString()
+      });
     }
 
     return res.status(200).json({ success: true, results, timestamp: new Date().toISOString() });
