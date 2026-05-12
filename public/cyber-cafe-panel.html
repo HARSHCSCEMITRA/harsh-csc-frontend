@@ -1290,32 +1290,27 @@ function switchTab(tab, btn) {
   if (tab === 'image') generateImage();
 }
 
-function buildTextPreview(hindiText = null) {
+function buildTextPreview(hindiText) {
   if (!currentUpdate) return;
-  const u = currentUpdate;
-  const b = branding;
-  const emoji = catEmoji[u.category] || '📢';
-  const title = hindiText ? hindiText.title : u.title;
-  const summary = hindiText ? hindiText.summary : (u.summary || '');
+  var u = currentUpdate;
+  var b = branding;
+  var emoji = catEmoji[u.category] || "📢";
+  var title = hindiText ? hindiText.title : u.title;
+  var summary = hindiText ? hindiText.summary : (u.summary || "");
+  var cafeName = b.cafe_name || "Harsh CSC eMitra";
+  var loc = (b.city ? "📍 " + b.city : "") + (b.phone ? "  📞 " + b.phone : "");
+  var footer = b.footer_line || "Aur updates ke liye apne najdeeki eMitra se mile";
+  var sep = "━━━━━━━━━━━━━━";
 
-  const msg =
-    `${emoji} *${title}*
+  var msg = emoji + " *" + title + "*\n\n" +
+    (summary ? summary + "\n\n" : "") +
+    sep + "\n" +
+    "🏢 *" + cafeName + "*\n" +
+    loc + "\n" +
+    sep + "\n" +
+    "_" + footer + "_";
 
-` +
-    (summary ? `${summary}
-
-` : '') +
-    `━━━━━━━━━━━━━━
-` +
-    `🏢 *${b.cafe_name || 'Harsh CSC eMitra'}*
-` +
-    (b.city ? `📍 ${b.city}` : '') + (b.phone ? `  📞 ${b.phone}` : '') + '
-' +
-    `━━━━━━━━━━━━━━
-` +
-    `_${b.footer_line || 'Aur updates ke liye apne najdeeki eMitra se mile'}_`;
-
-  document.getElementById('text-preview-content').textContent = msg;
+  document.getElementById("text-preview-content").textContent = msg;
 }
 
 
