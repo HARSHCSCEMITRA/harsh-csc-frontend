@@ -1459,17 +1459,15 @@ async function translateToHindi(btn) {
     if (parsed.error) throw new Error(parsed.error);
     buildTextPreview(parsed);
     // Image card bhi Hindi mein update karo
+    
+    // Image card Hindi mein update karo
     document.getElementById('img-title').textContent = parsed.title || currentUpdate.title;
     document.getElementById('img-summary').textContent = parsed.summary || currentUpdate.summary || '';
-    document.getElementById('img-badge').textContent = (catLabel[currentUpdate.category] || currentUpdate.category).toUpperCase();
-    // Regenerate image with Hindi text
     statusEl.style.display = 'none';
     previewEl.style.opacity = '1';
     showToast('🇮🇳 Hindi mein translate ho gaya!', 'green');
-    // Agar image tab already open hai to regenerate karo
-    if (document.getElementById('tab-image').classList.contains('active')) {
-      generateImage();
-    }
+    // Image bhi auto Hindi mein generate karo
+    setTimeout(generateImage, 400);
   } catch(e) {
     statusEl.textContent = '❌ Translation fail. Dobara try karein.';
     statusEl.style.color = 'red';
@@ -1505,8 +1503,12 @@ async function generateImage() {
   if (!currentUpdate) return;
   document.getElementById('img-placeholder').style.display = 'flex';
   document.getElementById('generated-img').style.display = 'none';
-  updateImageCard();
-  await new Promise(r => setTimeout(r, 200));
+  // Hindi text already set hai to updateImageCard mat karo
+  const imgTitle = document.getElementById('img-title');
+  if (!imgTitle || imgTitle.textContent === currentUpdate.title) {
+    updateImageCard();
+  }
+  await new Promise(r => setTimeout(r, 300));
   try {
     const card = document.getElementById('shareImageCard');
     const canvas = await html2canvas(card, { scale: 2, useCORS: true, backgroundColor: null });
@@ -1565,18 +1567,18 @@ function filterByState(state) {
 }
 
 // State keywords mapping
-// State keywords — word boundary matching for accuracy
+// State keywords — simple includes matching
 const stateKeywords = {
-  rajasthan: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','raj high court','jaipur','jodhpur','bikaner','kota','ajmer','udaipur rajasthan','rajasthan police','rajasthan board'],
-  up: ['uttar pradesh','uppsc','upsssc','upmsp','up police','up board','lucknow','kanpur','varanasi','prayagraj','up lekhpal'],
-  mp: ['madhya pradesh','mppsc','mptet','mp police','mp board','bhopal','indore','gwalior','jabalpur'],
-  bihar: ['bihar','bpsc','bssc','bihar police','bihar board','patna','muzaffarpur','bhagalpur'],
-  gujarat: ['gujarat','gpsc','gsssb','gujarat police','ahmedabad','surat','vadodara','rajkot'],
+  rajasthan: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','jaipur','jodhpur','bikaner','kota','ajmer','udaipur','alwar','sikar','bharatpur','chittorgarh','jhunjhunu','nagaur','pali','barmer','jaisalmer','bundi','tonk','sawai madhopur','karauli','dholpur','dausa'],
+  up: ['uttar pradesh','uppsc','upsssc','up police','up board','lucknow','kanpur','varanasi','prayagraj','agra','meerut','allahabad','gorakhpur','aligarh','bareilly'],
+  mp: ['madhya pradesh','mppsc','mptet','mp police','bhopal','indore','gwalior','jabalpur','ujjain'],
+  bihar: ['bihar','bpsc','bssc','bihar police','patna','muzaffarpur','bhagalpur','gaya','darbhanga'],
+  gujarat: ['gujarat','gpsc','gsssb','ahmedabad','surat','vadodara','rajkot','bhavnagar','gandhinagar'],
   maharashtra: ['maharashtra','mpsc','mahapariksha','mumbai','pune','nagpur','nashik','aurangabad'],
-  punjab: ['punjab','ppsc','psssb','punjab police','chandigarh','ludhiana','amritsar','jalandhar'],
-  haryana: ['haryana','hpsc','hssc','haryana police','gurugram','faridabad','hisar','rohtak'],
-  delhi: ['delhi','dsssb','ndmc','dmrc','delhi police','delhi university','new delhi'],
-  karnataka: ['karnataka','kpsc','kssb','bengaluru','bangalore','mysuru','hubli'],
+  punjab: ['punjab','ppsc','psssb','chandigarh','ludhiana','amritsar','jalandhar','patiala'],
+  haryana: ['haryana','hpsc','hssc','gurugram','faridabad','hisar','rohtak','panipat','ambala','karnal'],
+  delhi: ['delhi','dsssb','ndmc','dmrc','new delhi'],
+  karnataka: ['karnataka','kpsc','bengaluru','bangalore','mysuru','hubli'],
   tamil_nadu: ['tamil nadu','tnpsc','tneb','chennai','coimbatore','madurai','trichy'],
   other_state: [],
 };
@@ -1586,18 +1588,8 @@ function matchesScope(update) {
   if (!currentState || currentState === '') return true;
   const keywords = stateKeywords[currentState] || [];
   if (keywords.length === 0) return true;
-  const text = (
-    (update.title || '') + ' ' + 
-    (update.summary || '') + ' ' + 
-    (update.source_name || '')
-  ).toLowerCase();
-  // Strict matching — full word/phrase match
-  return keywords.some(kw => {
-    if (kw.includes(' ')) return text.includes(kw); // phrase match
-    // Word boundary check — avoid partial matches like 'raj' in 'rajkot'
-    const regex = new RegExp('\\b' + kw + '\\b', 'i');
-    return regex.test(text);
-  });
+  const text = ((update.title || '') + ' ' + (update.summary || '') + ' ' + (update.source_name || '')).toLowerCase();
+  return keywords.some(kw => text.includes(kw));
 }
 
 // Days filter — default 30 din
