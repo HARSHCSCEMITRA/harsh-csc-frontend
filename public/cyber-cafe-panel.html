@@ -932,13 +932,13 @@ body {
       <div class="form-group">
         <label class="form-label">Category *</label>
         <select class="form-input" id="src-category">
-          <option value="exam">Exam</option>
-          <option value="result">Result</option>
-          <option value="admit_card">Admit Card</option>
-          <option value="yojana">Yojana</option>
-          <option value="admission">Admission</option>
-          <option value="news">News</option>
-          <option value="other">Other</option>
+          <option value="other">🤖 Auto Detect (Recommended)</option>
+          <option value="exam">📋 Exam</option>
+          <option value="result">🏆 Result</option>
+          <option value="admit_card">📄 Admit Card</option>
+          <option value="yojana">🏛️ Yojana</option>
+          <option value="admission">🎓 Admission</option>
+          <option value="news">📰 News</option>
         </select>
       </div>
       <div class="form-group" style="display:flex;align-items:flex-end;">
@@ -1600,7 +1600,7 @@ async function loadSources() {
         <div class="s-name">${s.name}</div>
         <div class="s-url">${s.url}</div>
         <div class="s-meta">
-          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category}</span>
+          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category === 'other' ? '🤖 auto' : s.category}</span>
           ${s.last_fetched_at ? '&nbsp; Last fetch: ' + timeAgo(s.last_fetched_at) : '&nbsp; Never fetched'}
         </div>
       </div>
@@ -1623,10 +1623,22 @@ async function addSource() {
   if (!name || !url) { showToast('❌ Name aur URL zaroori hai'); return; }
   if (!url.startsWith('http')) { showToast('❌ URL https:// se shuru honi chahiye'); return; }
 
-  // Telegram URL fix
-  let finalUrl = url;
-  if (type === 'telegram' && url.includes('t.me/') && !url.includes('/s/')) {
-    finalUrl = url.replace('t.me/', 't.me/s/');
+  // URL fixes
+  let finalUrl = url.trim();
+  if (type === 'telegram') {
+    // t.me/channel -> t.me/s/channel
+    if (finalUrl.includes('t.me/') && !finalUrl.includes('/s/')) {
+      finalUrl = finalUrl.replace('https://t.me/', 'https://t.me/s/');
+      finalUrl = finalUrl.replace('http://t.me/', 'https://t.me/s/');
+    }
+    // Sirf channel name diya ho to
+    if (!finalUrl.startsWith('http')) {
+      finalUrl = 'https://t.me/s/' + finalUrl.replace('@','');
+    }
+  }
+  // RSS feed URL mein trailing slash
+  if (type === 'rss' && !finalUrl.endsWith('/') && !finalUrl.includes('?')) {
+    // dont add slash
   }
 
   const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources', {
@@ -1637,7 +1649,14 @@ async function addSource() {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     },
-    body: JSON.stringify({ name, url: finalUrl, source_type: type, category: cat, is_active: true })
+    body: JSON.stringify({ 
+      name, 
+      url: finalUrl, 
+      source_type: type, 
+      // Telegram/multi-category sources ke liye 'other' rakho — fetch time auto-detect hoga
+      category: cat === 'other' ? 'other' : cat, 
+      is_active: true 
+    })
   });
 
   if (res.ok) {
