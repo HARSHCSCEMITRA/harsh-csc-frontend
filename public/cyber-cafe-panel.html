@@ -993,7 +993,11 @@ async function loadBranding() {
     branding = data;
     localStorage.setItem('cafe_branding', JSON.stringify(data));
     applyBranding();
-    fillBrandingForm();
+    // Sirf pehli baar form fill karo — user edit kar raha ho tab nahi
+    if (!window._brandingLoaded) {
+      window._brandingLoaded = true;
+      fillBrandingForm();
+    }
   } else {
     // First time — default values
     branding = {
@@ -1075,6 +1079,7 @@ async function saveBranding() {
   if (!error) {
     branding = newBranding;
     localStorage.setItem('cafe_branding', JSON.stringify(newBranding));
+    window._brandingLoaded = true; // prevent reload overwrite
     applyBranding();
     const msg = document.getElementById('branding-save-msg');
     msg.style.display = 'inline';
@@ -1344,14 +1349,18 @@ async function translateToHindi(btn) {
     const parsed = await response.json();
     if (parsed.error) throw new Error(parsed.error);
     buildTextPreview(parsed);
-    // Image card bhi Hindi mein
-    const titleEl = document.getElementById('img-title');
-    const summaryEl = document.getElementById('img-summary');
-    if (titleEl) titleEl.textContent = parsed.title || currentUpdate.title;
-    if (summaryEl) summaryEl.textContent = parsed.summary || currentUpdate.summary || '';
+    // Image card bhi Hindi mein update karo
+    document.getElementById('img-title').textContent = parsed.title || currentUpdate.title;
+    document.getElementById('img-summary').textContent = parsed.summary || currentUpdate.summary || '';
+    document.getElementById('img-badge').textContent = (catLabel[currentUpdate.category] || currentUpdate.category).toUpperCase();
+    // Regenerate image with Hindi text
     statusEl.style.display = 'none';
     previewEl.style.opacity = '1';
     showToast('🇮🇳 Hindi mein translate ho gaya!', 'green');
+    // Agar image tab already open hai to regenerate karo
+    if (document.getElementById('tab-image').classList.contains('active')) {
+      generateImage();
+    }
   } catch(e) {
     statusEl.textContent = '❌ Translation fail. Dobara try karein.';
     statusEl.style.color = 'red';
