@@ -1,50 +1,39 @@
 // /api/translate.js
-// Vercel API route — Anthropic API proxy for Hindi translation
-// Browser se direct Anthropic call nahi ho sakti (CORS) — ye route proxy hai
+// MyMemory Free Translation API — No API key, No cost
+// 1000 requests/day free — enough for eMitra use
 
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { title, summary } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
 
+  async function translateText(text) {
+    if (!text || text.trim().length === 0) return '';
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|hi`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.responseStatus === 200) {
+      return data.responseData.translatedText || text;
+    }
+    return text;
+  }
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: `Translate to simple Hindi (Devanagari). Return ONLY valid JSON with "title" and "summary" keys. No markdown, no explanation.
+    // Title aur summary alag alag translate karo
+    const [translatedTitle, translatedSummary] = await Promise.all([
+      translateText(title),
+      translateText(summary || '')
+    ]);
 
-Title: ${title}
-Summary: ${summary || ''}
-
-JSON:`
-        }]
-      })
+    return res.status(200).json({
+      title: translatedTitle,
+      summary: translatedSummary
     });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API error');
-    
-    const rawText = data.content?.[0]?.text || '';
-    const cleaned = rawText.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
-    
-    return res.status(200).json(parsed);
   } catch (e) {
     console.error('Translate error:', e.message);
     return res.status(500).json({ error: e.message });
