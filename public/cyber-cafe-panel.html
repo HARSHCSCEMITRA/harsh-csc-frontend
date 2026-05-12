@@ -613,6 +613,32 @@ body {
 }
 
 /* ---- TOAST ---- */
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: var(--card);
+}
+.source-row:hover { border-color: var(--primary); }
+.source-info { flex: 1; min-width: 0; }
+.source-info .s-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.source-info .s-url { font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.source-info .s-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
+.source-toggle {
+  width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer;
+  transition: background 0.2s; position: relative; flex-shrink: 0;
+}
+.source-toggle.on { background: var(--success); }
+.source-toggle.off { background: #ccc; }
+.source-del {
+  background: none; border: 1px solid #ffcdd2; color: #e53935;
+  border-radius: 7px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+}
+.source-del:hover { background: #ffebee; }
 .toast {
   position: fixed;
   bottom: 24px;
@@ -675,6 +701,11 @@ body {
     <div class="nav-item" onclick="showPage('branding')">
       <span class="nav-icon">🎨</span>
       <span>Branding Settings</span>
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('sources')">
+      <span class="nav-icon">🔗</span>
+      <span>Source Manager</span>
     </div>
     <div class="nav-section">Coming Soon</div>
     <div class="nav-item" style="opacity:0.4;cursor:not-allowed">
@@ -869,6 +900,60 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- SOURCE MANAGER PAGE -->
+<div class="page" id="page-sources">
+  <div class="section-card">
+    <h4>🔗 Source Add Karo</h4>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Source Name *</label>
+        <input class="form-input" id="src-name" placeholder="e.g. RPSC Official">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source Type *</label>
+        <select class="form-input" id="src-type" onchange="toggleSourceHelp(this.value)">
+          <option value="rss">RSS Feed</option>
+          <option value="telegram">Telegram Channel</option>
+          <option value="google_doc">Google Doc (Published)</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">URL *</label>
+        <input class="form-input" id="src-url" placeholder="https://...">
+        <div id="src-help" style="font-size:11px;color:#888;margin-top:4px;">
+          RSS: Feed URL daalo (e.g. https://site.com/feed/)<br>
+          Telegram: https://t.me/s/channelname format mein daalo<br>
+          Google Doc: File > Share > Publish to web > URL copy karo
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-input" id="src-category">
+          <option value="exam">Exam</option>
+          <option value="result">Result</option>
+          <option value="admit_card">Admit Card</option>
+          <option value="yojana">Yojana</option>
+          <option value="admission">Admission</option>
+          <option value="news">News</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;">
+        <button class="save-btn" onclick="addSource()" style="width:100%;justify-content:center;">
+          ➕ Source Add Karo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>📋 Active Sources <span id="src-count" style="font-size:12px;color:#888;font-weight:400;"></span></h4>
+    <div id="sources-list">
+      <div style="text-align:center;padding:20px;color:#aaa;">Loading sources...</div>
+    </div>
   </div>
 </div>
 
@@ -1489,12 +1574,128 @@ function renderFilteredNews() {
   renderNews(data);
 }
 
+// ── SOURCE MANAGER ─────────────────────────────────
+async function loadSources() {
+  const list = document.getElementById('sources-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Loading...</div>';
+
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=*&order=created_at.desc', {
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  const sources = await res.json();
+
+  document.getElementById('src-count').textContent = '(' + sources.length + ' sources)';
+
+  if (!sources.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Koi source nahi. Upar se add karo.</div>';
+    return;
+  }
+
+  const typeIcon = { rss: '📡', telegram: '✈️', google_doc: '📄', manual: '✏️' };
+  list.innerHTML = sources.map(s => `
+    <div class="source-row" id="src-row-${s.id}">
+      <div style="font-size:22px;">${typeIcon[s.source_type] || '🔗'}</div>
+      <div class="source-info">
+        <div class="s-name">${s.name}</div>
+        <div class="s-url">${s.url}</div>
+        <div class="s-meta">
+          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category}</span>
+          ${s.last_fetched_at ? '&nbsp; Last fetch: ' + timeAgo(s.last_fetched_at) : '&nbsp; Never fetched'}
+        </div>
+      </div>
+      <button class="source-toggle ${s.is_active ? 'on' : 'off'}" 
+        onclick="toggleSource('${s.id}', ${s.is_active})" 
+        title="${s.is_active ? 'Active — click to disable' : 'Disabled — click to enable'}">
+        ${s.is_active ? '✓' : '✗'}
+      </button>
+      <button class="source-del" onclick="deleteSource('${s.id}', '${s.name}')">🗑️</button>
+    </div>
+  `).join('');
+}
+
+async function addSource() {
+  const name = document.getElementById('src-name').value.trim();
+  const url  = document.getElementById('src-url').value.trim();
+  const type = document.getElementById('src-type').value;
+  const cat  = document.getElementById('src-category').value;
+
+  if (!name || !url) { showToast('❌ Name aur URL zaroori hai'); return; }
+  if (!url.startsWith('http')) { showToast('❌ URL https:// se shuru honi chahiye'); return; }
+
+  // Telegram URL fix
+  let finalUrl = url;
+  if (type === 'telegram' && url.includes('t.me/') && !url.includes('/s/')) {
+    finalUrl = url.replace('t.me/', 't.me/s/');
+  }
+
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources', {
+    method: 'POST',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ name, url: finalUrl, source_type: type, category: cat, is_active: true })
+  });
+
+  if (res.ok) {
+    showToast('✅ Source add ho gaya!', 'green');
+    document.getElementById('src-name').value = '';
+    document.getElementById('src-url').value = '';
+    loadSources();
+  } else {
+    showToast('❌ Add nahi hua. Dobara try karo.');
+  }
+}
+
+async function toggleSource(id, currentState) {
+  await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ is_active: !currentState })
+  });
+  loadSources();
+  showToast(currentState ? '⏸️ Source disabled' : '▶️ Source enabled', 'green');
+}
+
+async function deleteSource(id, name) {
+  if (!confirm(name + ' delete karna chahte ho?')) return;
+  await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  showToast('🗑️ Source delete ho gaya', 'green');
+  loadSources();
+}
+
+function toggleSourceHelp(type) {
+  const help = document.getElementById('src-help');
+  const urlInput = document.getElementById('src-url');
+  if (type === 'rss') {
+    help.innerHTML = '📡 RSS Feed URL daalo — e.g. https://www.sarkariresult.com/feed/';
+    urlInput.placeholder = 'https://site.com/feed/';
+  } else if (type === 'telegram') {
+    help.innerHTML = '✈️ Telegram public channel URL — e.g. https://t.me/s/channelname (channel public hona chahiye)';
+    urlInput.placeholder = 'https://t.me/s/channelname';
+  } else if (type === 'google_doc') {
+    help.innerHTML = '📄 Google Doc > File > Share > Publish to web > Link copy karo';
+    urlInput.placeholder = 'https://docs.google.com/document/d/.../pub';
+  }
+}
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   event.currentTarget.classList.add('active');
-  const titles = { news: '📰 News & Updates', branding: '🎨 Branding Settings' };
+  const titles = { news: '📰 News & Updates', branding: '🎨 Branding Settings', sources: '🔗 Source Manager' };
+  if (name === 'sources') loadSources();
   document.getElementById('page-title').textContent = titles[name] || name;
 }
 
