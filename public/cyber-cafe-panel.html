@@ -1981,12 +1981,12 @@ function openSourceFile(url, name, updateJson) {
   const isImg = ext.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
 
   if (isImg) {
-    preview.innerHTML = '<img src="' + url + '" alt="source image" onerror="this.parentElement.innerHTML='<div class=file-icon>🖼️</div><div class=file-name>Image load nahi hui — Download karo</div>'">';
+    preview.innerHTML = '<img src="' + url + '" alt="source image" onerror="this.parentElement.innerHTML=&apos;<div class=file-icon>🖼️</div><div class=file-name>Image load nahi hui — Download karo</div>&apos;">';
   } else if (isPdf) {
     preview.innerHTML = '<div class="file-icon">📄</div><div class="file-name">PDF File<br><small>' + (name || url.split('/').pop()) + '</small></div>';
   } else {
     // Try as image first
-    preview.innerHTML = '<img src="' + url + '" alt="source" style="max-width:100%;max-height:280px;" onerror="this.parentElement.innerHTML='<div class=file-icon>🔗</div><div class=file-name>File preview available nahi — Download karke dekho</div>'">';
+    preview.innerHTML = '<img src="' + url + '" alt="source" style="max-width:100%;max-height:280px;" onerror="this.parentElement.innerHTML=&apos;<div class=file-icon>🔗</div><div class=file-name>File preview available nahi — Download karke dekho</div>&apos;">';
   }
 
   // Check mobile share support
