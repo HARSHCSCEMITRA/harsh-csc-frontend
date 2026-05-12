@@ -5,79 +5,2111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Cafe Panel — Harsh CSC eMitra</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ... (Aapka vohi CSS jo pehle tha, maine koi badlav nahi kiya) ... */
-:root { --primary: #1a237e; --accent: #ff6f00; --bg: #f0f2f8; --card: #ffffff; --text: #1a1a2e; --muted: #5c6bc0; --border: #e0e4f7; --sidebar-w: 220px; }
+:root {
+  --primary: #1a237e;
+  --primary-light: #283593;
+  --accent: #ff6f00;
+  --accent-light: #ff8f00;
+  --bg: #f0f2f8;
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --muted: #5c6bc0;
+  --border: #e0e4f7;
+  --success: #2e7d32;
+  --danger: #c62828;
+  --sidebar-w: 220px;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
-.sidebar { width: var(--sidebar-w); background: var(--primary); min-height: 100vh; position: fixed; left: 0; z-index: 100; }
-.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
-.page { display: none; padding: 20px; } .page.active { display: block; }
-/* ... (Baki saara original CSS yahan integrated hai) ... */
+body {
+  font-family: 'Noto Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo .logo-name {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  line-height: 1.2;
+}
+.sidebar-logo .logo-tag {
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
+}
+.sidebar-logo .panel-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-top: 6px;
+  letter-spacing: 0.03em;
+}
+.nav { flex: 1; padding: 10px 0; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-item.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border-left-color: var(--accent);
+}
+.nav-item .nav-icon { font-size: 17px; width: 20px; text-align: center; }
+.nav-section {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  padding: 10px 18px 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ---- MAIN ---- */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.refresh-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.15s;
+}
+.refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
+.last-updated {
+  font-size: 11px;
+  color: #999;
+}
+
+/* ---- CONTENT AREA ---- */
+.content { padding: 20px 24px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ---- STATS ROW ---- */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.stat-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+.stat-value { font-size: 22px; font-weight: 700; color: var(--text); font-family: 'Baloo 2', cursive; }
+
+/* ---- FILTER BAR ---- */
+.filter-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.15s;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.filter-search {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+.filter-search input {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  width: 160px;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* ---- NEWS CARDS ---- */
+.news-grid { display: flex; flex-direction: column; gap: 10px; }
+.news-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.news-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px rgba(26,35,126,0.08);
+}
+.news-card.important {
+  border-left: 3px solid var(--accent);
+}
+.news-cat-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.news-body { flex: 1; min-width: 0; }
+.news-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+.news-summary {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cat-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+.cat-exam    { background: #e8f5e9; color: #2e7d32; }
+.cat-result  { background: #e3f2fd; color: #1565c0; }
+.cat-admit_card { background: #fff3e0; color: #e65100; }
+.cat-yojana  { background: #ede7f6; color: #4527a0; }
+.cat-admission { background: #fce4ec; color: #880e4f; }
+.cat-news    { background: #e0f7fa; color: #006064; }
+.cat-other   { background: #f5f5f5; color: #424242; }
+.news-source {
+  font-size: 11px;
+  color: #999;
+}
+.news-time { font-size: 11px; color: #bbb; margin-left: auto; }
+.news-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--muted);
+  white-space: nowrap;
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: var(--bg); }
+.action-btn.wa { border-color: #25d366; color: #25d366; }
+.action-btn.wa:hover { background: #f0fdf4; }
+.action-btn.img { border-color: var(--accent); color: var(--accent); }
+.action-btn.img:hover { background: #fff8e1; }
+.source-link {
+  font-size: 10px;
+  color: var(--primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+.source-link:hover { text-decoration: underline; }
+
+/* ---- SHARE MODAL ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  padding: 0;
+}
+.modal-body { padding: 16px 20px; }
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.modal-tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.15s;
+  color: var(--muted);
+}
+.modal-tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.text-preview {
+  background: #f8f9ff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  font-family: 'Noto Sans', sans-serif;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+}
+.modal-btn {
+  flex: 1;
+  padding: 9px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans', sans-serif;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.modal-btn.wa { background: #25d366; border-color: #25d366; color: #fff; }
+.modal-btn.copy { background: var(--bg); color: var(--text); }
+.modal-btn.copy:hover { background: var(--border); }
+
+/* ---- IMAGE CARD (for html2canvas) ---- */
+#shareImageCard {
+  width: 480px;
+  background: #0f2347;
+  border-radius: 16px;
+  overflow: hidden;
+  font-family: 'Noto Sans', sans-serif;
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+.img-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 3px solid #e8a020;
+}
+.img-logo-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  color: #0f2347;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.img-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+.img-brand-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.3; }
+.img-brand-tag { font-size: 10px; color: rgba(255,255,255,0.55); }
+.img-body { padding: 16px 18px; }
+.img-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+.img-title { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.5; margin-bottom: 10px; }
+.img-summary { color: rgba(255,255,255,0.7); font-size: 12px; line-height: 1.65; margin-bottom: 12px; }
+.img-divider { height: 1px; background: rgba(255,255,255,0.12); margin-bottom: 12px; }
+.img-meta { display: flex; justify-content: space-between; align-items: center; }
+.img-source { font-size: 10px; color: rgba(255,255,255,0.5); }
+.img-source span { font-weight: 600; }
+.img-date { font-size: 10px; color: rgba(255,255,255,0.5); }
+.img-footer {
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.img-footer-left { font-size: 10px; color: rgba(255,255,255,0.5); }
+.img-footer-right { font-size: 11px; font-weight: 700; }
+
+.img-preview-box {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.img-preview-box img { width: 100%; display: block; }
+.img-placeholder {
+  background: var(--bg);
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 13px;
+}
+
+/* ---- BRANDING PAGE ---- */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.form-input {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--card);
+  font-family: 'Noto Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus { border-color: var(--primary); }
+.color-row { display: flex; align-items: center; gap: 8px; }
+.color-row input[type=color] {
+  width: 40px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  cursor: pointer;
+}
+.logo-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.logo-upload-area:hover { border-color: var(--primary); }
+.logo-preview {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin: 0 auto 8px;
+  display: block;
+}
+.save-btn {
+  padding: 11px 28px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Baloo 2', cursive;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.save-btn:hover { background: var(--primary-light); }
+.save-btn.saved { background: var(--success); }
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.section-card h4 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- TOAST ---- */
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: var(--card);
+}
+.source-row:hover { border-color: var(--primary); }
+.source-info { flex: 1; min-width: 0; }
+.source-info .s-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.source-info .s-url { font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.source-info .s-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
+.source-toggle {
+  width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer;
+  transition: background 0.2s; position: relative; flex-shrink: 0;
+}
+.source-toggle.on { background: var(--success); }
+.source-toggle.off { background: #ccc; }
+.source-del {
+  background: none; border: 1px solid #ffcdd2; color: #e53935;
+  border-radius: 7px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+}
+.source-del:hover { background: #ffebee; }
+.action-btn.src-btn {
+  border-color: #7b1fa2;
+  color: #7b1fa2;
+}
+.action-btn.src-btn:hover { background: #f3e5f5; }
+.source-file-preview {
+  background: #f8f9ff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+.source-file-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.source-file-preview .file-icon {
+  font-size: 48px;
+}
+.source-file-preview .file-name {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  padding: 0 10px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--text);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.green { background: var(--success); }
+
+/* ---- LOADING ---- */
+.skeleton {
+  background: linear-gradient(90deg, #e0e4f7 25%, #eef0fa 50%, #e0e4f7 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaa;
+  font-size: 14px;
+}
+.empty-state .big { font-size: 40px; margin-bottom: 10px; }
+
+@media(max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar-logo .logo-name, .sidebar-logo .logo-tag, .sidebar-logo .panel-badge, .nav-item span, .nav-section { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .main { margin-left: 60px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
+<!-- SIDEBAR -->
 <nav class="sidebar">
-  <div class="sidebar-logo" style="padding: 20px; color: white;">
-    <div style="font-family: 'Baloo 2'; font-weight: 700; font-size: 18px;">Harsh CSC eMitra</div>
-    <div style="font-size: 10px; opacity: 0.6;">Cyber Cafe Panel</div>
+  <div class="sidebar-logo">
+    <div class="logo-name" id="sb-cafe-name">Harsh CSC eMitra</div>
+    <div class="logo-tag">Digital Experts & Docs</div>
+    <div class="panel-badge">Cyber Cafe Panel</div>
   </div>
   <div class="nav">
-    <div class="nav-item active" onclick="showPage('news')"><span>📰</span> News & Updates</div>
-    <div class="nav-item" onclick="showPage('branding')"><span>🎨</span> Branding Settings</div>
-    <div class="nav-item" onclick="showPage('sources')"><span>🔗</span> Source Manager</div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('news')">
+      <span class="nav-icon">📰</span>
+      <span>News & Updates</span>
+    </div>
+    <div class="nav-item" onclick="showPage('branding')">
+      <span class="nav-icon">🎨</span>
+      <span>Branding Settings</span>
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('sources')">
+      <span class="nav-icon">🔗</span>
+      <span>Source Manager</span>
+    </div>
+    <div class="nav-section">Coming Soon</div>
+    <div class="nav-item" style="opacity:0.4;cursor:not-allowed">
+      <span class="nav-icon">📋</span>
+      <span>Services</span>
+    </div>
+    <div class="nav-item" style="opacity:0.4;cursor:not-allowed">
+      <span class="nav-icon">📁</span>
+      <span>Documents</span>
+    </div>
+    <div class="nav-item" style="opacity:0.4;cursor:not-allowed">
+      <span class="nav-icon">📊</span>
+      <span>Orders</span>
+    </div>
   </div>
+  <div class="sidebar-footer">v1.0 — harshcscemitra</div>
 </nav>
 
+<!-- MAIN AREA -->
 <div class="main">
-  <div id="page-news" class="page active">
-    <div class="filter-bar" style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-       <button class="filter-btn active" onclick="filterNews('all', this)">Sabhi</button>
-       </div>
-    <div id="news-grid" class="news-grid">Loading updates...</div>
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">📰 News & Updates</div>
+    <div class="topbar-right">
+      <span class="last-updated" id="last-updated-txt">Loading...</span>
+      <button class="refresh-btn" onclick="loadUpdates()">🔄 Refresh</button>
+      <a href="/" style="font-size:12px;color:var(--muted);text-decoration:none;">← Main site</a>
+    </div>
   </div>
 
+  <div class="content">
+
+    <!-- ===== NEWS PAGE ===== -->
+    <div class="page active" id="page-news">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e8f5e9;">📋</div>
+          <div><div class="stat-label">Aaj ki updates</div><div class="stat-value" id="stat-today">-</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e3f2fd;">🏆</div>
+          <div><div class="stat-label">Exam notifications</div><div class="stat-value" id="stat-exam">-</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fff3e0;">📄</div>
+          <div><div class="stat-label">Results</div><div class="stat-value" id="stat-result">-</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede7f6;">🏛️</div>
+          <div><div class="stat-label">Yojana updates</div><div class="stat-value" id="stat-yojana">-</div></div>
+        </div>
+      </div>
+
+      <!-- India/State filter row -->
+      <div class="filter-bar" style="margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:600;color:var(--muted);margin-right:4px;">🌍 Scope:</span>
+        <button class="filter-btn active" id="scope-all" onclick="filterScope('all', this)">🇮🇳 All India</button>
+        <button class="filter-btn" id="scope-state" onclick="filterScope('state', this)">📍 State wise</button>
+        <select id="state-select" style="display:none;padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted);background:var(--card);cursor:pointer;margin-left:4px;" onchange="filterByState(this.value)">
+          <option value="">-- State chunein --</option>
+          <option value="rajasthan">Rajasthan</option>
+          <option value="up">Uttar Pradesh</option>
+          <option value="mp">Madhya Pradesh</option>
+          <option value="bihar">Bihar</option>
+          <option value="gujarat">Gujarat</option>
+          <option value="maharashtra">Maharashtra</option>
+          <option value="punjab">Punjab</option>
+          <option value="haryana">Haryana</option>
+          <option value="delhi">Delhi</option>
+          <option value="karnataka">Karnataka</option>
+          <option value="tamil_nadu">Tamil Nadu</option>
+          <option value="other_state">Other State</option>
+        </select>
+      </div>
+      <!-- Category filter row -->
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterNews('all', this)">Sabhi</button>
+        <button class="filter-btn" onclick="filterNews('exam', this)">📋 Exam</button>
+        <button class="filter-btn" onclick="filterNews('result', this)">🏆 Result</button>
+        <button class="filter-btn" onclick="filterNews('admit_card', this)">📄 Admit Card</button>
+        <button class="filter-btn" onclick="filterNews('yojana', this)">🏛️ Yojana</button>
+        <button class="filter-btn" onclick="filterNews('admission', this)">🎓 Admission</button>
+        <div class="filter-search">
+          🔍 <input type="text" placeholder="Search..." id="search-input" oninput="searchNews(this.value)">
+        </div>
+      </div>
+
+      <div class="news-grid" id="news-grid">
+        <div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>
+      </div>
+    </div>
+
+    <!-- ===== BRANDING PAGE ===== -->
+    <div class="page" id="page-branding">
+      <div class="section-card">
+        <h4>🏪 Apni Cafe/eMitra ki details</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Cafe / eMitra Name *</label>
+            <input class="form-input" id="b-name" placeholder="e.g. Harsh CSC eMitra">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Owner Name</label>
+            <input class="form-input" id="b-owner" placeholder="e.g. Harsh Kumar">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tagline</label>
+            <input class="form-input" id="b-tagline" placeholder="Digital Experts & Documents Consultation">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input class="form-input" id="b-phone" placeholder="9876543210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input class="form-input" id="b-city" placeholder="Bikaner">
+          </div>
+          <div class="form-group">
+            <label class="form-label">WhatsApp Number</label>
+            <input class="form-input" id="b-wa" placeholder="919876543210">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Post Footer Line</label>
+            <input class="form-input" id="b-footer" placeholder="Aur updates ke liye apne najdeeki eMitra se mile">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h4>🎨 Colors & Logo</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Header Color</label>
+            <div class="color-row">
+              <input type="color" id="b-header-color" value="#0f2347">
+              <input class="form-input" id="b-header-color-txt" value="#0f2347" style="flex:1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Accent Color</label>
+            <div class="color-row">
+              <input type="color" id="b-accent-color" value="#e8a020">
+              <input class="form-input" id="b-accent-color-txt" value="#e8a020" style="flex:1">
+            </div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Logo Upload</label>
+            <div class="logo-upload-area" onclick="document.getElementById('logo-file').click()">
+              <img id="logo-preview-img" class="logo-preview" src="" style="display:none" alt="logo">
+              <div id="logo-placeholder">
+                📷 Click karke logo upload karein<br>
+                <span style="font-size:11px;color:#aaa;">(PNG, JPG — square image best hai)</span>
+              </div>
+            </div>
+            <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)">
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE PREVIEW -->
+      <div class="section-card">
+        <h4>👁️ Live Preview — Post Card</h4>
+        <p style="font-size:12px;color:#888;margin-bottom:14px;">Neeche dikha raha hai ki tumhara share card kaisa dikhega. Values type karte hi update hoga.</p>
+        <div id="live-preview-wrap" style="background:#1a3a6b;border-radius:12px;overflow:hidden;max-width:420px;">
+          <div id="lp-header" style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:3px solid #e8a020;background:#0f2347;">
+            <div id="lp-logo" style="width:38px;height:38px;border-radius:9px;background:#e8a020;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#0f2347;flex-shrink:0;overflow:hidden;">H</div>
+            <div>
+              <div id="lp-name" style="font-size:13px;font-weight:700;color:#fff;">Harsh CSC eMitra</div>
+              <div id="lp-tag" style="font-size:10px;color:rgba(255,255,255,0.5);">Digital Experts & Documents Consultation</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;background:#e8a020;color:#0f2347;">EXAM NOTIFICATION</div>
+            <div style="color:#fff;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;">RSMSSB Patwari 2025 — 4000+ vacancies, apply by June 15</div>
+            <div style="height:1px;background:rgba(255,255,255,0.12);margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:10px;color:rgba(255,255,255,0.45);">Source: RSMSSB Official</span>
+              <span style="font-size:10px;color:rgba(255,255,255,0.45);">Today</span>
+            </div>
+          </div>
+          <div id="lp-footer" style="padding:9px 16px;display:flex;justify-content:space-between;align-items:center;background:#0f2347;">
+            <div id="lp-footer-line" style="font-size:10px;color:rgba(255,255,255,0.45);">Aur updates ke liye apne najdeeki eMitra se mile</div>
+            <div id="lp-contact" style="font-size:11px;font-weight:700;color:#e8a020;">📍 Bikaner</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="save-btn" id="save-branding-btn" onclick="saveBranding()">
+          💾 Save Branding
+        </button>
+        <span id="branding-save-msg" style="font-size:12px;color:var(--success);display:none;">✅ Saved! Ab har post mein automatically use hoga.</span>
+      </div>
+    </div>
+
   </div>
+</div>
+
+<!-- SOURCE MANAGER PAGE -->
+<div class="page" id="page-sources">
+  <div class="section-card">
+    <h4>🔗 Source Add Karo</h4>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Source Name *</label>
+        <input class="form-input" id="src-name" placeholder="e.g. RPSC Official">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source Type *</label>
+        <select class="form-input" id="src-type" onchange="toggleSourceHelp(this.value)">
+          <option value="rss">RSS Feed</option>
+          <option value="telegram">Telegram Channel</option>
+          <option value="google_doc">Google Doc (Published)</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">URL *</label>
+        <input class="form-input" id="src-url" placeholder="https://...">
+        <div id="src-help" style="font-size:11px;color:#888;margin-top:4px;">
+          RSS: Feed URL daalo (e.g. https://site.com/feed/)<br>
+          Telegram: https://t.me/s/channelname format mein daalo<br>
+          Google Doc: File > Share > Publish to web > URL copy karo
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-input" id="src-category">
+          <option value="other">🤖 Auto Detect (Recommended)</option>
+          <option value="exam">📋 Exam</option>
+          <option value="result">🏆 Result</option>
+          <option value="admit_card">📄 Admit Card</option>
+          <option value="yojana">🏛️ Yojana</option>
+          <option value="admission">🎓 Admission</option>
+          <option value="news">📰 News</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;">
+        <button class="save-btn" onclick="addSource()" style="width:100%;justify-content:center;">
+          ➕ Source Add Karo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual trigger + Days filter -->
+  <div class="section-card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;">
+      <h4 style="margin-bottom:8px;">⏱️ Auto-fetch Settings</h4>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--muted);">News kitne din purani dikhani hai:</span>
+        <select class="form-input" style="width:140px;padding:6px 10px;" onchange="updateMaxAge(this.value)" id="days-select">
+          <option value="7">7 din</option>
+          <option value="15">15 din</option>
+          <option value="30" selected>30 din</option>
+          <option value="60">60 din</option>
+          <option value="90">90 din</option>
+          <option value="365">1 saal</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+      <button class="save-btn" id="trigger-btn" onclick="triggerFetch()" style="background:#2e7d32;">
+        🔄 Abhi Fetch Karo
+      </button>
+      <span id="trigger-status" style="font-size:11px;color:#888;"></span>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>📋 Active Sources <span id="src-count" style="font-size:12px;color:#888;font-weight:400;"></span></h4>
+    <div id="sources-list">
+      <div style="text-align:center;padding:20px;color:#aaa;">Loading sources...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📤 Share karo — Apni branding ke saath</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('text', this)">💬 English</button>
+        <button class="modal-tab" onclick="switchTab('image', this)">🖼️ Image Card</button>
+        <button class="modal-tab" style="border-color:#ff9933;color:#ff9933;" id="hindi-tab-btn" onclick="translateToHindi(this)">🇮🇳 Hindi</button>
+      </div>
+      <div id="hindi-status" style="font-size:11px;color:#888;margin-bottom:6px;display:none;"></div>
+
+      <!-- TEXT TAB -->
+      <div class="tab-content active" id="tab-text">
+        <div class="text-preview" id="text-preview-content"></div>
+        
+        <!-- Source file attach section -->
+        <div id="source-attach-section" style="display:none;background:#f3e5f5;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#7b1fa2;display:flex;align-items:center;gap:8px;">
+          <span id="source-attach-label"></span>
+          <button onclick="currentSourceUrl='';updateShareSourceSection()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#999;font-size:14px;">✕</button>
+        </div>
+
+        <div class="modal-actions" style="flex-wrap:wrap;gap:6px;">
+          <button class="modal-btn copy" onclick="copyText()" style="flex:1;min-width:120px;">📋 Copy Text</button>
+          <button class="modal-btn" onclick="mobileShare()" style="flex:1;min-width:120px;background:#7b1fa2;color:#fff;border-color:#7b1fa2;">
+            📤 Share (Mobile)
+          </button>
+          <button class="modal-btn wa" onclick="shareWithSource()" style="flex:2;min-width:200px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp + Source Link
+          </button>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:center;">
+          💡 Source file ke liye pehle <b>📥 Source File</b> button dabao — phir share karo
+        </div>
+      </div>
+
+      <!-- IMAGE TAB -->
+      <div class="tab-content" id="tab-image">
+        <div class="img-preview-box">
+          <div class="img-placeholder" id="img-placeholder">🖼️ Image generate ho rahi hai...</div>
+          <img id="generated-img" style="display:none;width:100%" alt="share card">
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn copy" onclick="generateImage()">🔄 Regenerate</button>
+          <button class="modal-btn wa" onclick="downloadImage()">⬇️ Download Image</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image card (off-screen, for html2canvas) -->
+<div id="shareImageCard">
+  <div class="img-header" id="img-header">
+    <div class="img-logo-box" id="img-logo-box" style="background:#e8a020;">H</div>
+    <div>
+      <div class="img-brand-name" id="img-brand-name">Harsh CSC eMitra</div>
+      <div class="img-brand-tag" id="img-brand-tag">Digital Experts & Documents Consultation</div>
+    </div>
+  </div>
+  <div class="img-body">
+    <div class="img-badge" id="img-badge" style="background:#e8a020;color:#0f2347;">EXAM</div>
+    <div class="img-title" id="img-title">Title here</div>
+    <div class="img-summary" id="img-summary">Summary here</div>
+    <div class="img-divider"></div>
+    <div class="img-meta">
+      <div class="img-source">Source: <span id="img-source-name">—</span></div>
+      <div class="img-date" id="img-date">Today</div>
+    </div>
+  </div>
+  <div class="img-footer" id="img-footer">
+    <div class="img-footer-left" id="img-footer-line">Aur updates ke liye eMitra se mile</div>
+    <div class="img-footer-right" id="img-contact" style="color:#e8a020;">📞 eMitra Bikaner</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// --- CONFIG ---
-const SB_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
-const _db = window.supabase.createClient(SB_URL, SB_KEY);
+// ============ SUPABASE CONFIG ============
+const CCP_SB_URL = 'https://qhqvmzrdncxddzlfrgrn.supabase.co';
+const CCP_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocXZtenJkbmN4ZGR6bGZyZ3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTg4MzYsImV4cCI6MjA5MjE3NDgzNn0.pZXICNxjcTo8v654L0ezIyerJ_GKj3Of-rTBKlH9bFc';
+// Unique DB client - no conflicts
+var _ccpDB = (function() {
+  try {
+    return window.supabase.createClient(CCP_SB_URL, CCP_SB_KEY);
+  } catch(e) { return null; }
+})();
+function getCCPClient() { return _ccpDB; }
 
-// --- ALL FUNCTIONS RESTORED ---
+// ============ STATE ============
+let allUpdates = [];
+let currentFilter = 'all';
+let currentUpdate = null;
+let branding = {};
+let sessionKey = getSessionKey();
 
-// Navigation
-window.showPage = function(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    if(name === 'sources') loadSources();
-};
+function getSessionKey() {
+  let k = localStorage.getItem('cafe_session_key');
+  if (!k) {
+    k = 'cafe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('cafe_session_key', k);
+  }
+  return k;
+}
 
-// Hindi Translation (MyMemory API - 100% Free)
-window.translateToHindi = async function(btn) {
-    // ... (Aapka vohi logic jo pehle tha)
-};
+// ============ INIT ============
+async function init() {
+  await loadBranding();
+  await loadUpdates();
+}
 
-// Original File Share Logic
-window.openSourceFile = function(url, name, updateJson) {
-    // ... (Wapas add kar diya hai)
-};
+// ============ BRANDING ============
+async function loadBranding() {
+  // Pehle localStorage se try karo (instant)
+  const local = localStorage.getItem('cafe_branding');
+  if (local) {
+    branding = JSON.parse(local);
+    applyBranding();
+  }
+  // Phir Supabase se sync karo
+  const { data } = await getCCPClient()
+    .from('cafe_branding')
+    .select('*')
+    .eq('session_key', sessionKey)
+    .single();
+  if (data) {
+    branding = data;
+    localStorage.setItem('cafe_branding', JSON.stringify(data));
+    applyBranding();
+    // Sirf pehli baar form fill karo — user edit kar raha ho tab nahi
+    if (!window._brandingLoaded) {
+      window._brandingLoaded = true;
+      fillBrandingForm();
+    }
+  } else {
+    // First time — default values
+    branding = {
+      cafe_name: 'Harsh CSC eMitra',
+      tagline: 'Digital Experts & Documents Consultation',
+      phone: '',
+      city: 'Bikaner',
+      footer_line: 'Aur updates ke liye apne najdeeki eMitra se mile',
+      logo_url: '',
+      header_color: '#0f2347',
+      accent_color: '#e8a020',
+      whatsapp_number: ''
+    };
+    fillBrandingForm();
+    applyBranding();
+  }
+}
 
-// Load Updates
-window.loadUpdates = async function() {
-    const { data, error } = await _db.from('gov_updates').select('*').order('published_at', { ascending: false });
-    if(data) renderNews(data);
-};
+function fillBrandingForm() {
+  setVal('b-name', branding.cafe_name || '');
+  setVal('b-owner', branding.owner_name || '');
+  setVal('b-tagline', branding.tagline || '');
+  setVal('b-phone', branding.phone || '');
+  setVal('b-city', branding.city || '');
+  setVal('b-wa', branding.whatsapp_number || '');
+  setVal('b-footer', branding.footer_line || '');
+  setVal('b-header-color', branding.header_color || '#0f2347');
+  setVal('b-header-color-txt', branding.header_color || '#0f2347');
+  setVal('b-accent-color', branding.accent_color || '#e8a020');
+  setVal('b-accent-color-txt', branding.accent_color || '#e8a020');
+  if (branding.logo_url) {
+    document.getElementById('logo-preview-img').src = branding.logo_url;
+    document.getElementById('logo-preview-img').style.display = 'block';
+    document.getElementById('logo-placeholder').style.display = 'none';
+  }
+}
 
-// ... (Baki saare functions: saveBranding, addSource, triggerFetch, filterScope)
+function applyBranding() {
+  document.getElementById('sb-cafe-name').textContent = branding.cafe_name || 'Harsh CSC eMitra';
+  // Image card branding
+  document.getElementById('img-brand-name').textContent = branding.cafe_name || 'Harsh CSC eMitra';
+  document.getElementById('img-brand-tag').textContent = branding.tagline || '';
+  document.getElementById('img-footer-line').textContent = branding.footer_line || '';
+  document.getElementById('img-contact').textContent = (branding.city ? '📍 ' + branding.city : '') + (branding.phone ? '  📞 ' + branding.phone : '');
+  document.getElementById('img-contact').style.color = branding.accent_color || '#e8a020';
+  document.getElementById('img-header').style.borderBottomColor = branding.accent_color || '#e8a020';
+  document.getElementById('img-header').style.background = branding.header_color || '#0f2347';
+  document.getElementById('img-footer').style.background = branding.header_color || '#0f2347';
+  const logoBox = document.getElementById('img-logo-box');
+  logoBox.style.background = branding.accent_color || '#e8a020';
+  if (branding.logo_url) {
+    logoBox.innerHTML = '<img src="' + branding.logo_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+  } else {
+    logoBox.textContent = (branding.cafe_name || 'H')[0].toUpperCase();
+  }
+}
 
+async function saveBranding() {
+  const newBranding = {
+    session_key: sessionKey,
+    cafe_name: getVal('b-name') || 'Harsh CSC eMitra',
+    owner_name: getVal('b-owner'),
+    tagline: getVal('b-tagline'),
+    phone: getVal('b-phone'),
+    city: getVal('b-city'),
+    whatsapp_number: getVal('b-wa'),
+    footer_line: getVal('b-footer'),
+    logo_url: branding.logo_url || '',
+    header_color: getVal('b-header-color'),
+    accent_color: getVal('b-accent-color'),
+    updated_at: new Date().toISOString()
+  };
+
+  // Save to Supabase
+  const { error } = await getCCPClient()
+    .from('cafe_branding')
+    .upsert(newBranding, { onConflict: 'session_key' });
+
+  if (!error) {
+    branding = newBranding;
+    localStorage.setItem('cafe_branding', JSON.stringify(newBranding));
+    window._brandingLoaded = true; // prevent reload overwrite
+    applyBranding();
+    const msg = document.getElementById('branding-save-msg');
+    msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 3000);
+    showToast('✅ Branding save ho gayi!', 'green');
+  } else {
+    showToast('❌ Save nahi hui, dobara try karein');
+  }
+}
+
+function previewLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    branding.logo_url = e.target.result;
+    document.getElementById('logo-preview-img').src = e.target.result;
+    document.getElementById('logo-preview-img').style.display = 'block';
+    document.getElementById('logo-placeholder').style.display = 'none';
+    applyBranding();
+    updateLivePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============ LIVE PREVIEW UPDATE ============
+function updateLivePreview() {
+  const name   = getVal('b-name')   || 'Harsh CSC eMitra';
+  const tag    = getVal('b-tagline')|| 'Digital Experts & Documents Consultation';
+  const footer = getVal('b-footer') || 'Aur updates ke liye apne najdeeki eMitra se mile';
+  const city   = getVal('b-city')   || '';
+  const phone  = getVal('b-phone')  || '';
+  const hc     = getVal('b-header-color') || '#0f2347';
+  const ac     = getVal('b-accent-color') || '#e8a020';
+
+  const lp = (id) => document.getElementById(id);
+  if (!lp('lp-name')) return;
+
+  lp('lp-name').textContent     = name;
+  lp('lp-tag').textContent      = tag;
+  lp('lp-footer-line').textContent = footer;
+  lp('lp-contact').textContent  = (city ? '📍 ' + city : '') + (phone ? '  📞 ' + phone : '');
+  lp('lp-contact').style.color  = ac;
+  lp('lp-header').style.borderBottomColor = ac;
+  lp('lp-header').style.background = hc;
+  lp('lp-footer').style.background = hc;
+  lp('lp-logo').style.background   = ac;
+
+  // Logo image update
+  if (branding.logo_url) {
+    lp('lp-logo').innerHTML = `<img src="${branding.logo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:7px;">`;
+  } else {
+    lp('lp-logo').textContent = name[0]?.toUpperCase() || 'H';
+    lp('lp-logo').style.color = hc;
+  }
+}
+
+// Color inputs sync + live preview wire
 document.addEventListener('DOMContentLoaded', () => {
-    loadUpdates();
+  // Color picker <-> text sync
+  document.getElementById('b-header-color').addEventListener('input', (e) => {
+    document.getElementById('b-header-color-txt').value = e.target.value;
+    updateLivePreview();
+  });
+  document.getElementById('b-accent-color').addEventListener('input', (e) => {
+    document.getElementById('b-accent-color-txt').value = e.target.value;
+    updateLivePreview();
+  });
+  document.getElementById('b-header-color-txt').addEventListener('input', (e) => {
+    if (/^#[0-9a-f]{6}$/i.test(e.target.value)) {
+      document.getElementById('b-header-color').value = e.target.value;
+      updateLivePreview();
+    }
+  });
+  document.getElementById('b-accent-color-txt').addEventListener('input', (e) => {
+    if (/^#[0-9a-f]{6}$/i.test(e.target.value)) {
+      document.getElementById('b-accent-color').value = e.target.value;
+      updateLivePreview();
+    }
+  });
+
+  // All text inputs wire to live preview
+  ['b-name','b-tagline','b-city','b-phone','b-footer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateLivePreview);
+  });
+
+  // Wait for supabase to init
+  setTimeout(function() {
+    if (!_ccpDB && window.supabase) {
+      _ccpDB = window.supabase.createClient(CCP_SB_URL, CCP_SB_KEY);
+    }
+    init();
+  }, 300);
+});
+
+// ============ NEWS & UPDATES ============
+async function loadUpdates() {
+  document.getElementById('last-updated-txt').textContent = 'Updating...';
+  const { data, error } = await getCCPClient()
+    .from('gov_updates')
+    .select('*')
+    .order('published_at', { ascending: false })
+    .limit(100);
+
+  if (error) {
+    showToast('❌ Updates load nahi huye');
+    document.getElementById('news-grid').innerHTML =
+      '<div class="empty-state"><div class="big">⚠️</div>Updates load nahi huye. Supabase key check karein.</div>';
+    return;
+  }
+
+  allUpdates = data || [];
+  updateStats();
+  renderNews(filterData(currentFilter));
+  document.getElementById('last-updated-txt').textContent = 'Last updated: ' + new Date().toLocaleTimeString('hi-IN');
+}
+
+function updateStats() {
+  const today = new Date().toDateString();
+  document.getElementById('stat-today').textContent =
+    allUpdates.filter(u => new Date(u.published_at).toDateString() === today).length;
+  document.getElementById('stat-exam').textContent =
+    allUpdates.filter(u => u.category === 'exam').length;
+  document.getElementById('stat-result').textContent =
+    allUpdates.filter(u => u.category === 'result').length;
+  document.getElementById('stat-yojana').textContent =
+    allUpdates.filter(u => u.category === 'yojana').length;
+}
+
+function filterData(cat) {
+  if (cat === 'all') return allUpdates;
+  return allUpdates.filter(u => u.category === cat);
+}
+
+function filterNews(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFilteredNews();
+}
+
+function searchNews(term) {
+  renderFilteredNews();
+}
+
+const catEmoji = { exam:'📋', result:'🏆', admit_card:'📄', yojana:'🏛️', admission:'🎓', news:'📰', other:'📌' };
+const catColor = { exam:'#e8f5e9', result:'#e3f2fd', admit_card:'#fff3e0', yojana:'#ede7f6', admission:'#fce4ec', news:'#e0f7fa', other:'#f5f5f5' };
+const catLabel = { exam:'Exam', result:'Result', admit_card:'Admit Card', yojana:'Yojana', admission:'Admission', news:'News', other:'Other' };
+
+function renderNews(data) {
+  const grid = document.getElementById('news-grid');
+  if (!data || data.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="big">📭</div>Koi update nahi mili is category mein.</div>';
+    return;
+  }
+  grid.innerHTML = data.map(u => `
+    <div class="news-card ${u.is_important ? 'important' : ''}">
+      <div class="news-cat-dot" style="background:${catColor[u.category]||'#f5f5f5'}">
+        ${catEmoji[u.category]||'📌'}
+      </div>
+      <div class="news-body">
+        <div class="news-title">${u.title}</div>
+        ${u.summary ? `<div class="news-summary">${u.summary}</div>` : ''}
+        <div class="news-meta">
+          <span class="cat-badge cat-${u.category}">${catLabel[u.category]||u.category}</span>
+          ${u.source_name ? `<span class="news-source">📡 ${u.source_name}</span>` : ''}
+          ${u.source_url ? `<a class="source-link" href="${u.source_url}" target="_blank">🔗 Source dekho</a>` : ''}
+          <span class="news-time">${timeAgo(u.published_at)}</span>
+        </div>
+      </div>
+      <div class="news-actions">
+        <button class="action-btn wa" onclick="openShare(${JSON.stringify(u).replace(/"/g,'&quot;')})">
+          💬 WA Share
+        </button>
+        <button class="action-btn img" onclick="openShare(${JSON.stringify(u).replace(/"/g,'&quot;')}, true)">
+          🖼️ Image Card
+        </button>
+        ${u.original_url ? `
+        <button class="action-btn" style="border-color:#1565c0;color:#1565c0;" onclick="openSourceFile('${u.original_url}','${(u.source_name||'').replace(/'/g,'').replace(/"/g,'')}','${JSON.stringify(u).replace(/"/g,'&quot;')}')">
+          📎 Source + Share
+        </button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 3600) return Math.floor(diff/60) + ' min pehle';
+  if (diff < 86400) return Math.floor(diff/3600) + ' ghante pehle';
+  return Math.floor(diff/86400) + ' din pehle';
+}
+
+// ============ SHARE MODAL ============
+function openShare(update, goImage = false) {
+  currentUpdate = typeof update === 'string' ? JSON.parse(update) : update;
+  // Source reset karo naye update ke liye
+  currentSourceUrl = '';
+  currentSourceType = '';
+  updateShareSourceSection();
+  buildTextPreview();
+  updateImageCard();
+  document.getElementById('shareModal').classList.add('open');
+  if (goImage) switchTab('image', document.querySelectorAll('.modal-tab')[1]);
+  else switchTab('text', document.querySelectorAll('.modal-tab')[0]);
+  if (goImage) generateImage();
+}
+
+function closeModal() {
+  document.getElementById('shareModal').classList.remove('open');
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'image') generateImage();
+}
+
+function buildTextPreview(hindiText) {
+  if (!currentUpdate) return;
+  var u = currentUpdate;
+  var b = branding;
+  var emoji = catEmoji[u.category] || "📢";
+  var title = hindiText ? hindiText.title : u.title;
+  var summary = hindiText ? hindiText.summary : (u.summary || "");
+  var cafeName = b.cafe_name || "Harsh CSC eMitra";
+  var loc = (b.city ? "📍 " + b.city : "") + (b.phone ? "  📞 " + b.phone : "");
+  var footer = b.footer_line || "Aur updates ke liye apne najdeeki eMitra se mile";
+  var sep = "━━━━━━━━━━━━━━";
+
+  var msg = emoji + " *" + title + "*\n\n" +
+    (summary ? summary + "\n\n" : "") +
+    sep + "\n" +
+    "🏢 *" + cafeName + "*\n" +
+    loc + "\n" +
+    sep + "\n" +
+    "_" + footer + "_";
+
+  document.getElementById("text-preview-content").textContent = msg;
+}
+
+
+function copyText() {
+  const text = document.getElementById('text-preview-content').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Text copy ho gaya!', 'green'));
+}
+
+async function translateToHindi(btn) {
+  if (!currentUpdate) return;
+  const statusEl = document.getElementById('hindi-status');
+  const previewEl = document.getElementById('text-preview-content');
+
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-text').classList.add('active');
+
+  statusEl.style.display = 'block';
+  statusEl.style.color = '#888';
+  statusEl.textContent = '⏳ Hindi mein translate ho raha hai...';
+  previewEl.style.opacity = '0.4';
+
+  try {
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: currentUpdate.title, summary: currentUpdate.summary || '' })
+    });
+    if (!response.ok) throw new Error('Server error: ' + response.status);
+    const parsed = await response.json();
+    if (parsed.error) throw new Error(parsed.error);
+    buildTextPreview(parsed);
+    // Image card bhi Hindi mein update karo
+    
+    // Image card Hindi mein update karo
+    document.getElementById('img-title').textContent = parsed.title || currentUpdate.title;
+    document.getElementById('img-summary').textContent = parsed.summary || currentUpdate.summary || '';
+    statusEl.style.display = 'none';
+    previewEl.style.opacity = '1';
+    showToast('🇮🇳 Hindi mein translate ho gaya!', 'green');
+    // Image bhi auto Hindi mein generate karo
+    setTimeout(generateImage, 400);
+  } catch(e) {
+    statusEl.textContent = '❌ Translation fail. Dobara try karein.';
+    statusEl.style.color = 'red';
+    previewEl.style.opacity = '1';
+  }
+}
+
+function shareWhatsApp() {
+  const text = document.getElementById('text-preview-content').textContent;
+  const wa = branding.whatsapp_number;
+  const url = wa
+    ? `https://wa.me/${wa}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+  logShare('whatsapp');
+}
+
+function updateImageCard() {
+  if (!currentUpdate) return;
+  const u = currentUpdate;
+  const b = branding;
+  document.getElementById('img-title').textContent = u.title;
+  document.getElementById('img-summary').textContent = u.summary || '';
+  document.getElementById('img-badge').textContent = (catLabel[u.category] || u.category).toUpperCase();
+  document.getElementById('img-badge').style.background = branding.accent_color || '#e8a020';
+  document.getElementById('img-badge').style.color = '#fff';
+  document.getElementById('img-source-name').textContent = u.source_name || '—';
+  document.getElementById('img-date').textContent = new Date(u.published_at).toLocaleDateString('hi-IN');
+  applyBranding();
+}
+
+async function generateImage() {
+  if (!currentUpdate) return;
+  document.getElementById('img-placeholder').style.display = 'flex';
+  document.getElementById('generated-img').style.display = 'none';
+  // Hindi text already set hai to updateImageCard mat karo
+  const imgTitle = document.getElementById('img-title');
+  if (!imgTitle || imgTitle.textContent === currentUpdate.title) {
+    updateImageCard();
+  }
+  await new Promise(r => setTimeout(r, 300));
+  try {
+    const card = document.getElementById('shareImageCard');
+    const canvas = await html2canvas(card, { scale: 2, useCORS: true, backgroundColor: null });
+    const url = canvas.toDataURL('image/png');
+    document.getElementById('img-placeholder').style.display = 'none';
+    const img = document.getElementById('generated-img');
+    img.src = url;
+    img.style.display = 'block';
+    logShare('image');
+  } catch(e) {
+    document.getElementById('img-placeholder').textContent = '❌ Image generate nahi hui. Try again.';
+  }
+}
+
+function downloadImage() {
+  const img = document.getElementById('generated-img');
+  if (!img.src || img.style.display === 'none') { generateImage(); return; }
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = 'news-update-' + Date.now() + '.png';
+  a.click();
+  showToast('⬇️ Image download ho rahi hai!', 'green');
+}
+
+// ── SOURCE FILE DOWNLOAD & SHARE ─────────────────────
+async function downloadSourceFile(url, sourceName) {
+  if (!url) return;
+  
+  // Check file type
+  const urlLower = url.toLowerCase();
+  const isPdf = urlLower.includes('.pdf');
+  const isImage = urlLower.match(/\.(jpg|jpeg|png|webp|gif)($|\?)/);
+  
+  if (isPdf || isImage) {
+    // Direct download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = sourceName + (isPdf ? '.pdf' : '.jpg');
+    a.target = '_blank';
+    a.click();
+    showToast('📥 Source file download ho rahi hai...', 'green');
+  } else {
+    // Web page — new tab mein kholo
+    window.open(url, '_blank');
+    showToast('🔗 Source page khul gaya', 'green');
+  }
+  
+  // Share modal mein source attach option dikhao
+  currentSourceUrl = url;
+  currentSourceType = isPdf ? 'pdf' : (isImage ? 'image' : 'link');
+  updateShareSourceSection();
+}
+
+var currentSourceUrl = '';
+var currentSourceType = '';
+
+function updateShareSourceSection() {
+  const el = document.getElementById('source-attach-section');
+  if (!el) return;
+  if (!currentSourceUrl) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  const typeLabel = currentSourceType === 'pdf' ? '📄 PDF' : currentSourceType === 'image' ? '🖼️ Image' : '🔗 Link';
+  document.getElementById('source-attach-label').textContent = typeLabel + ' attached: ' + currentSourceUrl.split('/').pop();
+}
+
+function shareWithSource() {
+  const text = document.getElementById('text-preview-content').textContent;
+  if (!currentSourceUrl) {
+    shareWhatsApp();
+    return;
+  }
+  // Text mein source link add karo
+  const textWithSource = text + '\n\n📎 Source: ' + currentSourceUrl;
+  const wa = branding.whatsapp_number;
+  const url = wa
+    ? 'https://wa.me/' + wa + '?text=' + encodeURIComponent(textWithSource)
+    : 'https://wa.me/?text=' + encodeURIComponent(textWithSource);
+  window.open(url, '_blank');
+  logShare('whatsapp');
+  // Also trigger download so user can attach manually
+  if (currentSourceType === 'pdf' || currentSourceType === 'image') {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = currentSourceUrl;
+      a.download = 'source-file';
+      a.target = '_blank';
+      a.click();
+    }, 500);
+    showToast('💡 File bhi download ho rahi hai — WhatsApp mein manually attach karo', 'green');
+  }
+}
+
+// Mobile navigator.share — Android Chrome pe direct share
+async function mobileShare() {
+  const text = document.getElementById('text-preview-content').textContent;
+  if (!navigator.share) {
+    shareWhatsApp();
+    return;
+  }
+  try {
+    const shareData = { text: text, title: currentUpdate?.title || 'Update' };
+    // Agar source image/pdf hai to fetch karke share karo
+    if (currentSourceUrl && (currentSourceType === 'image' || currentSourceType === 'pdf')) {
+      try {
+        const res = await fetch(currentSourceUrl);
+        const blob = await res.blob();
+        const ext = currentSourceType === 'pdf' ? 'pdf' : 'jpg';
+        const file = new File([blob], 'source.' + ext, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          shareData.files = [file];
+        }
+      } catch(e) { /* file fetch fail — text only share */ }
+    }
+    await navigator.share(shareData);
+    logShare('mobile_share');
+  } catch(e) {
+    if (e.name !== 'AbortError') shareWhatsApp();
+  }
+}
+
+async function logShare(type) {
+  if (!currentUpdate) return;
+  await getCCPClient().from('share_logs').insert({
+    update_id: currentUpdate.id,
+    session_key: sessionKey,
+    share_type: type
+  });
+}
+
+// ============ UI HELPERS ============
+// ── SCOPE / STATE FILTER ─────────────────────────────
+let currentScope = 'all';
+let currentState = '';
+
+function filterScope(scope, btn) {
+  currentScope = scope;
+  document.querySelectorAll('#scope-all, #scope-state').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const stateSelect = document.getElementById('state-select');
+  if (scope === 'state') {
+    stateSelect.style.display = 'inline-block';
+  } else {
+    stateSelect.style.display = 'none';
+    currentState = '';
+    renderFilteredNews();
+  }
+}
+
+function filterByState(state) {
+  currentState = state;
+  renderFilteredNews();
+}
+
+// State keywords mapping
+// State keywords — simple includes matching
+const stateKeywords = {
+  rajasthan: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','jaipur','jodhpur','bikaner','kota','ajmer','udaipur','alwar','sikar','bharatpur','chittorgarh','jhunjhunu','nagaur','pali','barmer','jaisalmer','bundi','tonk','sawai madhopur','karauli','dholpur','dausa'],
+  up: ['uttar pradesh','uppsc','upsssc','up police','up board','lucknow','kanpur','varanasi','prayagraj','agra','meerut','allahabad','gorakhpur','aligarh','bareilly'],
+  mp: ['madhya pradesh','mppsc','mptet','mp police','bhopal','indore','gwalior','jabalpur','ujjain'],
+  bihar: ['bihar','bpsc','bssc','bihar police','patna','muzaffarpur','bhagalpur','gaya','darbhanga'],
+  gujarat: ['gujarat','gpsc','gsssb','ahmedabad','surat','vadodara','rajkot','bhavnagar','gandhinagar'],
+  maharashtra: ['maharashtra','mpsc','mahapariksha','mumbai','pune','nagpur','nashik','aurangabad'],
+  punjab: ['punjab','ppsc','psssb','chandigarh','ludhiana','amritsar','jalandhar','patiala'],
+  haryana: ['haryana','hpsc','hssc','gurugram','faridabad','hisar','rohtak','panipat','ambala','karnal'],
+  delhi: ['delhi','dsssb','ndmc','dmrc','new delhi'],
+  karnataka: ['karnataka','kpsc','bengaluru','bangalore','mysuru','hubli'],
+  tamil_nadu: ['tamil nadu','tnpsc','tneb','chennai','coimbatore','madurai','trichy'],
+  other_state: [],
+};
+
+function matchesScope(update) {
+  if (currentScope === 'all') return true;
+  if (!currentState || currentState === '') return true;
+  const keywords = stateKeywords[currentState] || [];
+  if (keywords.length === 0) return true;
+  const text = ((update.title || '') + ' ' + (update.summary || '') + ' ' + (update.source_name || '')).toLowerCase();
+  return keywords.some(kw => text.includes(kw));
+}
+
+// Days filter — default 30 din
+var maxAgeDays = 30;
+
+function renderFilteredNews() {
+  const term = document.getElementById('search-input')?.value || '';
+  let data = filterData(currentFilter);
+  // Date filter — purana data hatao
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - maxAgeDays);
+  data = data.filter(function(u) {
+    return !u.published_at || new Date(u.published_at) >= cutoff;
+  });
+  // Scope/state filter
+  data = data.filter(u => matchesScope(u));
+  // Search filter
+  if (term) data = data.filter(u =>
+    u.title.toLowerCase().includes(term.toLowerCase()) ||
+    (u.summary || '').toLowerCase().includes(term.toLowerCase())
+  );
+  renderNews(data);
+}
+
+// ── SOURCE MANAGER ─────────────────────────────────
+function updateMaxAge(days) {
+  maxAgeDays = parseInt(days);
+  renderFilteredNews();
+  showToast('📅 ' + days + ' din ka filter set ho gaya', 'green');
+}
+
+async function triggerFetch() {
+  const btn = document.getElementById('trigger-btn');
+  const status = document.getElementById('trigger-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetch ho raha hai...';
+  status.textContent = '';
+
+  try {
+    const res = await fetch('/api/fetch-updates?secret=harsh_csc_cron_2025');
+    const data = await res.json();
+    if (data.success) {
+      const total = data.results?.total || 0;
+      status.textContent = '✅ ' + total + ' nayi updates aayi!';
+      status.style.color = 'green';
+      showToast('✅ ' + total + ' nayi updates fetch ho gayi!', 'green');
+      // Reload news
+      setTimeout(() => { loadUpdates(); }, 1000);
+    } else {
+      status.textContent = '❌ ' + (data.error || 'Error aaya');
+      status.style.color = 'red';
+    }
+  } catch(e) {
+    status.textContent = '❌ Network error';
+    status.style.color = 'red';
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 Abhi Fetch Karo';
+}
+
+async function loadSources() {
+  const list = document.getElementById('sources-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Loading...</div>';
+
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=*&order=created_at.desc', {
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  const sources = await res.json();
+
+  document.getElementById('src-count').textContent = '(' + sources.length + ' sources)';
+
+  if (!sources.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Koi source nahi. Upar se add karo.</div>';
+    return;
+  }
+
+  const typeIcon = { rss: '📡', telegram: '✈️', google_doc: '📄', manual: '✏️' };
+  list.innerHTML = sources.map(s => `
+    <div class="source-row" id="src-row-${s.id}">
+      <div style="font-size:22px;">${typeIcon[s.source_type] || '🔗'}</div>
+      <div class="source-info">
+        <div class="s-name">${s.name}</div>
+        <div class="s-url">${s.url}</div>
+        <div class="s-meta">
+          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category === 'other' ? '🤖 auto' : s.category}</span>
+          ${s.last_fetched_at ? '&nbsp; Last fetch: ' + timeAgo(s.last_fetched_at) : '&nbsp; Never fetched'}
+        </div>
+      </div>
+      <button class="source-toggle ${s.is_active ? 'on' : 'off'}" 
+        onclick="toggleSource('${s.id}', ${s.is_active})" 
+        title="${s.is_active ? 'Active — click to disable' : 'Disabled — click to enable'}">
+        ${s.is_active ? '✓' : '✗'}
+      </button>
+      <button class="source-del" onclick="deleteSource('${s.id}', '${s.name}')">🗑️</button>
+    </div>
+  `).join('');
+}
+
+async function addSource() {
+  const name = document.getElementById('src-name').value.trim();
+  const url  = document.getElementById('src-url').value.trim();
+  const type = document.getElementById('src-type').value;
+  const cat  = document.getElementById('src-category').value;
+
+  if (!name || !url) { showToast('❌ Name aur URL zaroori hai'); return; }
+  if (!url.startsWith('http')) { showToast('❌ URL https:// se shuru honi chahiye'); return; }
+
+  // URL fixes
+  let finalUrl = url.trim();
+  if (type === 'telegram') {
+    // t.me/channel -> t.me/s/channel
+    if (finalUrl.includes('t.me/') && !finalUrl.includes('/s/')) {
+      finalUrl = finalUrl.replace('https://t.me/', 'https://t.me/s/');
+      finalUrl = finalUrl.replace('http://t.me/', 'https://t.me/s/');
+    }
+    // Sirf channel name diya ho to
+    if (!finalUrl.startsWith('http')) {
+      finalUrl = 'https://t.me/s/' + finalUrl.replace('@','');
+    }
+  }
+  // RSS feed URL mein trailing slash
+  if (type === 'rss' && !finalUrl.endsWith('/') && !finalUrl.includes('?')) {
+    // dont add slash
+  }
+
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources', {
+    method: 'POST',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ 
+      name, 
+      url: finalUrl, 
+      source_type: type, 
+      // Telegram/multi-category sources ke liye 'other' rakho — fetch time auto-detect hoga
+      category: cat === 'other' ? 'other' : cat, 
+      is_active: true 
+    })
+  });
+
+  if (res.ok) {
+    showToast('✅ Source add ho gaya!', 'green');
+    document.getElementById('src-name').value = '';
+    document.getElementById('src-url').value = '';
+    loadSources();
+  } else {
+    showToast('❌ Add nahi hua. Dobara try karo.');
+  }
+}
+
+async function toggleSource(id, currentState) {
+  await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ is_active: !currentState })
+  });
+  loadSources();
+  showToast(currentState ? '⏸️ Source disabled' : '▶️ Source enabled', 'green');
+}
+
+async function deleteSource(id, name) {
+  if (!confirm(name + ' delete karna chahte ho?')) return;
+  await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  showToast('🗑️ Source delete ho gaya', 'green');
+  loadSources();
+}
+
+function toggleSourceHelp(type) {
+  const help = document.getElementById('src-help');
+  const urlInput = document.getElementById('src-url');
+  if (type === 'rss') {
+    help.innerHTML = '📡 RSS Feed URL daalo — e.g. https://www.sarkariresult.com/feed/';
+    urlInput.placeholder = 'https://site.com/feed/';
+  } else if (type === 'telegram') {
+    help.innerHTML = '✈️ Telegram public channel URL — e.g. https://t.me/s/channelname (channel public hona chahiye)';
+    urlInput.placeholder = 'https://t.me/s/channelname';
+  } else if (type === 'google_doc') {
+    help.innerHTML = '📄 Google Doc > File > Share > Publish to web > Link copy karo';
+    urlInput.placeholder = 'https://docs.google.com/document/d/.../pub';
+  }
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  const titles = { news: '📰 News & Updates', branding: '🎨 Branding Settings', sources: '🔗 Source Manager' };
+  if (name === 'sources') loadSources();
+  document.getElementById('page-title').textContent = titles[name] || name;
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+function getVal(id) { return document.getElementById(id)?.value || ''; }
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+// ── SOURCE FILE SHARE ────────────────────────────────
+var currentSourceUrl = '';
+var currentSourceName = '';
+
+function openSourceFile(url, name, updateJson) {
+  currentSourceUrl = url;
+  currentSourceName = name;
+  // Parse update for message
+  try {
+    const u = JSON.parse(updateJson.replace(/&quot;/g, '"'));
+    currentUpdate = u;
+  } catch(e) {}
+
+  const preview = document.getElementById('sf-preview');
+  const textPrev = document.getElementById('sf-text-preview');
+
+  // Build share message
+  buildTextPreview();
+  textPrev.textContent = document.getElementById('text-preview-content').textContent;
+
+  // Detect file type and show preview
+  const ext = url.split('?')[0].toLowerCase();
+  const isPdf = ext.endsWith('.pdf');
+  const isImg = ext.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
+
+  if (isImg) {
+    preview.innerHTML = '<img src="' + url + '" alt="source image" onerror="this.parentElement.innerHTML='<div class=file-icon>🖼️</div><div class=file-name>Image load nahi hui — Download karo</div>'">';
+  } else if (isPdf) {
+    preview.innerHTML = '<div class="file-icon">📄</div><div class="file-name">PDF File<br><small>' + (name || url.split('/').pop()) + '</small></div>';
+  } else {
+    // Try as image first
+    preview.innerHTML = '<img src="' + url + '" alt="source" style="max-width:100%;max-height:280px;" onerror="this.parentElement.innerHTML='<div class=file-icon>🔗</div><div class=file-name>File preview available nahi — Download karke dekho</div>'">';
+  }
+
+  // Check mobile share support
+  if (navigator.share && navigator.canShare) {
+    document.getElementById('sf-mobile-share').style.display = 'block';
+  }
+
+  document.getElementById('sourceFileModal').classList.add('open');
+}
+
+function closeSourceModal() {
+  document.getElementById('sourceFileModal').classList.remove('open');
+}
+
+function copySourceMsg() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Message copy ho gaya!', 'green'));
+}
+
+function downloadSourceNow() {
+  if (!currentSourceUrl) return;
+  // Direct download
+  const a = document.createElement('a');
+  a.href = currentSourceUrl;
+  a.download = currentSourceName || 'source-file';
+  a.target = '_blank';
+  a.click();
+  showToast('📥 Download shuru ho gayi!', 'green');
+}
+
+function shareSourceWA() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  const waNum = branding.whatsapp_number || '';
+  // Text + source link saath mein
+  const fullMsg = text + '\n\n📎 Source: ' + currentSourceUrl;
+  const waUrl = waNum
+    ? 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(fullMsg)
+    : 'https://wa.me/?text=' + encodeURIComponent(fullMsg);
+  window.open(waUrl, '_blank');
+  showToast('💬 WhatsApp khul raha hai...', 'green');
+}
+
+async function mobileShareSource() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  try {
+    // Try to fetch and share the file
+    const response = await fetch(currentSourceUrl);
+    const blob = await response.blob();
+    const ext = currentSourceUrl.split('.').pop().split('?')[0] || 'jpg';
+    const fileName = (currentSourceName || 'source') + '.' + ext;
+    const file = new File([blob], fileName, { type: blob.type });
+
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: currentUpdate?.title || 'Update',
+        text: text,
+        files: [file]
+      });
+      showToast('✅ Share ho gaya!', 'green');
+    } else {
+      // Fallback — just text share
+      await navigator.share({ title: currentUpdate?.title || 'Update', text: text + '\n\n📎 ' + currentSourceUrl });
+    }
+  } catch(e) {
+    // Fallback to WhatsApp
+    shareSourceWA();
+  }
+}
+
+// Close source modal on overlay click
+document.getElementById('sourceFileModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeSourceModal();
+});
+
+// Close modal on overlay click
+document.getElementById('shareModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
 });
 </script>
+<!-- SOURCE FILE MODAL -->
+<div class="modal-overlay" id="sourceFileModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>📎 Source File — Share ke saath</h3>
+      <button class="modal-close" onclick="closeSourceModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- File preview -->
+      <div class="source-file-preview" id="sf-preview">
+        <div class="file-icon">⏳</div>
+        <div class="file-name">Loading...</div>
+      </div>
+
+      <!-- Share message preview -->
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">📋 Tumhara message (copy hoga):</div>
+      <div class="text-preview" id="sf-text-preview" style="max-height:120px;font-size:12px;"></div>
+
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:12px;color:#795548;margin:10px 0;">
+        💡 <strong>How to share:</strong> Neeche se message copy karo → WhatsApp open karo → message paste karo → phir source file manually attach karo (Download button se pehle save karo)
+      </div>
+
+      <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+        <button class="modal-btn copy" onclick="copySourceMsg()" style="flex:1;">
+          📋 Message Copy
+        </button>
+        <button class="modal-btn" id="sf-download-btn" onclick="downloadSourceNow()" style="flex:1;background:#1565c0;color:#fff;border-color:#1565c0;">
+          📥 File Download
+        </button>
+        <button class="modal-btn wa" onclick="shareSourceWA()" style="flex:1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WA pe bhejo
+        </button>
+      </div>
+
+      <!-- Mobile share button -->
+      <div id="sf-mobile-share" style="display:none;margin-top:8px;">
+        <button onclick="mobileShareSource()" style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;">
+          📤 Direct Share (Image + Text)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
