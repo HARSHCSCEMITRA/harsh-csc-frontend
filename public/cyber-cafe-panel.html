@@ -949,6 +949,30 @@ body {
     </div>
   </div>
 
+  <!-- Manual trigger + Days filter -->
+  <div class="section-card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;">
+      <h4 style="margin-bottom:8px;">⏱️ Auto-fetch Settings</h4>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--muted);">News kitne din purani dikhani hai:</span>
+        <select class="form-input" style="width:140px;padding:6px 10px;" onchange="updateMaxAge(this.value)" id="days-select">
+          <option value="7">7 din</option>
+          <option value="15">15 din</option>
+          <option value="30" selected>30 din</option>
+          <option value="60">60 din</option>
+          <option value="90">90 din</option>
+          <option value="365">1 saal</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+      <button class="save-btn" id="trigger-btn" onclick="triggerFetch()" style="background:#2e7d32;">
+        🔄 Abhi Fetch Karo
+      </button>
+      <span id="trigger-status" style="font-size:11px;color:#888;"></span>
+    </div>
+  </div>
+
   <div class="section-card">
     <h4>📋 Active Sources <span id="src-count" style="font-size:12px;color:#888;font-weight:400;"></span></h4>
     <div id="sources-list">
@@ -1541,32 +1565,56 @@ function filterByState(state) {
 }
 
 // State keywords mapping
+// State keywords — word boundary matching for accuracy
 const stateKeywords = {
-  rajasthan: ['rajasthan','rpsc','rsmssb','rbse','rtet','raj','jaipur','jodhpur','bikaner','udaipur','kota'],
-  up: ['uttar pradesh','up','uppsc','upsssc','upmsp','lucknow','kanpur','varanasi','allahabad'],
-  mp: ['madhya pradesh','mp','mppsc','mptet','bhopal','indore','gwalior'],
-  bihar: ['bihar','bpsc','bssc','patna','muzaffarpur'],
-  gujarat: ['gujarat','gpsc','gsssb','ahmedabad','surat','vadodara'],
-  maharashtra: ['maharashtra','mpsc','mumbai','pune','nagpur'],
-  punjab: ['punjab','ppsc','psssb','chandigarh','ludhiana','amritsar'],
-  haryana: ['haryana','hpsc','hssc','gurugram','faridabad','hisar'],
-  delhi: ['delhi','dsssb','ndmc','dmrc'],
-  karnataka: ['karnataka','kpsc','bengaluru','bangalore','mysuru'],
-  tamil_nadu: ['tamil nadu','tnpsc','chennai','coimbatore','madurai'],
+  rajasthan: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','raj high court','jaipur','jodhpur','bikaner','kota','ajmer','udaipur rajasthan','rajasthan police','rajasthan board'],
+  up: ['uttar pradesh','uppsc','upsssc','upmsp','up police','up board','lucknow','kanpur','varanasi','prayagraj','up lekhpal'],
+  mp: ['madhya pradesh','mppsc','mptet','mp police','mp board','bhopal','indore','gwalior','jabalpur'],
+  bihar: ['bihar','bpsc','bssc','bihar police','bihar board','patna','muzaffarpur','bhagalpur'],
+  gujarat: ['gujarat','gpsc','gsssb','gujarat police','ahmedabad','surat','vadodara','rajkot'],
+  maharashtra: ['maharashtra','mpsc','mahapariksha','mumbai','pune','nagpur','nashik','aurangabad'],
+  punjab: ['punjab','ppsc','psssb','punjab police','chandigarh','ludhiana','amritsar','jalandhar'],
+  haryana: ['haryana','hpsc','hssc','haryana police','gurugram','faridabad','hisar','rohtak'],
+  delhi: ['delhi','dsssb','ndmc','dmrc','delhi police','delhi university','new delhi'],
+  karnataka: ['karnataka','kpsc','kssb','bengaluru','bangalore','mysuru','hubli'],
+  tamil_nadu: ['tamil nadu','tnpsc','tneb','chennai','coimbatore','madurai','trichy'],
+  other_state: [],
 };
 
 function matchesScope(update) {
   if (currentScope === 'all') return true;
-  if (!currentState) return true; // state select nahi ki to sab dikhao
-  const keywords = stateKeywords[currentState] || [currentState];
-  const text = (update.title + ' ' + (update.summary || '') + ' ' + (update.source_name || '')).toLowerCase();
-  return keywords.some(kw => text.includes(kw));
+  if (!currentState || currentState === '') return true;
+  const keywords = stateKeywords[currentState] || [];
+  if (keywords.length === 0) return true;
+  const text = (
+    (update.title || '') + ' ' + 
+    (update.summary || '') + ' ' + 
+    (update.source_name || '')
+  ).toLowerCase();
+  // Strict matching — full word/phrase match
+  return keywords.some(kw => {
+    if (kw.includes(' ')) return text.includes(kw); // phrase match
+    // Word boundary check — avoid partial matches like 'raj' in 'rajkot'
+    const regex = new RegExp('\\b' + kw + '\\b', 'i');
+    return regex.test(text);
+  });
 }
+
+// Days filter — default 30 din
+var maxAgeDays = 30;
 
 function renderFilteredNews() {
   const term = document.getElementById('search-input')?.value || '';
   let data = filterData(currentFilter);
+  // Date filter — purana data hatao
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - maxAgeDays);
+  data = data.filter(function(u) {
+    return !u.published_at || new Date(u.published_at) >= cutoff;
+  });
+  // Scope/state filter
   data = data.filter(u => matchesScope(u));
+  // Search filter
   if (term) data = data.filter(u =>
     u.title.toLowerCase().includes(term.toLowerCase()) ||
     (u.summary || '').toLowerCase().includes(term.toLowerCase())
@@ -1575,6 +1623,41 @@ function renderFilteredNews() {
 }
 
 // ── SOURCE MANAGER ─────────────────────────────────
+function updateMaxAge(days) {
+  maxAgeDays = parseInt(days);
+  renderFilteredNews();
+  showToast('📅 ' + days + ' din ka filter set ho gaya', 'green');
+}
+
+async function triggerFetch() {
+  const btn = document.getElementById('trigger-btn');
+  const status = document.getElementById('trigger-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetch ho raha hai...';
+  status.textContent = '';
+
+  try {
+    const res = await fetch('/api/fetch-updates?secret=harsh_csc_cron_2025');
+    const data = await res.json();
+    if (data.success) {
+      const total = data.results?.total || 0;
+      status.textContent = '✅ ' + total + ' nayi updates aayi!';
+      status.style.color = 'green';
+      showToast('✅ ' + total + ' nayi updates fetch ho gayi!', 'green');
+      // Reload news
+      setTimeout(() => { loadUpdates(); }, 1000);
+    } else {
+      status.textContent = '❌ ' + (data.error || 'Error aaya');
+      status.style.color = 'red';
+    }
+  } catch(e) {
+    status.textContent = '❌ Network error';
+    status.style.color = 'red';
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 Abhi Fetch Karo';
+}
+
 async function loadSources() {
   const list = document.getElementById('sources-list');
   if (!list) return;
