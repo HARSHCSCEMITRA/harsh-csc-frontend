@@ -714,6 +714,118 @@ body {
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
 }
+
+/* ---- PIN MODAL ---- */
+.pin-modal-box {
+  background: var(--card);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 360px;
+  padding: 32px 28px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  text-align: center;
+}
+.pin-logo { font-size: 48px; margin-bottom: 12px; }
+.pin-title { font-family: 'Baloo 2', cursive; font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.pin-sub { font-size: 12px; color: #888; margin-bottom: 22px; line-height: 1.6; }
+.pin-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.pin-input-big {
+  flex: 1; padding: 12px; border: 2px solid var(--border); border-radius: 12px;
+  font-size: 20px; font-weight: 700; text-align: center; letter-spacing: 6px;
+  color: var(--primary); font-family: 'Baloo 2', cursive; outline: none;
+  transition: border-color 0.15s;
+}
+.pin-input-big:focus { border-color: var(--primary); }
+.pin-error { font-size: 11px; color: var(--danger); min-height: 16px; margin-bottom: 12px; }
+.pin-login-btn {
+  width: 100%; padding: 12px; background: var(--primary); color: #fff;
+  border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'Baloo 2', cursive; transition: background 0.15s;
+}
+.pin-login-btn:hover { background: var(--primary-light); }
+.pin-hint { font-size: 11px; color: #aaa; margin-top: 14px; }
+
+/* ---- PIN STATUS BAR (branding page) ---- */
+.pin-status-bar {
+  background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+  border: 1px solid #9fa8da;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.pin-status-bar .pin-badge {
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 2px;
+  font-family: 'Baloo 2', cursive;
+}
+
+/* ---- TAG PILLS ---- */
+.tag-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e8eaf6; color: #3949ab;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  letter-spacing: 0.03em; margin: 2px 2px 2px 0;
+}
+.tag-pill.railway { background:#e3f2fd; color:#1565c0; }
+.tag-pill.banking  { background:#e8f5e9; color:#2e7d32; }
+.tag-pill.teaching { background:#fff8e1; color:#f57f17; }
+.tag-pill.police   { background:#fce4ec; color:#880e4f; }
+.tag-pill.ssc      { background:#e0f7fa; color:#006064; }
+.tag-pill.defence  { background:#f3e5f5; color:#6a1b9a; }
+.tag-pill.rajasthan{ background:#fff3e0; color:#e65100; }
+.tag-pill.yojana   { background:#ede7f6; color:#4527a0; }
+.tag-pill.result   { background:#e3f2fd; color:#1565c0; }
+.tag-pill.psc      { background:#e8f5e9; color:#1b5e20; }
+
+/* ---- TAG FILTER BAR ---- */
+.tags-filter-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filter-btn.tag-active {
+  background: #3949ab;
+  color: #fff;
+  border-color: #3949ab;
+}
+.tag-count-badge {
+  font-size: 9px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 1px 5px;
+  margin-left: 2px;
+}
+
+/* ---- SOURCE ROW TAGS ---- */
+.source-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.src-tag-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 12px;
+  font-family: 'Noto Sans', sans-serif;
+  color: var(--text);
+  background: var(--card);
+  outline: none;
+  margin-top: 4px;
+}
+.src-tag-input:focus { border-color: var(--primary); }
 </style>
 </head>
 <body>
@@ -825,6 +937,11 @@ body {
         </div>
       </div>
 
+      <!-- Tags filter bar — auto-populated from news data -->
+      <div class="tags-filter-wrap" id="tags-filter-bar" style="display:none;">
+        <span style="font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0;">🏷️ Tags:</span>
+      </div>
+
       <div class="news-grid" id="news-grid">
         <div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>
       </div>
@@ -832,6 +949,28 @@ body {
 
     <!-- ===== BRANDING PAGE ===== -->
     <div class="page" id="page-branding">
+
+      <!-- PIN STATUS CARD -->
+      <div class="section-card" id="pin-status-card">
+        <h4>🔐 Operator PIN — Kisi bhi Browser mein Login</h4>
+        <div class="pin-status-bar" id="pin-status-bar">
+          <span style="font-size:13px;color:#3949ab;font-weight:600;">Current PIN:</span>
+          <span class="pin-badge" id="pin-display">----</span>
+          <span style="font-size:11px;color:#5c6bc0;flex:1;">— Ye PIN yaad rakhein, kisi bhi device pe login hoga</span>
+          <button onclick="logoutPin()" style="background:none;border:1px solid #9fa8da;color:#5c6bc0;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;white-space:nowrap;">🚪 Logout</button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px;">
+          <div style="flex:1;min-width:180px;">
+            <label class="form-label">Naya PIN set karo (4–6 digits)</label>
+            <input class="form-input" type="password" id="change-pin-input" placeholder="New PIN" maxlength="6" style="margin-top:4px;letter-spacing:4px;font-size:16px;font-weight:700;">
+          </div>
+          <button class="save-btn" onclick="changePin()" style="background:#3949ab;flex-shrink:0;">
+            🔄 PIN Change Karo
+          </button>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px;">⚠️ PIN change karne par purana PIN kaam nahi karega — naya PIN yaad rakhein.</div>
+      </div>
+
       <div class="section-card">
         <h4>🏪 Apni Cafe/eMitra ki details</h4>
         <div class="form-grid">
@@ -974,6 +1113,11 @@ body {
           <option value="news">📰 News</option>
         </select>
       </div>
+      <div class="form-group full" style="grid-column:1/-1;">
+        <label class="form-label">🏷️ Tags (comma separated) — e.g. railway, ssc, rajasthan</label>
+        <input class="src-tag-input" id="src-tags" placeholder="e.g. railway, ssc, banking, teaching, police">
+        <div style="font-size:11px;color:#888;margin-top:4px;">Tags se news filter asaani se hoga. Multiple tags comma se alag karo.</div>
+      </div>
       <div class="form-group" style="display:flex;align-items:flex-end;">
         <button class="save-btn" onclick="addSource()" style="width:100%;justify-content:center;">
           ➕ Source Add Karo
@@ -1113,15 +1257,63 @@ let allUpdates = [];
 let currentFilter = 'all';
 let currentUpdate = null;
 let branding = {};
-let sessionKey = getSessionKey();
+let sessionKey = '';       // will be set by PIN system
+let operatorPin = '';
+let selectedTags = [];     // currently active tag filters
+let activeSourceNames = null; // cache for active sources
 
-function getSessionKey() {
-  let k = localStorage.getItem('cafe_session_key');
-  if (!k) {
-    k = 'cafe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('cafe_session_key', k);
+// ============ PIN SYSTEM ============
+function initPinSystem() {
+  const savedPin = localStorage.getItem('cafe_operator_pin');
+  if (savedPin && /^\d{4,6}$/.test(savedPin)) {
+    operatorPin = savedPin;
+    sessionKey = 'pin_' + savedPin;
+    document.getElementById('pin-display').textContent = savedPin;
+    document.getElementById('pinModal').classList.remove('open');
+    init();
+  } else {
+    document.getElementById('pinModal').classList.add('open');
+    setTimeout(() => document.getElementById('pin-input').focus(), 200);
   }
-  return k;
+}
+
+function setPinAndLogin() {
+  const pin = document.getElementById('pin-input').value.trim();
+  const errEl = document.getElementById('pin-error');
+  if (!/^\d{4,6}$/.test(pin)) {
+    errEl.textContent = '❌ PIN 4 se 6 digits ka hona chahiye (sirf numbers)';
+    return;
+  }
+  errEl.textContent = '';
+  operatorPin = pin;
+  sessionKey = 'pin_' + pin;
+  localStorage.setItem('cafe_operator_pin', pin);
+  document.getElementById('pin-display').textContent = pin;
+  document.getElementById('pinModal').classList.remove('open');
+  init();
+}
+
+function changePin() {
+  const newPin = document.getElementById('change-pin-input').value.trim();
+  if (!/^\d{4,6}$/.test(newPin)) {
+    showToast('❌ PIN 4-6 digits ka hona chahiye');
+    return;
+  }
+  operatorPin = newPin;
+  sessionKey = 'pin_' + newPin;
+  localStorage.setItem('cafe_operator_pin', newPin);
+  localStorage.removeItem('cafe_branding'); // force fresh load
+  document.getElementById('pin-display').textContent = newPin;
+  document.getElementById('change-pin-input').value = '';
+  saveBranding();
+  showToast('✅ PIN change ho gaya: ' + newPin + ' — Ye PIN yaad rakhein!', 'green');
+}
+
+function logoutPin() {
+  if (!confirm('Logout karein? PIN yaad rakhein — dobara login ke liye chahiye hoga.\n\nCurrent PIN: ' + operatorPin)) return;
+  localStorage.removeItem('cafe_operator_pin');
+  localStorage.removeItem('cafe_branding');
+  location.reload();
 }
 
 // ============ INIT ============
@@ -1132,42 +1324,53 @@ async function init() {
 
 // ============ BRANDING ============
 async function loadBranding() {
-  // Pehle localStorage se try karo (instant)
+  // Pehle localStorage se try karo (instant load)
   const local = localStorage.getItem('cafe_branding');
   if (local) {
-    branding = JSON.parse(local);
-    applyBranding();
+    try {
+      const parsed = JSON.parse(local);
+      // Only use if PIN matches
+      if (parsed._pin === operatorPin) {
+        branding = parsed;
+        applyBranding();
+      }
+    } catch(e) {}
   }
-  // Phir Supabase se sync karo
-  const { data } = await getCCPClient()
-    .from('cafe_branding')
-    .select('*')
-    .eq('session_key', sessionKey)
-    .single();
-  if (data) {
-    branding = data;
-    localStorage.setItem('cafe_branding', JSON.stringify(data));
-    applyBranding();
-    // Sirf pehli baar form fill karo — user edit kar raha ho tab nahi
-    if (!window._brandingLoaded) {
-      window._brandingLoaded = true;
+  // Phir Supabase se sync karo using PIN as key
+  try {
+    const { data } = await getCCPClient()
+      .from('cafe_branding')
+      .select('*')
+      .eq('session_key', sessionKey)
+      .single();
+    if (data) {
+      branding = data;
+      branding._pin = operatorPin;
+      localStorage.setItem('cafe_branding', JSON.stringify(branding));
+      applyBranding();
+      if (!window._brandingLoaded) {
+        window._brandingLoaded = true;
+        fillBrandingForm();
+      }
+    } else {
+      // First time with this PIN — set defaults
+      branding = {
+        cafe_name: 'Harsh CSC eMitra',
+        tagline: 'Digital Experts & Documents Consultation',
+        phone: '',
+        city: 'Bikaner',
+        footer_line: 'Aur updates ke liye apne najdeeki eMitra se mile',
+        logo_url: '',
+        header_color: '#0f2347',
+        accent_color: '#e8a020',
+        whatsapp_number: '',
+        _pin: operatorPin
+      };
       fillBrandingForm();
+      applyBranding();
     }
-  } else {
-    // First time — default values
-    branding = {
-      cafe_name: 'Harsh CSC eMitra',
-      tagline: 'Digital Experts & Documents Consultation',
-      phone: '',
-      city: 'Bikaner',
-      footer_line: 'Aur updates ke liye apne najdeeki eMitra se mile',
-      logo_url: '',
-      header_color: '#0f2347',
-      accent_color: '#e8a020',
-      whatsapp_number: ''
-    };
-    fillBrandingForm();
-    applyBranding();
+  } catch(e) {
+    // Network fail — use whatever we have
   }
 }
 
@@ -1212,7 +1415,7 @@ function applyBranding() {
 
 async function saveBranding() {
   const newBranding = {
-    session_key: sessionKey,
+    session_key: sessionKey,          // pin_XXXX — device-independent
     cafe_name: getVal('b-name') || 'Harsh CSC eMitra',
     owner_name: getVal('b-owner'),
     tagline: getVal('b-tagline'),
@@ -1226,20 +1429,19 @@ async function saveBranding() {
     updated_at: new Date().toISOString()
   };
 
-  // Save to Supabase
   const { error } = await getCCPClient()
     .from('cafe_branding')
     .upsert(newBranding, { onConflict: 'session_key' });
 
   if (!error) {
-    branding = newBranding;
-    localStorage.setItem('cafe_branding', JSON.stringify(newBranding));
-    window._brandingLoaded = true; // prevent reload overwrite
+    branding = { ...newBranding, _pin: operatorPin };
+    localStorage.setItem('cafe_branding', JSON.stringify(branding));
+    window._brandingLoaded = true;
     applyBranding();
     const msg = document.getElementById('branding-save-msg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 3000);
-    showToast('✅ Branding save ho gayi!', 'green');
+    showToast('✅ Branding save ho gayi! (PIN: ' + operatorPin + ')', 'green');
   } else {
     showToast('❌ Save nahi hui, dobara try karein');
   }
@@ -1327,18 +1529,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!_ccpDB && window.supabase) {
       _ccpDB = window.supabase.createClient(CCP_SB_URL, CCP_SB_KEY);
     }
-    init();
+    initPinSystem();
   }, 300);
 });
 
 // ============ NEWS & UPDATES ============
 async function loadUpdates() {
   document.getElementById('last-updated-txt').textContent = 'Updating...';
+  document.getElementById('news-grid').innerHTML =
+    '<div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>';
+
+  // Step 1: Active sources fetch karo
+  try {
+    const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=name,tags&is_active=eq.true', {
+      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+    });
+    const sources = await res.json();
+    if (Array.isArray(sources) && sources.length > 0) {
+      activeSourceNames = sources.map(s => s.name);
+      // Build source→tags map
+      window._sourceTagMap = {};
+      sources.forEach(s => {
+        if (s.tags && s.tags.length) window._sourceTagMap[s.name] = s.tags;
+      });
+    }
+  } catch(e) { activeSourceNames = null; }
+
+  // Step 2: Updates fetch
   const { data, error } = await getCCPClient()
     .from('gov_updates')
     .select('*')
     .order('published_at', { ascending: false })
-    .limit(100);
+    .limit(200);
 
   if (error) {
     showToast('❌ Updates load nahi huye');
@@ -1347,10 +1569,36 @@ async function loadUpdates() {
     return;
   }
 
-  allUpdates = data || [];
+  let updates = data || [];
+
+  // Step 3: Disabled sources ki news filter out karo
+  if (activeSourceNames && activeSourceNames.length > 0) {
+    updates = updates.filter(u =>
+      !u.source_name || activeSourceNames.includes(u.source_name)
+    );
+  }
+
+  // Step 4: Auto-fix categories + inject source tags
+  updates = updates.map(u => {
+    // Better category if stored as 'other' or missing
+    if (!u.category || u.category === 'other' || u.category === 'news') {
+      u.category = detectCategoryFromContent(u.title, u.summary);
+    }
+    // Merge source tags into update tags
+    const sourceTags = (window._sourceTagMap && u.source_name)
+      ? (window._sourceTagMap[u.source_name] || []) : [];
+    const autoTags = autoDetectTags(u);
+    const dbTags = Array.isArray(u.tags) ? u.tags : [];
+    u._tags = [...new Set([...dbTags, ...sourceTags, ...autoTags])];
+    return u;
+  });
+
+  allUpdates = updates;
   updateStats();
+  renderTagsBar(allUpdates);
   renderNews(filterData(currentFilter));
-  document.getElementById('last-updated-txt').textContent = 'Last updated: ' + new Date().toLocaleTimeString('hi-IN');
+  document.getElementById('last-updated-txt').textContent =
+    'Updated: ' + new Date().toLocaleTimeString('hi-IN');
 }
 
 function updateStats() {
@@ -1365,15 +1613,127 @@ function updateStats() {
     allUpdates.filter(u => u.category === 'yojana').length;
 }
 
+// ============ AUTO TAG DETECTION ============
+const TAG_RULES = [
+  { tag: 'railway',    kw: ['railway','rrb','rrc','ntpc','group-d','group d','loco pilot','station master','indian railways','rail'] },
+  { tag: 'ssc',        kw: ['ssc','staff selection','chsl','cgl',' mts ','stenographer','gd constable','capf'] },
+  { tag: 'banking',    kw: ['bank','ibps','sbi','rbi','nabard','rrb po','clerk','specialist officer','financial'] },
+  { tag: 'teaching',   kw: ['teacher','tet','ctet','reet','rtet','pgt','tgt','prt','school','education','shiksha','shikshak','adhyapak'] },
+  { tag: 'police',     kw: ['police','constable','sub inspector','si post','rpf','cisf','bsf','crpf','itbp','ssb ','paramilitary'] },
+  { tag: 'defence',    kw: ['army','navy','air force','nda','cds','afcat','agniveer','territorial army','military','sainik'] },
+  { tag: 'rajasthan',  kw: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','jaipur','jodhpur','bikaner','kota','ajmer','udaipur','alwar','sikar'] },
+  { tag: 'psc',        kw: ['psc','public service commission','civil services','ias','ips','ifs','upsc','state psc'] },
+  { tag: 'yojana',     kw: ['yojana','scheme','subsidy','pm kisan','pmay','awas yojana','ration','pension','scholarship','labh','laabh'] },
+  { tag: 'result',     kw: ['result','merit list','selection list','final answer key','cut off','cutoff','parinaam','selected candidates'] },
+  { tag: 'admit-card', kw: ['admit card','hall ticket','call letter','pravesha patra','e-admit'] },
+  { tag: 'nursing',    kw: ['nurse','nursing','aiims','norcet','health worker','anm','gnm','staff nurse'] },
+  { tag: 'engineering',kw: ['junior engineer','je post','assistant engineer','ae post','technical','iti','diploma'] },
+  { tag: 'central-govt',kw:['central government','central govt','ministry','department','commission','india govt'] },
+];
+
+function autoDetectTags(update) {
+  const text = ((update.title || '') + ' ' + (update.summary || '') + ' ' + (update.source_name || '')).toLowerCase();
+  const detected = [];
+  for (const rule of TAG_RULES) {
+    if (rule.kw.some(kw => text.includes(kw))) detected.push(rule.tag);
+  }
+  return detected;
+}
+
+// ============ IMPROVED CATEGORY DETECTION ============
+function detectCategoryFromContent(title, summary) {
+  const text = ((title || '') + ' ' + (summary || '')).toLowerCase();
+
+  // Result — most specific first
+  if (/result|merit list|selection list|final answer key|cut.?off declared|parinaam|selected candidates|written exam result/.test(text)) return 'result';
+
+  // Admit card
+  if (/admit card|hall ticket|call letter|pravesha patra|e.admit/.test(text)) return 'admit_card';
+
+  // Admission
+  if (/\badmission\b|counselling|counseling|seat allot|neet|jee |cuet|entrance exam result|college allot/.test(text)) return 'admission';
+
+  // Yojana/scheme
+  if (/yojana|scheme|subsidy|pm kisan|pmay|awas yojana|ration card|pension|scholarship|sarkari madad|labh/.test(text)) return 'yojana';
+
+  // Recruitment/exam notification
+  if (/vacancy|vacancies|post|recruitment|bharti|notification|apply online|application form|last date|age limit|eligibility|syllabus|new job|jobs/.test(text)) return 'exam';
+
+  return 'news';
+}
+
+// ============ TAGS FILTER BAR ============
+function renderTagsBar(updates) {
+  const bar = document.getElementById('tags-filter-bar');
+  if (!bar) return;
+
+  // Sabhi tags collect karo with count
+  const tagCount = {};
+  updates.forEach(u => {
+    (u._tags || []).forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
+  });
+
+  const tags = Object.entries(tagCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 18); // max 18 tags
+
+  if (!tags.length) { bar.style.display = 'none'; return; }
+
+  bar.style.display = 'flex';
+  const existing = bar.querySelectorAll('button');
+  existing.forEach(b => b.remove());
+
+  tags.forEach(([tag, count]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (selectedTags.includes(tag) ? ' tag-active' : '');
+    btn.style.cssText = 'font-size:11px;padding:4px 10px;height:auto;';
+    btn.innerHTML = tag + '<span class="tag-count-badge">' + count + '</span>';
+    btn.onclick = () => toggleTagFilter(tag, btn);
+    bar.appendChild(btn);
+  });
+
+  // Clear all button
+  if (selectedTags.length) {
+    const clr = document.createElement('button');
+    clr.className = 'filter-btn';
+    clr.style.cssText = 'font-size:10px;padding:3px 8px;height:auto;background:#fce4ec;color:#c62828;border-color:#ef9a9a;';
+    clr.textContent = '✕ Clear Tags';
+    clr.onclick = () => { selectedTags = []; renderTagsBar(allUpdates); renderFilteredNews(); };
+    bar.appendChild(clr);
+  }
+}
+
+function toggleTagFilter(tag, btn) {
+  const idx = selectedTags.indexOf(tag);
+  if (idx === -1) selectedTags.push(tag);
+  else selectedTags.splice(idx, 1);
+  btn.classList.toggle('tag-active', selectedTags.includes(tag));
+  // Update clear button visibility
+  renderTagsBar(allUpdates);
+  renderFilteredNews();
+}
+
 function filterData(cat) {
-  if (cat === 'all') return allUpdates;
-  return allUpdates.filter(u => u.category === cat);
+  let data = cat === 'all' ? allUpdates : allUpdates.filter(u => u.category === cat);
+  // Apply tag filter on top of category filter
+  if (selectedTags.length > 0) {
+    data = data.filter(u =>
+      selectedTags.some(tag => (u._tags || []).includes(tag))
+    );
+  }
+  return data;
 }
 
 function filterNews(cat, btn) {
   currentFilter = cat;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  // Reset tag filters when category changes
+  selectedTags = [];
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active');
+    b.classList.remove('tag-active');
+  });
   btn.classList.add('active');
+  renderTagsBar(allUpdates);
   renderFilteredNews();
 }
 
@@ -1388,10 +1748,14 @@ const catLabel = { exam:'Exam', result:'Result', admit_card:'Admit Card', yojana
 function renderNews(data) {
   const grid = document.getElementById('news-grid');
   if (!data || data.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><div class="big">📭</div>Koi update nahi mili is category mein.</div>';
+    grid.innerHTML = '<div class="empty-state"><div class="big">📭</div>Koi update nahi mili is filter mein.</div>';
     return;
   }
-  grid.innerHTML = data.map(u => `
+  grid.innerHTML = data.map(u => {
+    const tagPills = (u._tags || []).slice(0, 5).map(t =>
+      `<span class="tag-pill ${t.replace('-','')}" onclick="quickTagFilter('${t}')" title="'${t}' tag se filter karo" style="cursor:pointer;">${t}</span>`
+    ).join('');
+    return `
     <div class="news-card ${u.is_important ? 'important' : ''}">
       <div class="news-cat-dot" style="background:${catColor[u.category]||'#f5f5f5'}">
         ${catEmoji[u.category]||'📌'}
@@ -1399,6 +1763,7 @@ function renderNews(data) {
       <div class="news-body">
         <div class="news-title">${u.title}</div>
         ${u.summary ? `<div class="news-summary">${u.summary}</div>` : ''}
+        ${tagPills ? `<div class="source-tags" style="margin-top:5px;">${tagPills}</div>` : ''}
         <div class="news-meta">
           <span class="cat-badge cat-${u.category}">${catLabel[u.category]||u.category}</span>
           ${u.source_name ? `<span class="news-source">📡 ${u.source_name}</span>` : ''}
@@ -1418,8 +1783,17 @@ function renderNews(data) {
           📎 Source + Share
         </button>` : ''}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+
+// Quick tag filter by clicking tag pill on card
+function quickTagFilter(tag) {
+  if (!selectedTags.includes(tag)) selectedTags.push(tag);
+  renderTagsBar(allUpdates);
+  renderFilteredNews();
+  // Scroll to top of news grid
+  document.getElementById('news-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function timeAgo(iso) {
@@ -1820,25 +2194,67 @@ async function loadSources() {
   }
 
   const typeIcon = { rss: '📡', telegram: '✈️', google_doc: '📄', manual: '✏️' };
-  list.innerHTML = sources.map(s => `
+  list.innerHTML = sources.map(s => {
+    const tagsArr = Array.isArray(s.tags) ? s.tags : [];
+    const tagPillsHtml = tagsArr.length
+      ? tagsArr.map(t => `<span class="tag-pill">${t}</span>`).join('')
+      : '<span style="font-size:10px;color:#bbb;">No tags — add karo</span>';
+    return `
     <div class="source-row" id="src-row-${s.id}">
-      <div style="font-size:22px;">${typeIcon[s.source_type] || '🔗'}</div>
-      <div class="source-info">
+      <div style="font-size:22px;flex-shrink:0;">${typeIcon[s.source_type] || '🔗'}</div>
+      <div class="source-info" style="flex:1;min-width:0;">
         <div class="s-name">${s.name}</div>
-        <div class="s-url">${s.url}</div>
-        <div class="s-meta">
+        <div class="s-url" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.url}</div>
+        <div class="s-meta" style="margin-top:2px;">
           <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category === 'other' ? '🤖 auto' : s.category}</span>
-          ${s.last_fetched_at ? '&nbsp; Last fetch: ' + timeAgo(s.last_fetched_at) : '&nbsp; Never fetched'}
+          &nbsp; ${s.last_fetched_at ? 'Last fetch: ' + timeAgo(s.last_fetched_at) : 'Never fetched'}
+        </div>
+        <div class="source-tags" style="margin-top:5px;">${tagPillsHtml}</div>
+        <!-- Inline tags edit -->
+        <div style="display:flex;gap:6px;margin-top:5px;align-items:center;">
+          <input class="src-tag-input" id="tag-edit-${s.id}" 
+            value="${tagsArr.join(', ')}" 
+            placeholder="Tags: railway, ssc, banking" 
+            style="flex:1;padding:5px 8px;font-size:11px;">
+          <button onclick="saveSourceTags('${s.id}', '${s.name}')" 
+            style="background:#3949ab;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+            💾 Save Tags
+          </button>
         </div>
       </div>
-      <button class="source-toggle ${s.is_active ? 'on' : 'off'}" 
-        onclick="toggleSource('${s.id}', ${s.is_active})" 
-        title="${s.is_active ? 'Active — click to disable' : 'Disabled — click to enable'}">
-        ${s.is_active ? '✓' : '✗'}
-      </button>
-      <button class="source-del" onclick="deleteSource('${s.id}', '${s.name}')">🗑️</button>
-    </div>
-  `).join('');
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+        <button class="source-toggle ${s.is_active ? 'on' : 'off'}" 
+          onclick="toggleSource('${s.id}', ${s.is_active})" 
+          title="${s.is_active ? 'Active — click to disable' : 'Disabled — click to enable'}">
+          ${s.is_active ? '✓' : '✗'}
+        </button>
+        <button class="source-del" onclick="deleteSource('${s.id}', '${s.name}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveSourceTags(id, name) {
+  const input = document.getElementById('tag-edit-' + id);
+  if (!input) return;
+  const tags = input.value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ tags })
+  });
+  if (res.ok) {
+    showToast('✅ ' + name + ' ke tags save ho gaye!', 'green');
+    activeSourceNames = null;
+    loadSources();
+    setTimeout(() => loadUpdates(), 500);
+  } else {
+    showToast('❌ Tags save nahi hue — Supabase error');
+  }
 }
 
 async function addSource() {
@@ -1846,6 +2262,8 @@ async function addSource() {
   const url  = document.getElementById('src-url').value.trim();
   const type = document.getElementById('src-type').value;
   const cat  = document.getElementById('src-category').value;
+  const tagsRaw = document.getElementById('src-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
 
   if (!name || !url) { showToast('❌ Name aur URL zaroori hai'); return; }
   if (!url.startsWith('http')) { showToast('❌ URL https:// se shuru honi chahiye'); return; }
@@ -1853,19 +2271,13 @@ async function addSource() {
   // URL fixes
   let finalUrl = url.trim();
   if (type === 'telegram') {
-    // t.me/channel -> t.me/s/channel
     if (finalUrl.includes('t.me/') && !finalUrl.includes('/s/')) {
       finalUrl = finalUrl.replace('https://t.me/', 'https://t.me/s/');
       finalUrl = finalUrl.replace('http://t.me/', 'https://t.me/s/');
     }
-    // Sirf channel name diya ho to
     if (!finalUrl.startsWith('http')) {
       finalUrl = 'https://t.me/s/' + finalUrl.replace('@','');
     }
-  }
-  // RSS feed URL mein trailing slash
-  if (type === 'rss' && !finalUrl.endsWith('/') && !finalUrl.includes('?')) {
-    // dont add slash
   }
 
   const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources', {
@@ -1876,13 +2288,13 @@ async function addSource() {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     },
-    body: JSON.stringify({ 
-      name, 
-      url: finalUrl, 
-      source_type: type, 
-      // Telegram/multi-category sources ke liye 'other' rakho — fetch time auto-detect hoga
-      category: cat === 'other' ? 'other' : cat, 
-      is_active: true 
+    body: JSON.stringify({
+      name,
+      url: finalUrl,
+      source_type: type,
+      category: cat === 'other' ? 'other' : cat,
+      tags: tags,
+      is_active: true
     })
   });
 
@@ -1890,6 +2302,8 @@ async function addSource() {
     showToast('✅ Source add ho gaya!', 'green');
     document.getElementById('src-name').value = '';
     document.getElementById('src-url').value = '';
+    document.getElementById('src-tags').value = '';
+    activeSourceNames = null; // force reload on next news fetch
     loadSources();
   } else {
     showToast('❌ Add nahi hua. Dobara try karo.');
@@ -1906,8 +2320,12 @@ async function toggleSource(id, currentState) {
     },
     body: JSON.stringify({ is_active: !currentState })
   });
+  // Cache invalidate karein taaki disabled source ki news turant hide ho
+  activeSourceNames = null;
   loadSources();
-  showToast(currentState ? '⏸️ Source disabled' : '▶️ Source enabled', 'green');
+  showToast(currentState ? '⏸️ Source disabled — uski news bhi hat gayi' : '▶️ Source enabled', 'green');
+  // News bhi reload karo
+  setTimeout(() => loadUpdates(), 400);
 }
 
 async function deleteSource(id, name) {
@@ -2107,6 +2525,28 @@ document.getElementById('shareModal').addEventListener('click', (e) => {
           📤 Direct Share (Image + Text)
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN LOGIN MODAL -->
+<div class="modal-overlay" id="pinModal" style="z-index:999;">
+  <div class="pin-modal-box">
+    <div class="pin-logo">🔐</div>
+    <div class="pin-title">Operator PIN Daalo</div>
+    <div class="pin-sub">
+      Apna 4–6 digit PIN daalo.<br>
+      Naya operator ho? Koi bhi PIN set karo — wahi PIN har device pe kaam karega.
+    </div>
+    <div class="pin-input-row">
+      <input class="pin-input-big" type="password" id="pin-input" maxlength="6" placeholder="• • • •"
+        onkeydown="if(event.key===&apos;Enter&apos;) setPinAndLogin()">
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <button class="pin-login-btn" onclick="setPinAndLogin()">🚀 Login / Access Panel</button>
+    <div class="pin-hint">
+      💡 PIN sirf tumhare pass hona chahiye.<br>
+      Branding, sources sab PIN se linked rahega.
     </div>
   </div>
 </div>
