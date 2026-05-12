@@ -639,6 +639,39 @@ body {
   border-radius: 7px; padding: 4px 10px; font-size: 11px; cursor: pointer;
 }
 .source-del:hover { background: #ffebee; }
+.action-btn.src-btn {
+  border-color: #7b1fa2;
+  color: #7b1fa2;
+}
+.action-btn.src-btn:hover { background: #f3e5f5; }
+.source-file-preview {
+  background: #f8f9ff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+.source-file-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.source-file-preview .file-icon {
+  font-size: 48px;
+}
+.source-file-preview .file-name {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  padding: 0 10px;
+}
 .toast {
   position: fixed;
   bottom: 24px;
@@ -999,12 +1032,25 @@ body {
       <!-- TEXT TAB -->
       <div class="tab-content active" id="tab-text">
         <div class="text-preview" id="text-preview-content"></div>
-        <div class="modal-actions">
-          <button class="modal-btn copy" onclick="copyText()">📋 Copy Text</button>
-          <button class="modal-btn wa" onclick="shareWhatsApp()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            WhatsApp pe share
+        
+        <!-- Source file attach section -->
+        <div id="source-attach-section" style="display:none;background:#f3e5f5;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#7b1fa2;display:flex;align-items:center;gap:8px;">
+          <span id="source-attach-label"></span>
+          <button onclick="currentSourceUrl='';updateShareSourceSection()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#999;font-size:14px;">✕</button>
+        </div>
+
+        <div class="modal-actions" style="flex-wrap:wrap;gap:6px;">
+          <button class="modal-btn copy" onclick="copyText()" style="flex:1;min-width:120px;">📋 Copy Text</button>
+          <button class="modal-btn" onclick="mobileShare()" style="flex:1;min-width:120px;background:#7b1fa2;color:#fff;border-color:#7b1fa2;">
+            📤 Share (Mobile)
           </button>
+          <button class="modal-btn wa" onclick="shareWithSource()" style="flex:2;min-width:200px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp + Source Link
+          </button>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:center;">
+          💡 Source file ke liye pehle <b>📥 Source File</b> button dabao — phir share karo
         </div>
       </div>
 
@@ -1365,9 +1411,12 @@ function renderNews(data) {
           💬 WA Share
         </button>
         <button class="action-btn img" onclick="openShare(${JSON.stringify(u).replace(/"/g,'&quot;')}, true)">
-          🖼️ Image
+          🖼️ Image Card
         </button>
-        ${u.original_url ? `<a class="action-btn" href="${u.original_url}" target="_blank" style="text-decoration:none;">🔗 Open</a>` : ''}
+        ${u.original_url ? `
+        <button class="action-btn" style="border-color:#1565c0;color:#1565c0;" onclick="openSourceFile('${u.original_url}','${(u.source_name||'').replace(/'/g,'').replace(/"/g,'')}','${JSON.stringify(u).replace(/"/g,'&quot;')}')">
+          📎 Source + Share
+        </button>` : ''}
       </div>
     </div>
   `).join('');
@@ -1384,6 +1433,10 @@ function timeAgo(iso) {
 // ============ SHARE MODAL ============
 function openShare(update, goImage = false) {
   currentUpdate = typeof update === 'string' ? JSON.parse(update) : update;
+  // Source reset karo naye update ke liye
+  currentSourceUrl = '';
+  currentSourceType = '';
+  updateShareSourceSection();
   buildTextPreview();
   updateImageCard();
   document.getElementById('shareModal').classList.add('open');
@@ -1531,6 +1584,105 @@ function downloadImage() {
   a.download = 'news-update-' + Date.now() + '.png';
   a.click();
   showToast('⬇️ Image download ho rahi hai!', 'green');
+}
+
+// ── SOURCE FILE DOWNLOAD & SHARE ─────────────────────
+async function downloadSourceFile(url, sourceName) {
+  if (!url) return;
+  
+  // Check file type
+  const urlLower = url.toLowerCase();
+  const isPdf = urlLower.includes('.pdf');
+  const isImage = urlLower.match(/\.(jpg|jpeg|png|webp|gif)($|\?)/);
+  
+  if (isPdf || isImage) {
+    // Direct download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = sourceName + (isPdf ? '.pdf' : '.jpg');
+    a.target = '_blank';
+    a.click();
+    showToast('📥 Source file download ho rahi hai...', 'green');
+  } else {
+    // Web page — new tab mein kholo
+    window.open(url, '_blank');
+    showToast('🔗 Source page khul gaya', 'green');
+  }
+  
+  // Share modal mein source attach option dikhao
+  currentSourceUrl = url;
+  currentSourceType = isPdf ? 'pdf' : (isImage ? 'image' : 'link');
+  updateShareSourceSection();
+}
+
+var currentSourceUrl = '';
+var currentSourceType = '';
+
+function updateShareSourceSection() {
+  const el = document.getElementById('source-attach-section');
+  if (!el) return;
+  if (!currentSourceUrl) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  const typeLabel = currentSourceType === 'pdf' ? '📄 PDF' : currentSourceType === 'image' ? '🖼️ Image' : '🔗 Link';
+  document.getElementById('source-attach-label').textContent = typeLabel + ' attached: ' + currentSourceUrl.split('/').pop();
+}
+
+function shareWithSource() {
+  const text = document.getElementById('text-preview-content').textContent;
+  if (!currentSourceUrl) {
+    shareWhatsApp();
+    return;
+  }
+  // Text mein source link add karo
+  const textWithSource = text + '\n\n📎 Source: ' + currentSourceUrl;
+  const wa = branding.whatsapp_number;
+  const url = wa
+    ? 'https://wa.me/' + wa + '?text=' + encodeURIComponent(textWithSource)
+    : 'https://wa.me/?text=' + encodeURIComponent(textWithSource);
+  window.open(url, '_blank');
+  logShare('whatsapp');
+  // Also trigger download so user can attach manually
+  if (currentSourceType === 'pdf' || currentSourceType === 'image') {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = currentSourceUrl;
+      a.download = 'source-file';
+      a.target = '_blank';
+      a.click();
+    }, 500);
+    showToast('💡 File bhi download ho rahi hai — WhatsApp mein manually attach karo', 'green');
+  }
+}
+
+// Mobile navigator.share — Android Chrome pe direct share
+async function mobileShare() {
+  const text = document.getElementById('text-preview-content').textContent;
+  if (!navigator.share) {
+    shareWhatsApp();
+    return;
+  }
+  try {
+    const shareData = { text: text, title: currentUpdate?.title || 'Update' };
+    // Agar source image/pdf hai to fetch karke share karo
+    if (currentSourceUrl && (currentSourceType === 'image' || currentSourceType === 'pdf')) {
+      try {
+        const res = await fetch(currentSourceUrl);
+        const blob = await res.blob();
+        const ext = currentSourceType === 'pdf' ? 'pdf' : 'jpg';
+        const file = new File([blob], 'source.' + ext, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          shareData.files = [file];
+        }
+      } catch(e) { /* file fetch fail — text only share */ }
+    }
+    await navigator.share(shareData);
+    logShare('mobile_share');
+  } catch(e) {
+    if (e.name !== 'AbortError') shareWhatsApp();
+  }
 }
 
 async function logShare(type) {
@@ -1803,10 +1955,161 @@ function showToast(msg, type = '') {
 function getVal(id) { return document.getElementById(id)?.value || ''; }
 function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
+// ── SOURCE FILE SHARE ────────────────────────────────
+var currentSourceUrl = '';
+var currentSourceName = '';
+
+function openSourceFile(url, name, updateJson) {
+  currentSourceUrl = url;
+  currentSourceName = name;
+  // Parse update for message
+  try {
+    const u = JSON.parse(updateJson.replace(/&quot;/g, '"'));
+    currentUpdate = u;
+  } catch(e) {}
+
+  const preview = document.getElementById('sf-preview');
+  const textPrev = document.getElementById('sf-text-preview');
+
+  // Build share message
+  buildTextPreview();
+  textPrev.textContent = document.getElementById('text-preview-content').textContent;
+
+  // Detect file type and show preview
+  const ext = url.split('?')[0].toLowerCase();
+  const isPdf = ext.endsWith('.pdf');
+  const isImg = ext.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
+
+  if (isImg) {
+    preview.innerHTML = '<img src="' + url + '" alt="source image" onerror="this.parentElement.innerHTML='<div class=file-icon>🖼️</div><div class=file-name>Image load nahi hui — Download karo</div>'">';
+  } else if (isPdf) {
+    preview.innerHTML = '<div class="file-icon">📄</div><div class="file-name">PDF File<br><small>' + (name || url.split('/').pop()) + '</small></div>';
+  } else {
+    // Try as image first
+    preview.innerHTML = '<img src="' + url + '" alt="source" style="max-width:100%;max-height:280px;" onerror="this.parentElement.innerHTML='<div class=file-icon>🔗</div><div class=file-name>File preview available nahi — Download karke dekho</div>'">';
+  }
+
+  // Check mobile share support
+  if (navigator.share && navigator.canShare) {
+    document.getElementById('sf-mobile-share').style.display = 'block';
+  }
+
+  document.getElementById('sourceFileModal').classList.add('open');
+}
+
+function closeSourceModal() {
+  document.getElementById('sourceFileModal').classList.remove('open');
+}
+
+function copySourceMsg() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Message copy ho gaya!', 'green'));
+}
+
+function downloadSourceNow() {
+  if (!currentSourceUrl) return;
+  // Direct download
+  const a = document.createElement('a');
+  a.href = currentSourceUrl;
+  a.download = currentSourceName || 'source-file';
+  a.target = '_blank';
+  a.click();
+  showToast('📥 Download shuru ho gayi!', 'green');
+}
+
+function shareSourceWA() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  const waNum = branding.whatsapp_number || '';
+  // Text + source link saath mein
+  const fullMsg = text + '\n\n📎 Source: ' + currentSourceUrl;
+  const waUrl = waNum
+    ? 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(fullMsg)
+    : 'https://wa.me/?text=' + encodeURIComponent(fullMsg);
+  window.open(waUrl, '_blank');
+  showToast('💬 WhatsApp khul raha hai...', 'green');
+}
+
+async function mobileShareSource() {
+  const text = document.getElementById('sf-text-preview').textContent;
+  try {
+    // Try to fetch and share the file
+    const response = await fetch(currentSourceUrl);
+    const blob = await response.blob();
+    const ext = currentSourceUrl.split('.').pop().split('?')[0] || 'jpg';
+    const fileName = (currentSourceName || 'source') + '.' + ext;
+    const file = new File([blob], fileName, { type: blob.type });
+
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: currentUpdate?.title || 'Update',
+        text: text,
+        files: [file]
+      });
+      showToast('✅ Share ho gaya!', 'green');
+    } else {
+      // Fallback — just text share
+      await navigator.share({ title: currentUpdate?.title || 'Update', text: text + '\n\n📎 ' + currentSourceUrl });
+    }
+  } catch(e) {
+    // Fallback to WhatsApp
+    shareSourceWA();
+  }
+}
+
+// Close source modal on overlay click
+document.getElementById('sourceFileModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeSourceModal();
+});
+
 // Close modal on overlay click
 document.getElementById('shareModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeModal();
 });
 </script>
+<!-- SOURCE FILE MODAL -->
+<div class="modal-overlay" id="sourceFileModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>📎 Source File — Share ke saath</h3>
+      <button class="modal-close" onclick="closeSourceModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- File preview -->
+      <div class="source-file-preview" id="sf-preview">
+        <div class="file-icon">⏳</div>
+        <div class="file-name">Loading...</div>
+      </div>
+
+      <!-- Share message preview -->
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">📋 Tumhara message (copy hoga):</div>
+      <div class="text-preview" id="sf-text-preview" style="max-height:120px;font-size:12px;"></div>
+
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:12px;color:#795548;margin:10px 0;">
+        💡 <strong>How to share:</strong> Neeche se message copy karo → WhatsApp open karo → message paste karo → phir source file manually attach karo (Download button se pehle save karo)
+      </div>
+
+      <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+        <button class="modal-btn copy" onclick="copySourceMsg()" style="flex:1;">
+          📋 Message Copy
+        </button>
+        <button class="modal-btn" id="sf-download-btn" onclick="downloadSourceNow()" style="flex:1;background:#1565c0;color:#fff;border-color:#1565c0;">
+          📥 File Download
+        </button>
+        <button class="modal-btn wa" onclick="shareSourceWA()" style="flex:1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WA pe bhejo
+        </button>
+      </div>
+
+      <!-- Mobile share button -->
+      <div id="sf-mobile-share" style="display:none;margin-top:8px;">
+        <button onclick="mobileShareSource()" style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;">
+          📤 Direct Share (Image + Text)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
