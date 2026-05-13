@@ -1532,28 +1532,12 @@ async function loadUpdates() {
   document.getElementById('news-grid').innerHTML =
     '<div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>';
 
-  // Step 1a: Active sources — SIRF name fetch (tags column exist kare ya na kare, ye hamesha kaam karega)
-  try {
-    const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=id,name,source_type&is_active=eq.true', {
-      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-    });
-    const sources = await res.json();
-    if (Array.isArray(sources) && sources.length > 0) {
-      activeSourceNames = sources.map(s => s.name);
-    } else {
-      // Agar sources array nahi mila (error JSON etc.) — filter mat lagao, sab dikhao
-      activeSourceNames = null;
-      console.warn('Sources fetch issue:', sources);
-    }
-  } catch(e) {
-    activeSourceNames = null;
-    console.warn('Sources fetch failed:', e.message);
-  }
-
-  // Step 1b: Tags fetch — alag try/catch taaki tags fail ho toh baki kaam na ruke
+  // Step 1: Tags map build karo (source filter frontend pe nahi lagega)
+  // Backend (fetch-updates.js) pehle se is_active check karta hai naye updates ke liye
+  // Purane stored updates sabhi dikhenge — source disabled ho ya na ho
   window._sourceTagMap = {};
   try {
-    const tagRes = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=name,tags&is_active=eq.true', {
+    const tagRes = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=name,tags', {
       headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
     });
     const tagSources = await tagRes.json();
@@ -1564,14 +1548,14 @@ async function loadUpdates() {
         }
       });
     }
-  } catch(e) { /* tags optional hain — fail ho toh chalo */ }
+  } catch(e) { /* tags optional — fail ho toh chalo */ }
 
-  // Step 2: Updates fetch — limit badhaya 300 taaki saare sources ki news aaye
+  // Step 2: Saare updates fetch karo — limit 500 taaki koi update miss na ho
   const { data, error } = await getCCPClient()
     .from('gov_updates')
     .select('*')
     .order('published_at', { ascending: false })
-    .limit(300);
+    .limit(500);
 
   if (error) {
     showToast('❌ Updates load nahi huye');
@@ -1581,15 +1565,6 @@ async function loadUpdates() {
   }
 
   let updates = data || [];
-
-  // Step 3: Disabled sources ki news filter — case-insensitive match
-  if (activeSourceNames && activeSourceNames.length > 0) {
-    const activeNamesLower = activeSourceNames.map(n => n.toLowerCase().trim());
-    updates = updates.filter(u => {
-      if (!u.source_name) return true; // source_name nahi toh dikhao
-      return activeNamesLower.includes(u.source_name.toLowerCase().trim());
-    });
-  }
 
   // Step 3b: Junk / meaningless messages filter karo
   updates = updates.filter(u => {
