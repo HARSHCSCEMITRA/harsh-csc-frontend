@@ -924,14 +924,9 @@ body {
           <option value="other_state">Other State</option>
         </select>
       </div>
-      <!-- Category filter row -->
+      <!-- Filter row — sirf Sabhi + Search, category buttons removed (tags se filter hoga) -->
       <div class="filter-bar">
         <button class="filter-btn active" onclick="filterNews('all', this)">Sabhi</button>
-        <button class="filter-btn" onclick="filterNews('exam', this)">📋 Exam</button>
-        <button class="filter-btn" onclick="filterNews('result', this)">🏆 Result</button>
-        <button class="filter-btn" onclick="filterNews('admit_card', this)">📄 Admit Card</button>
-        <button class="filter-btn" onclick="filterNews('yojana', this)">🏛️ Yojana</button>
-        <button class="filter-btn" onclick="filterNews('admission', this)">🎓 Admission</button>
         <div class="filter-search">
           🔍 <input type="text" placeholder="Search..." id="search-input" oninput="searchNews(this.value)">
         </div>
@@ -1578,6 +1573,42 @@ async function loadUpdates() {
     );
   }
 
+  // Step 3b: Junk / meaningless messages filter karo
+  updates = updates.filter(u => {
+    const title = (u.title || '').trim();
+    const summary = (u.summary || '').trim();
+
+    // Empty title
+    if (!title || title.length < 5) return false;
+
+    // Pure URL as title (YouTube links, bare URLs, t.me links)
+    if (/^https?:\/\//i.test(title)) return false;
+
+    // Telegram system messages
+    const systemMsgPatterns = [
+      /^channel created$/i,
+      /^messages in this channel will/i,
+      /^pinned message/i,
+      /^document from\s*\.?\s*$/i,
+      /^voice message$/i,
+      /^video message$/i,
+      /^photo$/i,
+      /^sticker$/i,
+      /^poll:/i,
+      /^forwarded from/i,
+    ];
+    if (systemMsgPatterns.some(p => p.test(title))) return false;
+
+    // Sirf 1–2 word title with no summary — koi meaning nahi
+    const wordCount = title.split(/\s+/).filter(Boolean).length;
+    if (wordCount <= 2 && !summary) return false;
+
+    // Title + summary dono milake bahut chhote hain (< 20 chars total)
+    if ((title + summary).replace(/\s/g,'').length < 15) return false;
+
+    return true;
+  });
+
   // Step 4: Auto-fix categories + inject source tags
   updates = updates.map(u => {
     // Better category if stored as 'other' or missing
@@ -1615,20 +1646,27 @@ function updateStats() {
 
 // ============ AUTO TAG DETECTION ============
 const TAG_RULES = [
-  { tag: 'railway',    kw: ['railway','rrb','rrc','ntpc','group-d','group d','loco pilot','station master','indian railways','rail'] },
-  { tag: 'ssc',        kw: ['ssc','staff selection','chsl','cgl',' mts ','stenographer','gd constable','capf'] },
-  { tag: 'banking',    kw: ['bank','ibps','sbi','rbi','nabard','rrb po','clerk','specialist officer','financial'] },
-  { tag: 'teaching',   kw: ['teacher','tet','ctet','reet','rtet','pgt','tgt','prt','school','education','shiksha','shikshak','adhyapak'] },
-  { tag: 'police',     kw: ['police','constable','sub inspector','si post','rpf','cisf','bsf','crpf','itbp','ssb ','paramilitary'] },
-  { tag: 'defence',    kw: ['army','navy','air force','nda','cds','afcat','agniveer','territorial army','military','sainik'] },
-  { tag: 'rajasthan',  kw: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','jaipur','jodhpur','bikaner','kota','ajmer','udaipur','alwar','sikar'] },
-  { tag: 'psc',        kw: ['psc','public service commission','civil services','ias','ips','ifs','upsc','state psc'] },
-  { tag: 'yojana',     kw: ['yojana','scheme','subsidy','pm kisan','pmay','awas yojana','ration','pension','scholarship','labh','laabh'] },
-  { tag: 'result',     kw: ['result','merit list','selection list','final answer key','cut off','cutoff','parinaam','selected candidates'] },
-  { tag: 'admit-card', kw: ['admit card','hall ticket','call letter','pravesha patra','e-admit'] },
-  { tag: 'nursing',    kw: ['nurse','nursing','aiims','norcet','health worker','anm','gnm','staff nurse'] },
-  { tag: 'engineering',kw: ['junior engineer','je post','assistant engineer','ae post','technical','iti','diploma'] },
-  { tag: 'central-govt',kw:['central government','central govt','ministry','department','commission','india govt'] },
+  // Job category tags
+  { tag: 'railway',     kw: ['railway','rrb','rrc','ntpc','group-d','group d','loco pilot','station master','indian railways','rail','alp'] },
+  { tag: 'ssc',         kw: ['ssc','staff selection','chsl','cgl',' mts ','stenographer','gd constable','capf','ssc gd'] },
+  { tag: 'banking',     kw: ['bank','ibps','sbi','rbi','nabard','rrb po','clerk','specialist officer','financial','nainital bank','bank of baroda','pnb','canara'] },
+  { tag: 'teaching',    kw: ['teacher','tet','ctet','reet','rtet','pgt','tgt','prt','school','education','shiksha','shikshak','adhyapak','lecture','principal','headmaster'] },
+  { tag: 'police',      kw: ['police','constable','sub inspector','si post','rpf','cisf','bsf','crpf','itbp','ssb ','paramilitary','home guard'] },
+  { tag: 'defence',     kw: ['army','navy','air force','nda','cds','afcat','agniveer','territorial army','military','sainik','soldier','havildar'] },
+  { tag: 'engineering', kw: ['junior engineer','je post','assistant engineer','ae post','iti ','diploma engineer','technical post','ldc','jldb'] },
+  { tag: 'nursing',     kw: ['nurse','nursing','aiims','norcet','health worker','anm','gnm','staff nurse','paramedic','pharmacist'] },
+  { tag: 'psc',         kw: ['psc','public service commission','civil services','ias','ips','ifs','upsc','state psc','ras','rpsc','mppsc','bpsc'] },
+
+  // State tags
+  { tag: 'rajasthan',   kw: ['rajasthan','rpsc','rsmssb','rbse','rtet','rssb','jaipur','jodhpur','bikaner','kota','ajmer','udaipur','alwar','sikar','rssb','raj govt'] },
+  { tag: 'central-govt',kw: ['central government','central govt','ministry','india govt','union govt','central recruitment','all india'] },
+
+  // Update type tags — ye sabse important hain
+  { tag: 'result',      kw: ['result','merit list','selection list','final answer key','cut off','cutoff','parinaam','selected candidates','written result','score card','marks','scorecard','परिणाम','result out','result declared'] },
+  { tag: 'admit-card',  kw: ['admit card','hall ticket','call letter','pravesha patra','e-admit','admit card out','admit card download','pravesh patra','admit'] },
+  { tag: 'exam',        kw: ['vacancy','vacancies','recruitment','bharti','notification','apply online','application form','last date','age limit','eligibility','syllabus','new job','post','exam date','schedule','calendar','exam notice','form out','form bharo','form bharai','आवेदन','पद','भर्ती'] },
+  { tag: 'admission',   kw: ['admission','counselling','counseling','seat allot','neet','jee ','cuet','college allot','merit list admission','pravesh','प्रवेश'] },
+  { tag: 'yojana',      kw: ['yojana','scheme','subsidy','pm kisan','pmay','awas yojana','ration','pension','scholarship','labh','laabh','sarkari madad','helpline','portal','seva','service','muft','free service','योजना','छात्रवृत्ति'] },
 ];
 
 function autoDetectTags(update) {
@@ -1726,7 +1764,6 @@ function filterData(cat) {
 
 function filterNews(cat, btn) {
   currentFilter = cat;
-  // Reset tag filters when category changes
   selectedTags = [];
   document.querySelectorAll('.filter-btn').forEach(b => {
     b.classList.remove('active');
@@ -1765,9 +1802,8 @@ function renderNews(data) {
         ${u.summary ? `<div class="news-summary">${u.summary}</div>` : ''}
         ${tagPills ? `<div class="source-tags" style="margin-top:5px;">${tagPills}</div>` : ''}
         <div class="news-meta">
-          <span class="cat-badge cat-${u.category}">${catLabel[u.category]||u.category}</span>
           ${u.source_name ? `<span class="news-source">📡 ${u.source_name}</span>` : ''}
-          ${u.source_url ? `<a class="source-link" href="${u.source_url}" target="_blank">🔗 Source dekho</a>` : ''}
+          ${u.original_url ? `<a class="source-link" href="${u.original_url}" target="_blank">🔗 Source dekho</a>` : u.source_url ? `<a class="source-link" href="${u.source_url}" target="_blank">🔗 Source dekho</a>` : ''}
           <span class="news-time">${timeAgo(u.published_at)}</span>
         </div>
       </div>
