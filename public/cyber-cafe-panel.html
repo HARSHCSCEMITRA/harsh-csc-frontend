@@ -930,9 +930,22 @@ body {
         </div>
       </div>
 
-      <!-- Tags filter bar — auto-populated from news data -->
+      <!-- Tags filter bar — keyword search, click = filter by that keyword in title/summary -->
       <div class="tags-filter-wrap" id="tags-filter-bar" style="display:none;">
         <span style="font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0;">🏷️ Tags:</span>
+      </div>
+
+      <!-- New Tag creator (search bar ke niche) -->
+      <div id="new-tag-bar" style="display:none;background:var(--card);border:1px dashed var(--border);border-radius:10px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0;">➕ Naya Tag:</span>
+        <input id="new-tag-input" type="text" placeholder="Tag name likhein (e.g. mlsu, patwar, reet 2026)"
+          style="flex:1;min-width:160px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-family:'Noto Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;"
+          onkeydown="if(event.key==='Enter') addCustomTag()">
+        <button onclick="addCustomTag()"
+          style="background:#3949ab;color:#fff;border:none;border-radius:20px;padding:4px 14px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:'Noto Sans',sans-serif;">
+          + Add Tag
+        </button>
+        <span style="font-size:10px;color:#aaa;">Custom tag banao — click karo to filter</span>
       </div>
 
       <div class="news-grid" id="news-grid">
@@ -1776,15 +1789,112 @@ function toggleTagFilter(tag, btn) {
   renderFilteredNews();
 }
 
+// ============ TAGS FILTER — KEYWORD SEARCH ============
+// selectedTags = keywords — update title+summary mein search karo (AND logic)
 function filterData(cat) {
   let data = cat === 'all' ? allUpdates : allUpdates.filter(u => u.category === cat);
-  // Apply tag filter on top of category filter
+
   if (selectedTags.length > 0) {
-    data = data.filter(u =>
-      selectedTags.some(tag => (u._tags || []).includes(tag))
-    );
+    data = data.filter(u => {
+      const haystack = ((u.title || '') + ' ' + (u.summary || '') + ' ' + (u.full_content || '')).toLowerCase();
+      // AND logic — saare selected tags content mein hone chahiye
+      return selectedTags.every(tag => haystack.includes(tag.toLowerCase()));
+    });
   }
   return data;
+}
+
+function toggleTagFilter(tag) {
+  const idx = selectedTags.indexOf(tag);
+  if (idx === -1) selectedTags.push(tag);
+  else selectedTags.splice(idx, 1);
+  renderTagsBar(allUpdates);
+  renderFilteredNews();
+}
+
+function renderTagsBar(updates) {
+  const bar = document.getElementById('tags-filter-bar');
+  const newTagBar = document.getElementById('new-tag-bar');
+  if (!bar) return;
+
+  // Count karo — keyword kitni updates mein match karta hai
+  const tagCount = {};
+  updates.forEach(u => {
+    (u._tags || []).forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
+  });
+
+  // Custom tags bhi count karo
+  (window._customTags || []).forEach(t => {
+    if (!(t in tagCount)) {
+      const hay = updates.filter(u =>
+        ((u.title||'')+(u.summary||'')).toLowerCase().includes(t.toLowerCase())
+      ).length;
+      if (hay > 0) tagCount[t] = hay;
+    }
+  });
+
+  const tags = Object.entries(tagCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 25);
+
+  if (!tags.length) {
+    bar.style.display = 'none';
+    if (newTagBar) newTagBar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  if (newTagBar) newTagBar.style.display = 'flex';
+
+  // Buttons rebuild
+  const existing = bar.querySelectorAll('button');
+  existing.forEach(b => b.remove());
+
+  tags.forEach(([tag, count]) => {
+    const isActive = selectedTags.includes(tag);
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (isActive ? ' tag-active' : '');
+    btn.style.cssText = 'font-size:11px;padding:4px 10px;height:auto;';
+    btn.title = '"' + tag + '" keyword wale updates dikhao';
+    btn.innerHTML = tag + '<span class="tag-count-badge">' + count + '</span>';
+    btn.onclick = () => toggleTagFilter(tag);
+    bar.appendChild(btn);
+  });
+
+  // Active tags info + Clear button
+  if (selectedTags.length) {
+    const info = document.createElement('span');
+    info.style.cssText = 'font-size:10px;color:#5c6bc0;padding:2px 6px;background:#e8eaf6;border-radius:10px;white-space:nowrap;';
+    info.textContent = selectedTags.length > 1 ? '🔗 AND: ' + selectedTags.join(' + ') : '';
+    if (selectedTags.length > 1) bar.appendChild(info);
+
+    const clr = document.createElement('button');
+    clr.className = 'filter-btn';
+    clr.style.cssText = 'font-size:10px;padding:3px 9px;height:auto;background:#fce4ec;color:#c62828;border-color:#ef9a9a;';
+    clr.textContent = '✕ Clear';
+    clr.onclick = () => { selectedTags = []; renderTagsBar(allUpdates); renderFilteredNews(); };
+    bar.appendChild(clr);
+  }
+}
+
+// ── Custom tag add karo ──
+window._customTags = JSON.parse(localStorage.getItem('_customTags') || '[]');
+
+function addCustomTag() {
+  const input = document.getElementById('new-tag-input');
+  if (!input) return;
+  const tag = input.value.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!tag || tag.length < 2) { showToast('❌ Tag kam se kam 2 characters ka hona chahiye'); return; }
+  if (!window._customTags.includes(tag)) {
+    window._customTags.push(tag);
+    localStorage.setItem('_customTags', JSON.stringify(window._customTags));
+  }
+  // Auto select it too
+  if (!selectedTags.includes(tag)) selectedTags.push(tag);
+  input.value = '';
+  renderTagsBar(allUpdates);
+  renderFilteredNews();
+  showToast('✅ Tag "' + tag + '" add ho gaya!', 'green');
 }
 
 function filterNews(cat, btn) {
@@ -1888,25 +1998,6 @@ function renderNews(data) {
         ${bodyContent}
         ${incompleteNote}
         <div class="source-tags" style="margin-top:5px;min-height:4px;">${tagPills}</div>
-
-        <!-- Manual tag editor (collapsed by default) -->
-        <div id="tag-editor-${uid}" style="display:none;margin-top:6px;">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <input id="tag-input-${uid}" value="${currentTagsStr}"
-              placeholder="Tags: railway, result, rajasthan..."
-              style="flex:1;min-width:140px;padding:5px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:'Noto Sans',sans-serif;background:var(--card);color:var(--text);"
-              onkeydown="if(event.key==='Enter') saveNewsTagsInline('${uid}')">
-            <button onclick="saveNewsTagsInline('${uid}')"
-              style="background:#3949ab;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;white-space:nowrap;">
-              💾 Save
-            </button>
-            <button onclick="document.getElementById('tag-editor-${uid}').style.display='none'"
-              style="background:none;border:1px solid #ddd;color:#888;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer;">
-              ✕
-            </button>
-          </div>
-        </div>
-
         <div class="news-meta">
           ${u.source_name ? `<span class="news-source">📡 ${u.source_name}</span>` : ''}
           ${srcUrl ? `<a class="source-link" href="${srcUrl}" target="_blank">${srcLabel}</a>` : ''}
@@ -1924,10 +2015,6 @@ function renderNews(data) {
         <button class="action-btn" style="border-color:#1565c0;color:#1565c0;" onclick="openSourceFile('${u.original_url}','${(u.source_name||'').replace(/'/g,'').replace(/"/g,'')}','${JSON.stringify(u).replace(/"/g,'&quot;')}')">
           📎 Source + Share
         </button>` : ''}
-        <button class="action-btn" style="border-color:#f57f17;color:#f57f17;"
-          onclick="document.getElementById('tag-editor-${uid}').style.display=document.getElementById('tag-editor-${uid}').style.display==='none'?'block':'none'">
-          🏷️ Edit Tags
-        </button>
         <button class="action-btn" style="border-color:#c62828;color:#c62828;"
           onclick="deleteNewsUpdate('${uid}', '${cleanTitle.substring(0,50).replace(/'/g,'').replace(/"/g,'')}')">
           🗑️ Delete
@@ -1989,13 +2076,12 @@ async function deleteNewsUpdate(id, title) {
   }
 }
 
-// Quick tag filter by clicking tag pill on card
+// Quick tag filter — news card ke tag pill click se
 function quickTagFilter(tag) {
   if (!selectedTags.includes(tag)) selectedTags.push(tag);
   renderTagsBar(allUpdates);
   renderFilteredNews();
-  // Scroll to top of news grid
-  document.getElementById('news-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('tags-filter-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function timeAgo(iso) {
