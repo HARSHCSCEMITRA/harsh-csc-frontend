@@ -884,20 +884,20 @@ body {
     <div class="page active" id="page-news">
       <div class="stats-row" id="stats-row">
         <div class="stat-card">
-          <div class="stat-icon" style="background:#e8f5e9;">📋</div>
-          <div><div class="stat-label">Aaj ki updates</div><div class="stat-value" id="stat-today">-</div></div>
+          <div class="stat-icon" style="background:#e8f5e9;">📅</div>
+          <div><div class="stat-label">Today's Updates</div><div class="stat-value" id="stat-today">-</div></div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background:#e3f2fd;">🏆</div>
-          <div><div class="stat-label">Exam notifications</div><div class="stat-value" id="stat-exam">-</div></div>
+          <div class="stat-icon" style="background:#e3f2fd;">📆</div>
+          <div><div class="stat-label">This Week</div><div class="stat-value" id="stat-week">-</div></div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background:#fff3e0;">📄</div>
-          <div><div class="stat-label">Results</div><div class="stat-value" id="stat-result">-</div></div>
+          <div class="stat-icon" style="background:#fff3e0;">🗓️</div>
+          <div><div class="stat-label">This Month</div><div class="stat-value" id="stat-month">-</div></div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background:#ede7f6;">🏛️</div>
-          <div><div class="stat-label">Yojana updates</div><div class="stat-value" id="stat-yojana">-</div></div>
+          <div class="stat-icon" style="background:#ede7f6;">📊</div>
+          <div><div class="stat-label">Total Updates</div><div class="stat-value" id="stat-total">-</div></div>
         </div>
       </div>
 
@@ -1617,24 +1617,56 @@ async function loadUpdates() {
     return u;
   });
 
+  // Step 5: Frontend duplicate remove — same title (first 80 chars) ek hi baar dikhao
+  // Duplicate IDs track karo DB cleanup ke liye
+  const seenTitles = new Set();
+  const dupIds = [];
+  const allData = data || [];
+  updates = updates.filter(u => {
+    const key = (u.title || '').trim().toLowerCase().substring(0, 80).replace(/\s+/g, ' ');
+    if (!key || seenTitles.has(key)) return false;
+    seenTitles.add(key);
+    return true;
+  });
+  // Duplicate IDs collect karo (jo filter ho gaye)
+  const keptIds = new Set(updates.map(u => u.id));
+  allData.forEach(u => { if (!keptIds.has(u.id)) dupIds.push(u.id); });
+
   allUpdates = updates;
   updateStats();
   renderTagsBar(allUpdates);
   renderNews(filterData(currentFilter));
   document.getElementById('last-updated-txt').textContent =
     'Updated: ' + new Date().toLocaleTimeString('hi-IN');
+
+  // Background mein DB se bhi duplicates delete karo (silently)
+  if (dupIds.length > 0) {
+    console.log('🧹 Duplicate cleanup:', dupIds.length, 'entries');
+    dupIds.slice(0, 20).forEach(async (id) => {
+      try {
+        await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
+          method: 'DELETE',
+          headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+        });
+      } catch(e) { /* silent */ }
+    });
+  }
 }
 
 function updateStats() {
-  const today = new Date().toDateString();
+  const now = new Date();
+  const todayStr = now.toDateString();
+
+  const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+  const monthAgo = new Date(now); monthAgo.setDate(now.getDate() - 30);
+
   document.getElementById('stat-today').textContent =
-    allUpdates.filter(u => new Date(u.published_at).toDateString() === today).length;
-  document.getElementById('stat-exam').textContent =
-    allUpdates.filter(u => u.category === 'exam').length;
-  document.getElementById('stat-result').textContent =
-    allUpdates.filter(u => u.category === 'result').length;
-  document.getElementById('stat-yojana').textContent =
-    allUpdates.filter(u => u.category === 'yojana').length;
+    allUpdates.filter(u => u.published_at && new Date(u.published_at).toDateString() === todayStr).length;
+  document.getElementById('stat-week').textContent =
+    allUpdates.filter(u => u.published_at && new Date(u.published_at) >= weekAgo).length;
+  document.getElementById('stat-month').textContent =
+    allUpdates.filter(u => u.published_at && new Date(u.published_at) >= monthAgo).length;
+  document.getElementById('stat-total').textContent = allUpdates.length;
 }
 
 // ============ AUTO TAG DETECTION ============
@@ -1822,40 +1854,59 @@ function renderNews(data) {
     return;
   }
   grid.innerHTML = data.map(u => {
-    const tagPills = (u._tags || []).slice(0, 5).map(t =>
+    const tagPills = (u._tags || []).slice(0, 6).map(t =>
       `<span class="tag-pill ${t.replace(/[^a-z]/g,'')}" onclick="quickTagFilter('${t}')" title="'${t}' tag se filter karo" style="cursor:pointer;">${t}</span>`
     ).join('');
 
     const cleanTitle   = cleanText(u.title);
     const cleanSummary = cleanText(u.summary);
 
-    // Combine: agar summary alag content hai toh dono dikhao, warna sirf title
     const isSameContent = cleanSummary && cleanTitle.startsWith(cleanSummary.substring(0, 40));
     const bodyContent = isSameContent
       ? `<div class="news-title">${cleanTitle}</div>`
       : `<div class="news-title">${cleanTitle}</div>${cleanSummary ? `<div class="news-summary">${cleanSummary}</div>` : ''}`;
 
-    // Incomplete text warning
     const incompleteNote = looksIncomplete(cleanTitle) && !cleanSummary
-      ? `<div style="font-size:10px;color:#f57f17;margin-top:2px;">⚠️ Telegram se puri news ke liye source dekho</div>`
+      ? `<div style="font-size:10px;color:#f57f17;margin-top:2px;">⚠️ Puri news ke liye source dekho</div>`
       : '';
 
-    // Source URL — Telegram post → channel URL (avoids mismatch)
     const srcUrl = u.original_url ? getChannelUrl(u.original_url)
-                 : u.source_url  ? getChannelUrl(u.source_url)
-                 : '';
+                 : u.source_url  ? getChannelUrl(u.source_url) : '';
     const isTg = srcUrl && srcUrl.includes('t.me');
     const srcLabel = isTg ? '📲 Telegram Channel' : '🔗 Source dekho';
 
+    // Current tags for manual edit (db tags + auto tags)
+    const currentTagsStr = (u._tags || []).join(', ');
+    const uid = u.id || '';
+
     return `
-    <div class="news-card ${u.is_important ? 'important' : ''}">
+    <div class="news-card ${u.is_important ? 'important' : ''}" id="ncard-${uid}">
       <div class="news-cat-dot" style="background:${catColor[u.category]||'#f5f5f5'}">
         ${catEmoji[u.category]||'📌'}
       </div>
       <div class="news-body">
         ${bodyContent}
         ${incompleteNote}
-        ${tagPills ? `<div class="source-tags" style="margin-top:5px;">${tagPills}</div>` : ''}
+        <div class="source-tags" style="margin-top:5px;min-height:4px;">${tagPills}</div>
+
+        <!-- Manual tag editor (collapsed by default) -->
+        <div id="tag-editor-${uid}" style="display:none;margin-top:6px;">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input id="tag-input-${uid}" value="${currentTagsStr}"
+              placeholder="Tags: railway, result, rajasthan..."
+              style="flex:1;min-width:140px;padding:5px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:'Noto Sans',sans-serif;background:var(--card);color:var(--text);"
+              onkeydown="if(event.key==='Enter') saveNewsTagsInline('${uid}')">
+            <button onclick="saveNewsTagsInline('${uid}')"
+              style="background:#3949ab;color:#fff;border:none;border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;white-space:nowrap;">
+              💾 Save
+            </button>
+            <button onclick="document.getElementById('tag-editor-${uid}').style.display='none'"
+              style="background:none;border:1px solid #ddd;color:#888;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer;">
+              ✕
+            </button>
+          </div>
+        </div>
+
         <div class="news-meta">
           ${u.source_name ? `<span class="news-source">📡 ${u.source_name}</span>` : ''}
           ${srcUrl ? `<a class="source-link" href="${srcUrl}" target="_blank">${srcLabel}</a>` : ''}
@@ -1873,9 +1924,69 @@ function renderNews(data) {
         <button class="action-btn" style="border-color:#1565c0;color:#1565c0;" onclick="openSourceFile('${u.original_url}','${(u.source_name||'').replace(/'/g,'').replace(/"/g,'')}','${JSON.stringify(u).replace(/"/g,'&quot;')}')">
           📎 Source + Share
         </button>` : ''}
+        <button class="action-btn" style="border-color:#f57f17;color:#f57f17;"
+          onclick="document.getElementById('tag-editor-${uid}').style.display=document.getElementById('tag-editor-${uid}').style.display==='none'?'block':'none'">
+          🏷️ Edit Tags
+        </button>
+        <button class="action-btn" style="border-color:#c62828;color:#c62828;"
+          onclick="deleteNewsUpdate('${uid}', '${cleanTitle.substring(0,50).replace(/'/g,'').replace(/"/g,'')}')">
+          🗑️ Delete
+        </button>
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Save manual tags for a news update ──
+async function saveNewsTagsInline(id) {
+  const input = document.getElementById('tag-input-' + id);
+  if (!input) return;
+  const tags = input.value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ tags })
+  });
+  if (res.ok) {
+    // Local update bhi karo
+    const u = allUpdates.find(x => x.id == id);
+    if (u) {
+      u.tags = tags;
+      u._tags = [...new Set([...tags, ...autoDetectTags(u)])];
+    }
+    document.getElementById('tag-editor-' + id).style.display = 'none';
+    renderTagsBar(allUpdates);
+    showToast('✅ Tags save ho gaye!', 'green');
+  } else {
+    showToast('❌ Tags save nahi hue — retry karo');
+  }
+}
+
+// ── Delete a news update ──
+async function deleteNewsUpdate(id, title) {
+  if (!id) { showToast('❌ ID nahi mili'); return; }
+  if (!confirm('Ye update delete karna chahte ho?\n\n"' + title + '..."')) return;
+  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
+    method: 'DELETE',
+    headers: {
+      'apikey': CCP_SB_KEY,
+      'Authorization': 'Bearer ' + CCP_SB_KEY
+    }
+  });
+  if (res.ok) {
+    allUpdates = allUpdates.filter(u => u.id != id);
+    const card = document.getElementById('ncard-' + id);
+    if (card) card.remove();
+    updateStats();
+    renderTagsBar(allUpdates);
+    showToast('🗑️ Update delete ho gaya!', 'green');
+  } else {
+    showToast('❌ Delete nahi hua — retry karo');
+  }
 }
 
 // Quick tag filter by clicking tag pill on card
