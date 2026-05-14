@@ -1,7 +1,6 @@
 // /api/fetch-updates.js
 // NO external packages — pure fetch() se Supabase REST API use karta hai
 // Vercel ES Module compatible
-// v2 — Fixed: Telegram URL mismatch, text truncation, better content extraction
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -46,66 +45,28 @@ async function sbUpdate(table, match, data) {
 }
 
 // ── Helpers ───────────────────────────────────────────
-function detectCategory(title = '', summary = '') {
-  const t = (title + ' ' + summary).toLowerCase();
-  if (t.match(/result|परिणाम|merit list|cut.?off declared|parinaam/)) return 'result';
-  if (t.match(/admit|hall ticket|प्रवेश पत्र|pravesha/)) return 'admit_card';
-  if (t.match(/admission|प्रवेश|counselling|seat allot|neet|jee |cuet/)) return 'admission';
-  if (t.match(/yojana|योजना|scheme|kisan|किसान|subsidy|pension|scholarship/)) return 'yojana';
-  if (t.match(/vacancy|recruitment|bharti|भर्ती|exam|apply|notification|last date|आवेदन/)) return 'exam';
+function detectCategory(title = '') {
+  const t = title.toLowerCase();
+  if (t.match(/result|परिणाम/)) return 'result';
+  if (t.match(/admit|hall ticket/)) return 'admit_card';
+  if (t.match(/admission|प्रवेश/)) return 'admission';
+  if (t.match(/yojana|योजना|scheme|kisan|किसान/)) return 'yojana';
+  if (t.match(/vacancy|recruitment|bharti|भर्ती|exam|apply|post/)) return 'exam';
   return 'news';
 }
 
 function cleanHtml(str = '') {
-  return str
-    .replace(/<br\s*\/?>/gi, '\n')    // <br> → newline preserve karein
-    .replace(/<\/p>/gi, '\n')          // </p> → newline
-    .replace(/<[^>]+>/g, ' ')          // baaki tags hataao
-    .replace(/&amp;/g, '&')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{4,}/g, '\n\n\n')      // excess blank lines
-    .replace(/[ \t]{2,}/g, ' ')        // multiple spaces
-    .trim();
+  return str.replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
 }
 
-// Title aur summary smart split — puri content preserve karo
-function splitContent(text, maxTitle = 500, maxSummary = 2000) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return { title: '', summary: '' };
-
-  // First 3 lines title mein jaayengi (ya jab tak 500 chars na ho jaayein)
-  let titleParts = [];
-  let charCount = 0;
-  let splitAt = 0;
-  for (let i = 0; i < Math.min(lines.length, 4); i++) {
-    if (charCount + lines[i].length > maxTitle) break;
-    titleParts.push(lines[i]);
-    charCount += lines[i].length;
-    splitAt = i + 1;
-  }
-  // Agar sirf ek hi lambi line hai — 500 pe split karo
-  if (titleParts.length === 0) {
-    titleParts = [lines[0].substring(0, maxTitle)];
-    splitAt = 1;
-  }
-  const title = titleParts.join('\n');
-  const summaryParts = lines.slice(splitAt);
-  const summary = summaryParts.join('\n').substring(0, maxSummary);
-  return { title, summary };
-}
-
-function makeSummary(text = '', max = 2000) {
+function makeSummary(text = '', max = 300) {
   const c = cleanHtml(text);
   return c.length > max ? c.substring(0, max) + '...' : c;
 }
 
 async function isDuplicate(title, sourceId) {
   const data = await sbSelect('gov_updates',
-    `select=id&title=eq.${encodeURIComponent(title.substring(0, 200))}&source_id=eq.${sourceId}&limit=1`
+    `select=id&title=eq.${encodeURIComponent(title.substring(0,200))}&source_id=eq.${sourceId}&limit=1`
   );
   return Array.isArray(data) && data.length > 0;
 }
@@ -128,28 +89,22 @@ async function fetchRSS(source) {
         const plain = raw.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
         return (cdata?.[1] || plain?.[1] || '').trim();
       };
-      const rawTitle = get('title');
-      if (!rawTitle || rawTitle.length < 5) continue;
-
+      const title = get('title');
+      if (!title || title.length < 5) continue;
       const link    = get('link') || get('guid');
       const desc    = get('description') || get('content:encoded') || '';
       const pubDate = get('pubDate') || get('dc:date') || '';
-      const fullText = cleanHtml(desc);
-      // RSS title pura rakho — article ka proper title hota hai
-      const title = rawTitle.substring(0, 500);
-      const summary = fullText.substring(0, 2000);
-
       items.push({
-        title,
+        title: title.substring(0, 300),
         original_url: link,
-        summary,
-        full_content: fullText.substring(0, 5000),
-        category: source.category !== 'other' ? source.category : detectCategory(title, summary),
+        summary: makeSummary(desc),
+        full_content: cleanHtml(desc).substring(0, 3000),
+        category: source.category !== 'other' ? source.category : detectCategory(title),
         source_id: source.id,
         source_name: source.name,
         source_url: source.url,
         published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-        is_important: /last date|vacancy|result declared|important|अंतिम तिथि/i.test(title),
+        is_important: /last date|vacancy|result declared|important/i.test(title),
         has_pdf: false, pdf_url: '', has_image: false, image_url: ''
       });
     }
@@ -161,96 +116,107 @@ async function fetchRSS(source) {
 }
 
 // ── Telegram Fetch ────────────────────────────────────
-// FIX: Ab har message ka link, date, aur text ek saath parse hoga
-// Pehle allLinks[i] aur msgBlocks[i] alag arrays se match ho rahe the → wrong URL
-async function fetchTelegram(source) {
+// Multi-page: 3 pages × ~20 msgs = ~60 messages per source per cron run
+async function fetchTelegramPage(channelUrl, beforeMsgId = null) {
+  const url = beforeMsgId ? `${channelUrl}?before=${beforeMsgId}` : channelUrl;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HarshCSCBot/1.0)' },
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!res.ok) return { html: '', ok: false };
+  return { html: await res.text(), ok: true };
+}
+
+function parseTelegramPage(html, baseUrl, source) {
+  const items = [];
+  const wrapperRe = /data-post="([^"]+)"([\s\S]*?)(?=data-post="|<\/section>|$)/gi;
+  const wrappers = [...html.matchAll(wrapperRe)];
+
+  for (const wrapper of wrappers) {
+    const postPath = wrapper[1];
+    const blockHtml = wrapper[2];
+    const msgIdMatch = postPath.match(/\/(\d+)$/);
+    const msgId = msgIdMatch ? parseInt(msgIdMatch[1]) : null;
+    const postUrl = `https://t.me/${postPath}`;
+
+    let pubDate = new Date().toISOString();
+    const dateMatch = blockHtml.match(/<time[^>]+datetime="([^"]+)"/i);
+    if (dateMatch) {
+      try { const d = new Date(dateMatch[1]); if (!isNaN(d.getTime())) pubDate = d.toISOString(); } catch(e) {}
+    }
+
+    const textMatch = blockHtml.match(/class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    if (!textMatch) continue;
+    const rawText = cleanHtml(textMatch[1]);
+    if (!rawText || rawText.trim().length < 10) continue;
+
+    const junkPatterns = [/^channel created$/i, /^messages in this channel will/i,
+      /^pinned message/i, /^document from\s*\.?\s*$/i,
+      /^voice message$/i, /^video message$/i, /^photo$/i, /^sticker$/i];
+    if (junkPatterns.some(p => p.test(rawText.trim()))) continue;
+    if (/^https?:\/\/\S+$/.test(rawText.trim())) continue;
+
+    const hasPdf = blockHtml.includes('.pdf') || blockHtml.includes('tgme_widget_message_document');
+    const pdfMatch = blockHtml.match(/href="(https?:\/\/[^"]+\.pdf)"/i);
+    const { title, summary } = splitContent(rawText, 500, 2000);
+    if (!title || title.length < 10) continue;
+
+    items.push({
+      title, summary,
+      full_content: rawText.substring(0, 5000),
+      original_url: postUrl,
+      category: source.category !== 'other' ? source.category : detectCategory(title, summary),
+      source_id: source.id, source_name: source.name, source_url: source.url,
+      published_at: pubDate,
+      is_important: /last date|important|urgent|\u0905\u0902\u0924\u093f\u092e \u0924\u093f\u0925\u093f|breaking/i.test(title),
+      has_pdf: hasPdf, pdf_url: pdfMatch ? pdfMatch[1] : '',
+      has_image: false, image_url: '', _msgId: msgId
+    });
+  }
+  return items;
+}
+
+async function fetchTelegram(source, days = 30) {
   try {
-    const url = source.url.includes('/s/')
+    const baseUrl = source.url.includes('/s/')
       ? source.url
       : source.url.replace('https://t.me/', 'https://t.me/s/').replace('http://t.me/', 'https://t.me/s/');
 
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HarshCSCBot/1.0)' },
-      signal: AbortSignal.timeout(12000)
-    });
-    if (!res.ok) return [];
-    const html = await res.text();
     const items = [];
+    let lastMsgId = null;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    // ── Step 1: Pehle har message ka outer wrapper pakdo
-    // data-post="channelname/123" se sahi post ID milega
-    // Regex: har message block independently parse karein
-    // Each block: data-post="..." se next data-post= tak
-    const wrapperRe = /data-post="([^"]+)"([\s\S]*?)(?=data-post="|<\/section>)/gi;
-    const wrappers = [...html.matchAll(wrapperRe)];
+    // days ke hisab se pages calculate karo
+    // ~20 msgs/page, ~5 msgs/day avg → days*5/20 = days/4 pages (min 2, max 15)
+    const MAX_PAGES = Math.min(15, Math.max(2, Math.ceil(days / 4)));
 
-    for (const wrapper of wrappers.slice(0, 25)) {
-      const postPath = wrapper[1];          // e.g. "eservicesemitrarajasthan/595"
-      const blockHtml = wrapper[2];         // is post ka pura HTML
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const { html, ok } = await fetchTelegramPage(baseUrl, lastMsgId);
+      if (!ok || !html) break;
+      const pageItems = parseTelegramPage(html, baseUrl, source);
+      if (!pageItems.length) break;
 
-      // ── Sahi post URL (isi block se) ──
-      const postUrl = `https://t.me/${postPath}`;
+      // Cutoff se purane items skip karo aur loop band karo
+      let hitCutoff = false;
+      for (const item of pageItems) {
+        if (new Date(item.published_at) < cutoffDate) { hitCutoff = true; break; }
+        items.push(item);
+      }
+      if (hitCutoff) break;
 
-      // ── Date (isi block se) ──
-      const dateMatch = blockHtml.match(/<time[^>]+datetime="([^"]+)"/i);
-      const pubDate = dateMatch
-        ? new Date(dateMatch[1]).toISOString()
-        : new Date().toISOString();
-
-      // ── Message text (isi block se) ──
-      const textMatch = blockHtml.match(
-        /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i
-      );
-      if (!textMatch) continue;
-
-      const rawText = cleanHtml(textMatch[1]);
-      if (!rawText || rawText.trim().length < 10) continue;
-
-      // ── Junk filter: Telegram system messages ──
-      const junkPatterns = [
-        /^channel created$/i,
-        /^messages in this channel will/i,
-        /^pinned message/i,
-        /^document from\s*\.?\s*$/i,
-        /^voice message$/i,
-        /^video message$/i,
-        /^photo$/i,
-        /^sticker$/i,
-      ];
-      if (junkPatterns.some(p => p.test(rawText.trim()))) continue;
-
-      // ── Bare URL filter ──
-      if (/^https?:\/\/\S+$/.test(rawText.trim())) continue;
-
-      // ── PDF attachment detect ──
-      const hasPdf = blockHtml.includes('.pdf') || blockHtml.includes('tgme_widget_message_document');
-      const pdfMatch = blockHtml.match(/href="(https?:\/\/[^"]+\.pdf)"/i);
-      const pdfUrl = pdfMatch ? pdfMatch[1] : '';
-
-      // ── Title + Summary smart split ──
-      const { title, summary } = splitContent(rawText, 500, 2000);
-      if (!title || title.length < 10) continue;
-
-      items.push({
-        title,
-        summary,
-        full_content: rawText.substring(0, 5000),
-        original_url: postUrl,               // ✅ Ab sahi post URL — isi block se
-        category: source.category !== 'other'
-          ? source.category
-          : detectCategory(title, summary),
-        source_id: source.id,
-        source_name: source.name,
-        source_url: source.url,
-        published_at: pubDate,
-        is_important: /last date|important|urgent|अंतिम तिथि|breaking/i.test(title),
-        has_pdf: hasPdf,
-        pdf_url: pdfUrl,
-        has_image: false,
-        image_url: ''
-      });
+      const firstMsgId = pageItems[pageItems.length - 1]?._msgId;
+      if (!firstMsgId || firstMsgId === lastMsgId) break;
+      lastMsgId = firstMsgId;
+      if (page < MAX_PAGES - 1) await new Promise(r => setTimeout(r, 800));
     }
-    return items;
+
+    const seen = new Set();
+    return items.filter(item => {
+      if (seen.has(item.original_url)) return false;
+      seen.add(item.original_url);
+      return true;
+    });
   } catch (e) {
     console.error(`Telegram failed: ${source.name}`, e.message);
     return [];
@@ -273,18 +239,14 @@ async function fetchGoogleDoc(source) {
       if (titleEnd === -1) return;
       const title = cleanHtml(section.substring(0, titleEnd));
       if (!title || title.length < 5) return;
-      const bodyText = cleanHtml(section.substring(titleEnd));
       items.push({
-        title: title.substring(0, 500),
-        summary: bodyText.substring(0, 2000),
-        full_content: bodyText.substring(0, 5000),
+        title, summary: makeSummary(section.substring(titleEnd), 300),
+        full_content: cleanHtml(section).substring(0, 3000),
         original_url: source.url,
         category: source.category !== 'other' ? source.category : detectCategory(title),
-        source_id: source.id,
-        source_name: source.name,
-        source_url: source.url,
+        source_id: source.id, source_name: source.name, source_url: source.url,
         published_at: new Date().toISOString(),
-        is_important: /important|last date|अंतिम तिथि/i.test(title),
+        is_important: /important|last date/i.test(title),
         has_pdf: false, pdf_url: '', has_image: false, image_url: ''
       });
     });
@@ -302,7 +264,12 @@ export default async function handler(req, res) {
   if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
   if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Supabase env vars missing' });
 
-  const results = { rss: 0, telegram: 0, google_doc: 0, total: 0, errors: [] };
+  // days param — frontend se pass hota hai (default 30)
+  const days = Math.min(90, Math.max(1, parseInt(req.query.days) || 30));
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  const results = { rss: 0, telegram: 0, google_doc: 0, total: 0, errors: [], days };
 
   try {
     const sources = await sbSelect('gov_sources', 'is_active=eq.true');
@@ -313,14 +280,17 @@ export default async function handler(req, res) {
     for (const source of sources) {
       let items = [];
       try {
-        if (source.source_type === 'rss')             items = await fetchRSS(source);
-        else if (source.source_type === 'telegram')   items = await fetchTelegram(source);
+        if (source.source_type === 'rss')             items = await fetchRSS(source, days);
+        else if (source.source_type === 'telegram')   items = await fetchTelegram(source, days);
         else if (source.source_type === 'google_doc') items = await fetchGoogleDoc(source);
         else continue;
-      } catch (e) {
+      } catch(e) {
         results.errors.push(`${source.name}: ${e.message}`);
         continue;
       }
+
+      // Cutoff se purane items discard karo
+      items = items.filter(item => !item.published_at || new Date(item.published_at) >= cutoffDate);
 
       for (const item of items) {
         try {
@@ -331,7 +301,7 @@ export default async function handler(req, res) {
             results[key] = (results[key] || 0) + 1;
             results.total++;
           }
-        } catch (e) { /* skip single item error */ }
+        } catch(e) { /* skip single item error */ }
       }
 
       await sbUpdate('gov_sources', `id=eq.${source.id}`, {
