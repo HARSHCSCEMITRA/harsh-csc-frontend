@@ -1135,25 +1135,30 @@ body {
   <!-- Manual trigger + Days filter -->
   <div class="section-card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="flex:1;">
-      <h4 style="margin-bottom:8px;">⏱️ Auto-fetch Settings</h4>
+      <h4 style="margin-bottom:6px;">⏱️ Data Fetch Settings</h4>
+      <div style="font-size:12px;color:#888;margin-bottom:10px;">
+        Kitne din ka data chahiye select karo — phir "Abhi Fetch Karo" dabao.<br>
+        Purana data delete hoga, selected days ka fresh data sources se aayega.
+      </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:13px;color:var(--muted);">News kitne din purani dikhani hai:</span>
-        <select class="form-input" style="width:140px;padding:6px 10px;" onchange="updateMaxAge(this.value)" id="days-select">
-          <option value="999" selected>📅 Sab Dikhao</option>
-          <option value="1">Aaj ka</option>
-          <option value="7">7 din</option>
-          <option value="15">15 din</option>
-          <option value="30">30 din</option>
-          <option value="60">60 din</option>
-          <option value="90">90 din</option>
+        <span style="font-size:13px;font-weight:600;color:var(--text);">📅 Kitne din ka data:</span>
+        <select class="form-input" style="width:150px;padding:8px 10px;font-weight:600;" id="fetch-days-select">
+          <option value="7">Last 7 Din</option>
+          <option value="15">Last 15 Din</option>
+          <option value="30" selected>Last 30 Din</option>
+          <option value="60">Last 60 Din</option>
+          <option value="90">Last 90 Din</option>
         </select>
+        <span style="font-size:11px;color:#f57f17;background:#fff8e1;padding:4px 10px;border-radius:20px;">
+          ⚠️ Days badalne par purana data delete hoga
+        </span>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-      <button class="save-btn" id="trigger-btn" onclick="triggerFetch()" style="background:#2e7d32;">
+      <button class="save-btn" id="trigger-btn" onclick="triggerFetchWithDays()" style="background:#2e7d32;min-width:180px;">
         🔄 Abhi Fetch Karo
       </button>
-      <span id="trigger-status" style="font-size:11px;color:#888;"></span>
+      <span id="trigger-status" style="font-size:11px;color:#888;text-align:right;"></span>
     </div>
   </div>
 
@@ -1546,36 +1551,39 @@ async function loadUpdates() {
   document.getElementById('news-grid').innerHTML =
     '<div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>';
 
-  // Step 1: Active source IDs + tags map — ek hi query mein
-  let activeSourceIds = null;
+  // Step 1: Tags map build karo
+  let allSources = [];
   window._sourceTagMap = {};
   try {
     const srcRes = await fetch(
-      CCP_SB_URL + '/rest/v1/gov_sources?select=id,name,is_active,tags',
+      CCP_SB_URL + '/rest/v1/gov_sources?select=id,name,tags',
       { headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
     );
-    const allSources = await srcRes.json();
+    allSources = await srcRes.json();
     if (Array.isArray(allSources)) {
-      // Active source IDs collect karo (UUID se filter — name mismatch nahi hoga)
-      activeSourceIds = allSources
-        .filter(s => s.is_active === true)
-        .map(s => s.id);
-      // Tags map build karo
       allSources.forEach(s => {
         if (s.tags && Array.isArray(s.tags) && s.tags.length) {
           window._sourceTagMap[s.name] = s.tags;
         }
       });
     }
-  } catch(e) {
-    console.warn('Sources fetch failed:', e.message);
-    activeSourceIds = null;
-  }
+  } catch(e) { allSources = []; }
 
-  // Step 2: Updates fetch — limit 500
+  // Step 2: 30 din se purane updates DB se delete karo (background)
+  // Supabase REST: published_at < 30 din pehle
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 30);
+  const cutoffISO = cutoffDate.toISOString();
+  fetch(CCP_SB_URL + '/rest/v1/gov_updates?published_at=lt.' + cutoffISO, {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  }).catch(() => {});
+
+  // Step 3: Updates fetch — sirf last 30 din ke (DB pe bhi filter)
   const { data, error } = await getCCPClient()
     .from('gov_updates')
     .select('*')
+    .gte('published_at', cutoffISO)
     .order('published_at', { ascending: false })
     .limit(500);
 
@@ -1587,16 +1595,6 @@ async function loadUpdates() {
   }
 
   let updates = data || [];
-
-  // Step 3: DISABLED source ka data hide karo — source_id se match (reliable)
-  if (activeSourceIds && activeSourceIds.length > 0) {
-    const activeIdSet = new Set(activeSourceIds);
-    updates = updates.filter(u => {
-      // source_id nahi hai to dikhao (manually added entries)
-      if (!u.source_id) return true;
-      return activeIdSet.has(u.source_id);
-    });
-  }
 
   // Step 4: Junk filter
   updates = updates.filter(u => {
@@ -2443,34 +2441,63 @@ function updateMaxAge(days) {
   showToast('📅 ' + days + ' din ka filter set ho gaya', 'green');
 }
 
-async function triggerFetch() {
-  const btn = document.getElementById('trigger-btn');
+async function triggerFetchWithDays() {
+  const btn    = document.getElementById('trigger-btn');
   const status = document.getElementById('trigger-status');
+  const days   = parseInt(document.getElementById('fetch-days-select').value) || 30;
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffISO = cutoff.toISOString();
+
+  if (!confirm(
+    `Last ${days} din ka fresh data fetch karein?\n\n` +
+    `⚠️ ${days} din se purane SAARE updates permanently delete ho jaayenge.\n` +
+    `✅ Sources se last ${days} din ka data fresh fetch hoga.\n\nConfirm karo?`
+  )) return;
+
   btn.disabled = true;
-  btn.textContent = '⏳ Fetch ho raha hai...';
+  btn.textContent = '⏳ Step 1/3: Purana data delete ho raha hai...';
   status.textContent = '';
+  status.style.color = '#888';
 
   try {
-    const res = await fetch('/api/fetch-updates?secret=harsh_csc_cron_2025');
+    // Step 1: Days se purane saare updates delete karo
+    const delRes = await fetch(
+      CCP_SB_URL + '/rest/v1/gov_updates?published_at=lt.' + cutoffISO,
+      { method: 'DELETE', headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+    );
+    status.textContent = `✅ Purana data delete hua`;
+
+    // Step 2: Backend fetch trigger — days parameter pass karo
+    btn.textContent = `⏳ Step 2/3: Sources se ${days} din ka data fetch ho raha hai...`;
+    const res  = await fetch(`/api/fetch-updates?secret=harsh_csc_cron_2025&days=${days}`);
     const data = await res.json();
+
     if (data.success) {
       const total = data.results?.total || 0;
-      status.textContent = '✅ ' + total + ' nayi updates aayi!';
+      btn.textContent = '⏳ Step 3/3: Panel update ho raha hai...';
+      status.textContent = `✅ ${total} nayi updates aayi (last ${days} din)`;
       status.style.color = 'green';
-      showToast('✅ ' + total + ' nayi updates fetch ho gayi!', 'green');
-      // Reload news
-      setTimeout(() => { loadUpdates(); }, 1000);
+      showToast(`✅ ${total} updates fetch ho gayi — last ${days} din ka data!`, 'green');
+      setTimeout(() => loadUpdates(), 1200);
     } else {
-      status.textContent = '❌ ' + (data.error || 'Error aaya');
+      status.textContent = '❌ Fetch error: ' + (data.error || 'Unknown');
       status.style.color = 'red';
+      showToast('❌ Fetch fail hua — console dekho', '');
     }
   } catch(e) {
-    status.textContent = '❌ Network error';
+    status.textContent = '❌ Network error: ' + e.message;
     status.style.color = 'red';
+    showToast('❌ Network error', '');
   }
+
   btn.disabled = false;
   btn.textContent = '🔄 Abhi Fetch Karo';
 }
+
+// Legacy — kept for compatibility
+async function triggerFetch() { triggerFetchWithDays(); }
 
 async function loadSources() {
   const list = document.getElementById('sources-list');
@@ -2607,6 +2634,14 @@ async function addSource() {
 }
 
 async function toggleSource(id, currentState) {
+  const willDisable = currentState === true;
+
+  if (willDisable) {
+    // Confirm before deleting all updates
+    if (!confirm('Is source ko disable karne par iske SAARE updates DB se permanently delete ho jaayenge.\n\nWapas enable karne par fresh data fetch hoga.\n\nConfirm karo?')) return;
+  }
+
+  // Step 1: Source status update karo
   await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
     method: 'PATCH',
     headers: {
@@ -2616,22 +2651,54 @@ async function toggleSource(id, currentState) {
     },
     body: JSON.stringify({ is_active: !currentState })
   });
-  // Cache invalidate karein taaki disabled source ki news turant hide ho
+
+  if (willDisable) {
+    // Step 2: Is source ke SAARE updates DB se delete karo
+    showToast('🗑️ Updates delete ho rahe hain...', 'green');
+    const delRes = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_id=eq.' + id, {
+      method: 'DELETE',
+      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+    });
+    // source_name se bhi delete karo (purani entries jinka source_id NULL hai)
+    // Pehle source ka naam lo
+    const srcData = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id + '&select=name', {
+      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+    }).then(r => r.json());
+    if (Array.isArray(srcData) && srcData[0]?.name) {
+      await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_name=eq.' + encodeURIComponent(srcData[0].name), {
+        method: 'DELETE',
+        headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+      });
+    }
+    showToast('✅ Source disabled — saare updates delete ho gaye', 'green');
+  } else {
+    showToast('✅ Source enabled — agli fetch mein naya data aayega', 'green');
+  }
+
   activeSourceNames = null;
   loadSources();
-  showToast(currentState ? '⏸️ Source disabled — uski news bhi hat gayi' : '▶️ Source enabled', 'green');
-  // News bhi reload karo
-  setTimeout(() => loadUpdates(), 400);
+  setTimeout(() => loadUpdates(), 600);
 }
 
 async function deleteSource(id, name) {
-  if (!confirm(name + ' delete karna chahte ho?')) return;
+  if (!confirm(name + ' delete karna chahte ho?\n\nIs source ke SAARE updates bhi delete ho jaayenge.')) return;
+  // Pehle updates delete karo
+  await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_id=eq.' + id, {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_name=eq.' + encodeURIComponent(name), {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+  // Phir source delete karo
   await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
     method: 'DELETE',
     headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
   });
-  showToast('🗑️ Source delete ho gaya', 'green');
+  showToast('🗑️ Source aur uske saare updates delete ho gaye', 'green');
   loadSources();
+  setTimeout(() => loadUpdates(), 400);
 }
 
 function toggleSourceHelp(type) {
