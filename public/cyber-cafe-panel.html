@@ -2593,50 +2593,111 @@ async function loadSources() {
   if (!list) return;
   list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Loading...</div>';
 
-  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=*&order=created_at.desc', {
-    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-  });
-  const sources = await res.json();
+  // Sources + update counts ek saath fetch karo
+  const [srcRes, countRes] = await Promise.all([
+    fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=*&order=created_at.desc', {
+      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+    }),
+    // Sirf source_id aur source_name fetch — count ke liye
+    fetch(CCP_SB_URL + '/rest/v1/gov_updates?select=source_id,source_name&limit=1000', {
+      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+    })
+  ]);
 
-  document.getElementById('src-count').textContent = '(' + sources.length + ' sources)';
+  const sources = await srcRes.json();
+  const updatesRaw = await countRes.json().catch(() => []);
 
-  if (!sources.length) {
+  // Per-source count build karo
+  const countById   = {};
+  const countByName = {};
+  if (Array.isArray(updatesRaw)) {
+    updatesRaw.forEach(u => {
+      if (u.source_id) countById[u.source_id] = (countById[u.source_id] || 0) + 1;
+      if (u.source_name) countByName[u.source_name] = (countByName[u.source_name] || 0) + 1;
+    });
+  }
+
+  document.getElementById('src-count').textContent = '(' + (Array.isArray(sources) ? sources.length : 0) + ' sources)';
+
+  if (!Array.isArray(sources) || !sources.length) {
     list.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Koi source nahi. Upar se add karo.</div>';
     return;
   }
 
   const typeIcon = { rss: '📡', telegram: '✈️', google_doc: '📄', manual: '✏️' };
+
   list.innerHTML = sources.map(s => {
-    const tagsArr = Array.isArray(s.tags) ? s.tags : [];
+    const tagsArr  = Array.isArray(s.tags) ? s.tags : [];
     const tagPillsHtml = tagsArr.length
       ? tagsArr.map(t => `<span class="tag-pill">${t}</span>`).join('')
-      : '<span style="font-size:10px;color:#bbb;">No tags — add karo</span>';
+      : '<span style="font-size:10px;color:#bbb;">No tags</span>';
+
+    // Update count — id se try karo, phir name se
+    const updateCount = (countById[s.id] || 0) + (
+      // Agar id se count mila to name ka count mat jodo (warna double hoga)
+      countById[s.id] ? 0 : (countByName[s.name] || 0)
+    );
+
+    // Health status
+    let healthDot, healthText, healthBg;
+    if (!s.is_active) {
+      healthDot = '⚫'; healthBg = '#f5f5f5'; healthText = 'Disabled';
+    } else if (!s.last_fetched_at) {
+      healthDot = '🔴'; healthBg = '#fff3e0'; healthText = 'Kabhi fetch nahi hua';
+    } else if (updateCount === 0) {
+      healthDot = '🟡'; healthBg = '#fffde7'; healthText = 'Fetched but koi update nahi';
+    } else {
+      healthDot = '🟢'; healthBg = '#e8f5e9'; healthText = updateCount + ' updates';
+    }
+
+    // Last fetch time
+    const lastFetch = s.last_fetched_at
+      ? 'Last fetch: ' + timeAgo(s.last_fetched_at)
+      : 'Never fetched';
+
     return `
-    <div class="source-row" id="src-row-${s.id}">
-      <div style="font-size:22px;flex-shrink:0;">${typeIcon[s.source_type] || '🔗'}</div>
+    <div class="source-row" id="src-row-${s.id}" style="background:${s.is_active ? 'var(--card)' : '#fafafa'};">
+      <div style="font-size:22px;flex-shrink:0;opacity:${s.is_active ? 1 : 0.4};">${typeIcon[s.source_type] || '🔗'}</div>
       <div class="source-info" style="flex:1;min-width:0;">
-        <div class="s-name">${s.name}</div>
-        <div class="s-url" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.url}</div>
-        <div class="s-meta" style="margin-top:2px;">
-          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category === 'other' ? '🤖 auto' : s.category}</span>
-          &nbsp; ${s.last_fetched_at ? 'Last fetch: ' + timeAgo(s.last_fetched_at) : 'Never fetched'}
+
+        <!-- Name + health badge -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="s-name" style="${!s.is_active ? 'color:#aaa;' : ''}">${s.name}</div>
+          <span style="font-size:11px;background:${healthBg};border-radius:20px;padding:2px 8px;white-space:nowrap;">
+            ${healthDot} ${healthText}
+          </span>
         </div>
+
+        <!-- URL -->
+        <div class="s-url" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">${s.url}</div>
+
+        <!-- Meta row -->
+        <div class="s-meta" style="margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="cat-badge cat-${s.category}" style="font-size:10px;padding:1px 7px;">${s.category === 'other' ? '🤖 auto' : s.category}</span>
+          <span style="color:#999;">${lastFetch}</span>
+          ${updateCount > 0 ? `<span style="background:#e3f2fd;color:#1565c0;border-radius:20px;padding:1px 8px;font-size:10px;font-weight:600;">📊 ${updateCount} updates DB mein</span>` : ''}
+        </div>
+
+        <!-- Tags -->
         <div class="source-tags" style="margin-top:5px;">${tagPillsHtml}</div>
-        <!-- Inline tags edit -->
+
+        <!-- Tags edit -->
         <div style="display:flex;gap:6px;margin-top:5px;align-items:center;">
-          <input class="src-tag-input" id="tag-edit-${s.id}" 
-            value="${tagsArr.join(', ')}" 
-            placeholder="Tags: railway, ssc, banking" 
+          <input class="src-tag-input" id="tag-edit-${s.id}"
+            value="${tagsArr.join(', ')}"
+            placeholder="Tags: railway, ssc, banking"
             style="flex:1;padding:5px 8px;font-size:11px;">
-          <button onclick="saveSourceTags('${s.id}', '${s.name}')" 
+          <button onclick="saveSourceTags('${s.id}', '${s.name}')"
             style="background:#3949ab;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
-            💾 Save Tags
+            💾 Tags
           </button>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-        <button class="source-toggle ${s.is_active ? 'on' : 'off'}" 
-          onclick="toggleSource('${s.id}', ${s.is_active})" 
+
+      <!-- Toggle + Delete -->
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:center;">
+        <button class="source-toggle ${s.is_active ? 'on' : 'off'}"
+          onclick="toggleSource('${s.id}', ${s.is_active})"
           title="${s.is_active ? 'Active — click to disable' : 'Disabled — click to enable'}">
           ${s.is_active ? '✓' : '✗'}
         </button>
