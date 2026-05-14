@@ -233,6 +233,88 @@ async function fetchTelegram(source, days = 30) {
   }
 }
 
+// ── JS Website Fetch (MLSU + Govt sites via Scraping APIs) ───────────
+async function fetchJsSite(source) {
+  const SCRAPERS = {
+    scrapingant: (key, url) => `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(url)}&x-api-key=${key}&browser=true&proxy_type=datacenter`,
+    scrape_do:   (key, url) => `https://api.scrape.do/?token=${key}&url=${encodeURIComponent(url)}&render=true`,
+    scrapingbee: (key, url) => `https://app.scrapingbee.com/api/v1/?api_key=${key}&url=${encodeURIComponent(url)}&render_js=true&block_resources=true&wait=2000`,
+    scrapfly:    (key, url) => `https://api.scrapfly.io/scrape?key=${key}&url=${encodeURIComponent(url)}&asp=true&render_js=true`,
+  };
+  const KEYS = {
+    scrapingant: process.env.SCRAPINGANT_API_KEY,
+    scrape_do:   process.env.SCRAPEDO_API_KEY,
+    scrapingbee: process.env.SCRAPINGBEE_API_KEY,
+    scrapfly:    process.env.SCRAPFLY_API_KEY,
+  };
+
+  // scraper_api field se pata chalta hai kaunsa API use karna hai
+  // agar field nahi hai to available key wala pehla API use karo
+  let pId = source.scraper_api || null;
+  if (!pId) {
+    pId = Object.keys(KEYS).find(k => KEYS[k]) || null;
+  }
+
+  let html = '';
+  try {
+    if (pId && KEYS[pId] && SCRAPERS[pId]) {
+      const apiUrl = SCRAPERS[pId](KEYS[pId], source.url);
+      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(35000) });
+      if (!res.ok) throw new Error(`Scraper ${pId} HTTP ${res.status}`);
+      html = await res.text();
+      // Scrapfly JSON response unwrap
+      if (pId === 'scrapfly') {
+        try { html = JSON.parse(html).result?.content || html; } catch {}
+      }
+    } else {
+      // Fallback: direct fetch (static pages ke liye)
+      const res = await fetch(source.url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (HarshCSCBot/1.0)' },
+        signal: AbortSignal.timeout(12000)
+      });
+      html = await res.text();
+    }
+  } catch(e) {
+    console.error(`fetchJsSite failed: ${source.name}`, e.message);
+    return [];
+  }
+
+  // HTML se links + titles extract karo
+  const items = [];
+  const seen = new Set();
+  const re = /<a[^>]+href=["']([^"'#][^"']*)["'][^>]*>\s*([^<]{12,300})\s*<\/a>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const title = m[2].replace(/\s+/g,' ').trim();
+    const href  = m[1].trim();
+    if (seen.has(title)) continue;
+    // Nav/menu links skip karo
+    if (title.length < 15) continue;
+    if (/^(home|about|contact|login|register|menu|back|next|prev|more)$/i.test(title)) continue;
+    seen.add(title);
+    const url = href.startsWith('http') ? href : (() => { try { return new URL(href, source.url).toString(); } catch { return ''; } })();
+    if (!url) continue;
+    items.push({
+      title:        title.substring(0, 300),
+      original_url: url,
+      summary:      '',
+      full_content: title,
+      category:     source.category !== 'other' ? source.category : detectCategory(title),
+      source_id:    source.id,
+      source_name:  source.name,
+      source_url:   source.url,
+      published_at: new Date().toISOString(),
+      is_important: /last date|admit card|result declared|important|urgent|आवेदन|अंतिम/i.test(title),
+      has_pdf:      href.toLowerCase().endsWith('.pdf'),
+      pdf_url:      href.toLowerCase().endsWith('.pdf') ? url : '',
+      has_image:    false,
+      image_url:    '',
+    });
+    if (items.length >= 30) break;
+  }
+  return items;
+}
+
 // ── Google Doc Fetch ──────────────────────────────────
 async function fetchGoogleDoc(source) {
   try {
@@ -306,6 +388,7 @@ export default async function handler(req, res) {
         if (source.source_type === 'rss')             items = await fetchRSS(source, days || 1);
         else if (source.source_type === 'telegram')   items = await fetchTelegram(source, days || 3);
         else if (source.source_type === 'google_doc') items = await fetchGoogleDoc(source);
+        else if (source.source_type === 'website')    items = await fetchJsSite(source);
         else continue;
       } catch(e) {
         results.errors.push(`${source.name}: ${e.message}`);
