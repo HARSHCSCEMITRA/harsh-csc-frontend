@@ -1149,14 +1149,14 @@ body {
           <option value="60">Last 60 Din</option>
           <option value="90">Last 90 Din</option>
         </select>
-        <span style="font-size:11px;color:#f57f17;background:#fff8e1;padding:4px 10px;border-radius:20px;">
-          ⚠️ Days badalne par purana data delete hoga
-        </span>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
       <button class="save-btn" id="trigger-btn" onclick="triggerFetchWithDays()" style="background:#2e7d32;min-width:180px;">
         🔄 Abhi Fetch Karo
+      </button>
+      <button onclick="deleteAllUpdates()" style="background:none;border:1px solid #c62828;color:#c62828;border-radius:10px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:600;min-width:180px;">
+        🗑️ Saari Updates Delete Karo
       </button>
       <span id="trigger-status" style="font-size:11px;color:#888;text-align:right;"></span>
     </div>
@@ -1596,8 +1596,14 @@ async function loadUpdates() {
 
   let updates = data || [];
 
-  // Step 4: Junk filter
+  // Step 4: Junk filter + deleted filter
+  const deletedIds = getDeletedIds();
   updates = updates.filter(u => {
+    // localStorage deleted IDs filter (most reliable)
+    if (deletedIds.has(String(u.id))) return false;
+    // Soft deleted in DB
+    if (u.category === '__deleted__') return false;
+
     const title = (u.title || '').trim();
     const summary = (u.summary || '').trim();
     if (!title || title.length < 5) return false;
@@ -2060,25 +2066,67 @@ async function saveNewsTagsInline(id) {
 }
 
 // ── Delete a news update ──
+// ── Deleted items localStorage store ──
+// DB soft-delete fail hone par bhi localStorage se filter hoga
+function getDeletedIds() {
+  try { return new Set(JSON.parse(localStorage.getItem('_deletedUpdateIds') || '[]')); }
+  catch(e) { return new Set(); }
+}
+function addDeletedId(id) {
+  try {
+    const ids = getDeletedIds();
+    ids.add(String(id));
+    // Max 500 IDs rakhenge
+    const arr = [...ids].slice(-500);
+    localStorage.setItem('_deletedUpdateIds', JSON.stringify(arr));
+  } catch(e) {}
+}
+function clearDeletedIds() {
+  localStorage.removeItem('_deletedUpdateIds');
+}
+
 async function deleteNewsUpdate(id, title) {
   if (!id) { showToast('❌ ID nahi mili'); return; }
   if (!confirm('Ye update delete karna chahte ho?\n\n"' + title + '..."')) return;
-  const res = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
-    method: 'DELETE',
-    headers: {
-      'apikey': CCP_SB_KEY,
-      'Authorization': 'Bearer ' + CCP_SB_KEY
+
+  // 1. Pehle localStorage mein save karo — ye instant aur reliable hai
+  addDeletedId(id);
+
+  // 2. Frontend se turant hatao
+  allUpdates = allUpdates.filter(u => String(u.id) !== String(id));
+  const card = document.getElementById('ncard-' + id);
+  if (card) {
+    card.style.transition = 'opacity 0.25s';
+    card.style.opacity = '0';
+    setTimeout(() => card.remove(), 250);
+  }
+  updateStats();
+  renderTagsBar(allUpdates);
+
+  // 3. DB mein soft delete try karo (PATCH category = __deleted__)
+  try {
+    const res = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'apikey': CCP_SB_KEY,
+        'Authorization': 'Bearer ' + CCP_SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ category: '__deleted__' })
+    });
+    if (res.ok) {
+      showToast('🗑️ Delete ho gaya — wapas nahi aayega!', 'green');
+    } else {
+      // PATCH fail — try actual DELETE
+      const del = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+      });
+      showToast(del.ok ? '🗑️ Delete ho gaya!' : '⚠️ DB delete fail — locally removed', 'green');
     }
-  });
-  if (res.ok) {
-    allUpdates = allUpdates.filter(u => u.id != id);
-    const card = document.getElementById('ncard-' + id);
-    if (card) card.remove();
-    updateStats();
-    renderTagsBar(allUpdates);
-    showToast('🗑️ Update delete ho gaya!', 'green');
-  } else {
-    showToast('❌ Delete nahi hua — retry karo');
+  } catch(e) {
+    showToast('⚠️ Network error — locally removed (refresh tak safe hai)', 'green');
   }
 }
 
@@ -2441,62 +2489,103 @@ function updateMaxAge(days) {
   showToast('📅 ' + days + ' din ka filter set ho gaya', 'green');
 }
 
+// ── Helper: Supabase DELETE with limit workaround ──
+// Supabase REST DELETE bina limit ke kaam karta hai
+async function sbDelete(filter) {
+  return fetch(CCP_SB_URL + '/rest/v1/gov_updates?' + filter, {
+    method: 'DELETE',
+    headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
+  });
+}
+
+// ── Delete ALL updates ──
+async function deleteAllUpdates() {
+  if (!confirm('SAARI updates delete karna chahte ho?\n\nYe action permanent hai. Baad mein "Abhi Fetch Karo" se fresh data la sakte ho.')) return;
+  const status = document.getElementById('trigger-status');
+  status.textContent = '🗑️ Sab delete ho raha hai...';
+  status.style.color = '#f57f17';
+
+  await sbDelete('id=gt.0');
+  await sbDelete('published_at=gte.2000-01-01');
+  clearDeletedIds(); // localStorage bhi clear
+
+  allUpdates = [];
+  renderNews([]);
+  updateStats();
+  renderTagsBar([]);
+  status.textContent = '✅ Saari updates delete ho gayi!';
+  status.style.color = 'green';
+  showToast('🗑️ Saari updates delete ho gayi — ab Fetch karo', 'green');
+}
+
+// ── Main Fetch ──
 async function triggerFetchWithDays() {
   const btn    = document.getElementById('trigger-btn');
   const status = document.getElementById('trigger-status');
   const days   = parseInt(document.getElementById('fetch-days-select').value) || 30;
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffISO = cutoff.toISOString();
-
   if (!confirm(
     `Last ${days} din ka fresh data fetch karein?\n\n` +
-    `⚠️ ${days} din se purane SAARE updates permanently delete ho jaayenge.\n` +
-    `✅ Sources se last ${days} din ka data fresh fetch hoga.\n\nConfirm karo?`
+    `✅ Active sources se last ${days} din ka data aayega\n` +
+    `🗑️ Disabled sources ke updates delete honge\n` +
+    `🗑️ ${days} din se purana data delete hoga\n\nConfirm karo?`
   )) return;
 
   btn.disabled = true;
-  btn.textContent = '⏳ Step 1/3: Purana data delete ho raha hai...';
-  status.textContent = '';
   status.style.color = '#888';
 
   try {
-    // Step 1: Days se purane saare updates delete karo
-    const delRes = await fetch(
-      CCP_SB_URL + '/rest/v1/gov_updates?published_at=lt.' + cutoffISO,
-      { method: 'DELETE', headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+    // Step 1: Disabled sources ke updates delete karo
+    btn.textContent = '⏳ 1/4: Disabled sources cleanup...';
+    const srcRes = await fetch(
+      CCP_SB_URL + '/rest/v1/gov_sources?select=id,name,is_active',
+      { headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
     );
-    status.textContent = `✅ Purana data delete hua`;
+    const allSrcs = await srcRes.json();
+    if (Array.isArray(allSrcs)) {
+      const disabled = allSrcs.filter(s => s.is_active === false);
+      for (const s of disabled) {
+        await sbDelete('source_id=eq.' + s.id);
+        if (s.name) await sbDelete('source_name=eq.' + encodeURIComponent(s.name));
+      }
+    }
+    status.textContent = '✅ Disabled sources cleanup done';
 
-    // Step 2: Backend fetch trigger — days parameter pass karo
-    btn.textContent = `⏳ Step 2/3: Sources se ${days} din ka data fetch ho raha hai...`;
+    // Step 2: Days se purane updates delete karo
+    btn.textContent = `⏳ 2/4: ${days} din se purana data delete ho raha hai...`;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffISO = cutoff.toISOString();
+    await sbDelete('published_at=lt.' + cutoffISO);
+    status.textContent = '✅ Purana data delete hua';
+
+    // Step 3: Fresh fetch — backend call
+    btn.textContent = `⏳ 3/4: Sources se last ${days} din ka data fetch ho raha hai...`;
     const res  = await fetch(`/api/fetch-updates?secret=harsh_csc_cron_2025&days=${days}`);
     const data = await res.json();
 
     if (data.success) {
       const total = data.results?.total || 0;
-      btn.textContent = '⏳ Step 3/3: Panel update ho raha hai...';
+      btn.textContent = '⏳ 4/4: Panel refresh ho raha hai...';
       status.textContent = `✅ ${total} nayi updates aayi (last ${days} din)`;
       status.style.color = 'green';
-      showToast(`✅ ${total} updates fetch ho gayi — last ${days} din ka data!`, 'green');
-      setTimeout(() => loadUpdates(), 1200);
+      showToast(`✅ ${total} updates fetch ho gayi — last ${days} din!`, 'green');
+      setTimeout(() => loadUpdates(), 1000);
     } else {
       status.textContent = '❌ Fetch error: ' + (data.error || 'Unknown');
       status.style.color = 'red';
-      showToast('❌ Fetch fail hua — console dekho', '');
+      showToast('❌ Fetch fail hua', '');
     }
   } catch(e) {
-    status.textContent = '❌ Network error: ' + e.message;
+    status.textContent = '❌ Error: ' + e.message;
     status.style.color = 'red';
-    showToast('❌ Network error', '');
+    showToast('❌ Error: ' + e.message, '');
   }
 
   btn.disabled = false;
   btn.textContent = '🔄 Abhi Fetch Karo';
 }
 
-// Legacy — kept for compatibility
 async function triggerFetch() { triggerFetchWithDays(); }
 
 async function loadSources() {
