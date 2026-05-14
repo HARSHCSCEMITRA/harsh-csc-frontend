@@ -824,6 +824,62 @@ body {
   margin-top: 4px;
 }
 .src-tag-input:focus { border-color: var(--primary); }
+
+/* ════ SCRAPING APIs PAGE ════ */
+.sc-provider-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px; }
+.sc-card { background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:16px; transition:border-color .15s; position:relative; }
+.sc-card.has-key { border-color:#81c784; }
+.sc-card.key-error { border-color:#e57373; }
+.sc-card-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.sc-logo { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.sc-name { font-size:14px; font-weight:700; color:var(--text); }
+.sc-sub { font-size:11px; color:#888; margin-top:1px; }
+.sc-free-badge { position:absolute; top:10px; right:12px; background:#e8f5e9; color:#2e7d32; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; letter-spacing:.04em; }
+.sc-key-row { display:flex; gap:6px; margin-bottom:8px; }
+.sc-key-input { flex:1; padding:7px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:monospace; color:var(--text); background:var(--bg); outline:none; transition:border-color .15s; }
+.sc-key-input:focus { border-color:var(--primary); }
+.sc-test-btn { padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; font-size:11px; cursor:pointer; color:var(--muted); font-family:'Noto Sans',sans-serif; white-space:nowrap; transition:all .15s; }
+.sc-test-btn:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+.sc-test-btn.testing { opacity:.55; cursor:not-allowed; }
+.sc-test-btn.sc-ok { border-color:#2e7d32!important; color:#2e7d32!important; }
+.sc-test-btn.sc-err { border-color:#c62828!important; color:#c62828!important; }
+.sc-status-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.sc-pill { font-size:10px; font-weight:600; padding:2px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; }
+.sc-pill.idle { background:#f5f5f5; color:#888; }
+.sc-pill.ok { background:#e8f5e9; color:#2e7d32; }
+.sc-pill.err { background:#ffebee; color:#c62828; }
+.sc-signup-link { font-size:11px; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:3px; margin-left:auto; }
+.sc-signup-link:hover { text-decoration:underline; }
+.sc-meter-wrap { margin-top:9px; }
+.sc-meter-label { display:flex; justify-content:space-between; font-size:10px; color:#888; margin-bottom:3px; }
+.sc-meter-bar { height:5px; background:#e0e4f7; border-radius:3px; overflow:hidden; }
+.sc-meter-fill { height:100%; border-radius:3px; transition:width .5s; }
+.sc-meter-fill.good { background:#2e7d32; }
+.sc-meter-fill.mid { background:#f57f17; }
+.sc-meter-fill.low { background:#c62828; }
+.sc-assign-table { width:100%; border-collapse:collapse; font-size:13px; }
+.sc-assign-table th { text-align:left; font-size:10px; font-weight:700; color:#888; padding:5px 10px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.07em; }
+.sc-assign-table td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.sc-assign-table tr:last-child td { border-bottom:none; }
+.sc-assign-table tr:hover td { background:#f8f9ff; }
+.sc-select { padding:5px 8px; border:1px solid var(--border); border-radius:7px; font-size:12px; background:var(--card); color:var(--text); font-family:'Noto Sans',sans-serif; cursor:pointer; outline:none; }
+.sc-select:focus { border-color:var(--primary); }
+.sc-fetch-btn { padding:4px 11px; border-radius:7px; border:1px solid #7b1fa2; color:#7b1fa2; background:transparent; font-size:11px; cursor:pointer; font-family:'Noto Sans',sans-serif; transition:all .15s; }
+.sc-fetch-btn:hover:not(:disabled) { background:#f3e5f5; }
+.sc-fetch-btn.fetching { opacity:.5; cursor:not-allowed; }
+.sc-fetch-btn.done { border-color:var(--success); color:var(--success); }
+.sc-fetch-btn.fail { border-color:var(--danger); color:var(--danger); }
+.sc-type-chip { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; display:inline-block; }
+.sc-type-chip.js { background:#fff3e0; color:#e65100; }
+.sc-type-chip.rss { background:#e8f5e9; color:#2e7d32; }
+.sc-type-chip.tg { background:#e3f2fd; color:#1565c0; }
+.sc-type-chip.gdoc { background:#ede7f6; color:#4527a0; }
+.sc-log { background:#0f1b2d; border-radius:10px; padding:10px 14px; font-family:monospace; font-size:12px; color:#a5d6a7; max-height:200px; overflow-y:auto; line-height:1.8; }
+.sc-log p { margin:0; }
+.sc-log .l-err { color:#ef9a9a; }
+.sc-log .l-info { color:#90caf9; }
+.sc-log .l-ok { color:#a5d6a7; }
+.sc-log .l-warn { color:#ffe082; }
 </style>
 </head>
 <body>
@@ -849,6 +905,10 @@ body {
     <div class="nav-item" onclick="showPage('sources')">
       <span class="nav-icon">🔗</span>
       <span>Source Manager</span>
+    </div>
+    <div class="nav-item" id="nav-scraping" onclick="showPage('scraping')">
+      <span class="nav-icon">🕷️</span>
+      <span>Scraping APIs</span>
     </div>
     <div class="nav-section">Coming Soon</div>
     <div class="nav-item" style="opacity:0.4;cursor:not-allowed">
@@ -1096,6 +1156,7 @@ body {
           <option value="rss">RSS Feed</option>
           <option value="telegram">Telegram Channel</option>
           <option value="google_doc">Google Doc (Published)</option>
+          <option value="website">🌐 Website (JS Scraping)</option>
         </select>
       </div>
       <div class="form-group full">
@@ -1166,6 +1227,81 @@ body {
     <h4>📋 Active Sources <span id="src-count" style="font-size:12px;color:#888;font-weight:400;"></span></h4>
     <div id="sources-list">
       <div style="text-align:center;padding:20px;color:#aaa;">Loading sources...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRAPING APIs PAGE ===== -->
+<div class="page" id="page-scraping">
+  <div class="stats-row" style="margin-bottom:16px;">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f5e9">🟢</div>
+      <div><div class="stat-label">Active APIs</div><div class="stat-value" id="sc-stat-active">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fff3e0">🌐</div>
+      <div><div class="stat-label">JS Sources Assigned</div><div class="stat-value" id="sc-stat-js">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e3f2fd">💳</div>
+      <div><div class="stat-label">Credits/Day (est.)</div><div class="stat-value" id="sc-stat-cpd">—</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#ede7f6">📅</div>
+      <div><div class="stat-label">Monthly Estimate</div><div class="stat-value" id="sc-stat-cpm">—</div></div>
+    </div>
+  </div>
+
+  <!-- API Keys -->
+  <div class="section-card">
+    <h4>🔑 Scraping API Keys — Yahan Daalo</h4>
+    <p style="font-size:12px;color:#888;margin-bottom:14px;">
+      Free signup karo → API key milegi → yahan paste karo → <b>Test</b> dabao → Green ✓ = sab sahi.<br>
+      Keys sirf tumhare browser mein save hoti hain (localStorage) — server pe nahi jaati.
+    </p>
+    <div class="sc-provider-grid" id="sc-provider-grid">
+      <div style="color:#aaa;padding:10px;">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Source Assignment -->
+  <div class="section-card">
+    <h4>📋 Sources → Scraper Assignment</h4>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">
+      Jo sources JS-rendered hain (MLSU, Sarkari Websites) unhe scraper assign karo.
+      RSS/Telegram ke liye <b>Direct</b> rahne do.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="sc-assign-table">
+        <thead>
+          <tr>
+            <th>Source Name</th>
+            <th>Type</th>
+            <th>Assigned Scraper</th>
+            <th>Test Fetch</th>
+          </tr>
+        </thead>
+        <tbody id="sc-assign-tbody">
+          <tr><td colspan="4" style="text-align:center;color:#bbb;padding:20px;">
+            Sources load ho rahi hain — pehle Source Manager mein add karo.
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Live Log -->
+  <div class="section-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <h4 style="margin:0;">📟 Live Fetch Log</h4>
+      <button onclick="document.getElementById('sc-log-box').innerHTML='<p class=l-info>[Log cleared]</p>'"
+        style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;color:#888;">
+        🗑️ Clear
+      </button>
+    </div>
+    <div class="sc-log" id="sc-log-box">
+      <p class="l-info">[System] Scraping API Manager ready.</p>
+      <p class="l-info">[Tip] API key daalo → Test karo → Source assign karo → Fetch Now dabao</p>
     </div>
   </div>
 </div>
@@ -2873,6 +3009,9 @@ function toggleSourceHelp(type) {
   } else if (type === 'google_doc') {
     help.innerHTML = '📄 Google Doc > File > Share > Publish to web > Link copy karo';
     urlInput.placeholder = 'https://docs.google.com/document/d/.../pub';
+  } else if (type === 'website') {
+    help.innerHTML = '🌐 Website URL daalo (MLSU, Govt sites) — Scraping APIs page mein scraper assign karo';
+    urlInput.placeholder = 'https://www.mlsu.ac.in/index.php/notification';
   }
 }
 
@@ -2881,10 +3020,284 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   event.currentTarget.classList.add('active');
-  const titles = { news: '📰 News & Updates', branding: '🎨 Branding Settings', sources: '🔗 Source Manager' };
+  const titles = { news: '📰 News & Updates', branding: '🎨 Branding Settings', sources: '🔗 Source Manager', scraping: '🕷️ Scraping APIs' };
   if (name === 'sources') loadSources();
+  if (name === 'scraping') { scRenderProviders(); scLoadAssignTable(); }
   document.getElementById('page-title').textContent = titles[name] || name;
 }
+
+// ══════════════════════════════════════════════
+//  SCRAPING API MANAGER — Complete JS
+// ══════════════════════════════════════════════
+
+const SC_PROVIDERS = [
+  {
+    id: 'scrapingant',
+    name: 'ScrapingAnt',
+    icon: '🐜', iconBg: '#e8f5e9',
+    free: '10,000 credits/month',
+    costNote: '10 cr/JS req → ~1,000 req/month free',
+    signup: 'https://app.scrapingant.com/signup',
+    checkCredits: async (key) => {
+      const r = await fetch(`https://api.scrapingant.com/v2/general?url=https%3A%2F%2Fhttpbin.org%2Fget&x-api-key=${key}&browser=false`, { signal: AbortSignal.timeout(15000) });
+      return { ok: r.ok || r.status === 200, remaining: null, total: 1000 };
+    },
+    buildUrl: (key, url, js) => `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(url)}&x-api-key=${key}&browser=${js}&proxy_type=datacenter`,
+  },
+  {
+    id: 'scrape_do',
+    name: 'Scrape.do',
+    icon: '🔮', iconBg: '#ede7f6',
+    free: '1,000 req/month',
+    costNote: '1 credit/req (JS included!) → 1,000 req free',
+    signup: 'https://scrape.do',
+    checkCredits: async (key) => {
+      const r = await fetch(`https://api.scrape.do/?token=${key}&url=https%3A%2F%2Fhttpbin.org%2Fget&render=false`, { signal: AbortSignal.timeout(15000) });
+      return { ok: r.ok, remaining: null, total: 1000 };
+    },
+    buildUrl: (key, url, js) => `https://api.scrape.do/?token=${key}&url=${encodeURIComponent(url)}&render=${js}`,
+  },
+  {
+    id: 'scrapingbee',
+    name: 'ScrapingBee',
+    icon: '🐝', iconBg: '#fff8e1',
+    free: '1,000 one-time credits',
+    costNote: '1 cr basic / 5 cr JS → ~200 JS req free',
+    signup: 'https://www.scrapingbee.com/',
+    checkCredits: async (key) => {
+      try {
+        const r = await fetch(`https://app.scrapingbee.com/api/v1/usage?api_key=${key}`, { signal: AbortSignal.timeout(10000) });
+        if (r.ok) {
+          const d = await r.json();
+          const used = d.used_api_credits || 0;
+          const total = d.max_api_credits || 1000;
+          return { ok: true, remaining: total - used, total };
+        }
+      } catch(e) {}
+      const r2 = await fetch(`https://app.scrapingbee.com/api/v1/?api_key=${key}&url=https%3A%2F%2Fhttpbin.org%2Fget&render_js=false`, { signal: AbortSignal.timeout(15000) });
+      return { ok: r2.ok, remaining: null, total: 1000 };
+    },
+    buildUrl: (key, url, js) => `https://app.scrapingbee.com/api/v1/?api_key=${key}&url=${encodeURIComponent(url)}&render_js=${js}&block_resources=true${js ? '&wait=2000' : ''}`,
+  },
+  {
+    id: 'scrapfly',
+    name: 'Scrapfly',
+    icon: '✈️', iconBg: '#e3f2fd',
+    free: '1,000 credits (no expiry!)',
+    costNote: '1 cr HTTP / 5 cr JS+ASP → no monthly reset',
+    signup: 'https://scrapfly.io/register',
+    checkCredits: async (key) => {
+      try {
+        const r = await fetch(`https://api.scrapfly.io/account?key=${key}`, { signal: AbortSignal.timeout(10000) });
+        if (r.ok) {
+          const d = await r.json();
+          const used = d.subscription?.usage?.scrape?.current || 0;
+          const total = d.subscription?.usage?.scrape?.limit || 1000;
+          return { ok: true, remaining: total - used, total };
+        }
+      } catch(e) {}
+      return { ok: false, remaining: null, total: 1000 };
+    },
+    buildUrl: (key, url, js) => `https://api.scrapfly.io/scrape?key=${key}&url=${encodeURIComponent(url)}&asp=true&render_js=${js}`,
+  },
+];
+
+function scGetKeys() { try { return JSON.parse(localStorage.getItem('sc_api_keys')||'{}'); } catch { return {}; } }
+function scSaveKey(id, val) { const k = scGetKeys(); k[id] = val.trim(); localStorage.setItem('sc_api_keys', JSON.stringify(k)); }
+function scGetAssign() { try { return JSON.parse(localStorage.getItem('sc_assignments')||'{}'); } catch { return {}; } }
+function scSaveAssign(srcId, pId) { const a = scGetAssign(); a[srcId] = pId; localStorage.setItem('sc_assignments', JSON.stringify(a)); }
+function scGetCredits() { try { return JSON.parse(localStorage.getItem('sc_credits')||'{}'); } catch { return {}; } }
+function scSaveCred(id, data) { const c = scGetCredits(); c[id] = {...data, ts: Date.now()}; localStorage.setItem('sc_credits', JSON.stringify(c)); }
+
+function scLog(msg, type='ok') {
+  const box = document.getElementById('sc-log-box');
+  if (!box) return;
+  const now = new Date().toLocaleTimeString('hi-IN');
+  const p = document.createElement('p');
+  p.className = 'l-' + type;
+  p.textContent = '[' + now + '] ' + msg;
+  box.appendChild(p);
+  box.scrollTop = box.scrollHeight;
+}
+
+function scRenderProviders() {
+  const grid = document.getElementById('sc-provider-grid');
+  if (!grid) return;
+  const keys = scGetKeys();
+  const credits = scGetCredits();
+  let active = 0;
+
+  grid.innerHTML = SC_PROVIDERS.map(p => {
+    const savedKey = keys[p.id] || '';
+    const hasKey = !!savedKey;
+    if (hasKey) active++;
+    const cred = credits[p.id] || {};
+    const pct = cred.total ? Math.max(0, Math.min(100, Math.round((1-(cred.used||0)/cred.total)*100))) : (hasKey ? 80 : 0);
+    const fillCls = pct > 50 ? 'good' : pct > 20 ? 'mid' : 'low';
+    const remTxt = cred.remaining != null ? cred.remaining + ' / ' + cred.total + ' baki' : (hasKey ? 'Test karo to dekhein' : '—');
+    return `<div class="sc-card ${hasKey?'has-key':''}" id="scc-${p.id}">
+  <div class="sc-free-badge">FREE</div>
+  <div class="sc-card-head">
+    <div class="sc-logo" style="background:${p.iconBg}">${p.icon}</div>
+    <div><div class="sc-name">${p.name}</div><div class="sc-sub">${p.free}</div></div>
+  </div>
+  <div style="font-size:11px;color:#888;margin-bottom:8px;">💡 ${p.costNote}</div>
+  <div class="sc-key-row">
+    <input type="password" class="sc-key-input" id="sckey-${p.id}" placeholder="API Key paste karo..." value="${savedKey}" oninput="scOnKeyInput('${p.id}',this.value)">
+    <button class="sc-test-btn" id="sctbtn-${p.id}" onclick="scTestProvider('${p.id}')">Test</button>
+  </div>
+  <div class="sc-status-row">
+    <span class="sc-pill ${hasKey?'ok':'idle'}" id="scpill-${p.id}">${hasKey?'✓ Key saved':'○ No key'}</span>
+    <a class="sc-signup-link" href="${p.signup}" target="_blank">Free signup ↗</a>
+  </div>
+  <div class="sc-meter-wrap">
+    <div class="sc-meter-label"><span>Credits remaining</span><span id="sccred-${p.id}">${remTxt}</span></div>
+    <div class="sc-meter-bar"><div class="sc-meter-fill ${fillCls}" id="scfill-${p.id}" style="width:${pct}%"></div></div>
+  </div>
+</div>`;
+  }).join('');
+  document.getElementById('sc-stat-active').textContent = active;
+  scUpdateStats();
+}
+
+function scOnKeyInput(id, val) {
+  scSaveKey(id, val);
+  const card = document.getElementById('scc-'+id);
+  const pill = document.getElementById('scpill-'+id);
+  if (val.trim()) {
+    card?.classList.add('has-key');
+    if (pill) { pill.className='sc-pill ok'; pill.textContent='✓ Key saved'; }
+  } else {
+    card?.classList.remove('has-key');
+    if (pill) { pill.className='sc-pill idle'; pill.textContent='○ No key'; }
+  }
+  scUpdateStats();
+}
+
+async function scTestProvider(id) {
+  const p = SC_PROVIDERS.find(x=>x.id===id);
+  const key = document.getElementById('sckey-'+id)?.value.trim();
+  const btn = document.getElementById('sctbtn-'+id);
+  const pill = document.getElementById('scpill-'+id);
+  const credEl = document.getElementById('sccred-'+id);
+  const fillEl = document.getElementById('scfill-'+id);
+  if (!key) { showToast('Pehle API key daalo!', ''); return; }
+  btn.className='sc-test-btn testing'; btn.textContent='...';
+  scLog('Testing ' + p.name + '...', 'info');
+  try {
+    const result = await p.checkCredits(key);
+    if (result.ok) {
+      btn.className='sc-test-btn sc-ok'; btn.textContent='✓ OK';
+      pill.className='sc-pill ok'; pill.textContent='✓ Working';
+      document.getElementById('scc-'+id)?.classList.add('has-key');
+      document.getElementById('scc-'+id)?.classList.remove('key-error');
+      scSaveCred(id, result);
+      if (result.remaining != null) {
+        credEl.textContent = result.remaining + ' / ' + result.total + ' baki';
+        const pct = Math.max(0,Math.min(100,Math.round(result.remaining/result.total*100)));
+        fillEl.style.width = pct+'%';
+        fillEl.className = 'sc-meter-fill ' + (pct>50?'good':pct>20?'mid':'low');
+        scLog(p.name + ' ✓ — ' + result.remaining + ' credits baki (total: ' + result.total + ')', 'ok');
+      } else {
+        credEl.textContent = 'Connected! (details unavailable)';
+        fillEl.style.width = '70%';
+        scLog(p.name + ' ✓ — Connected! Credit info is not available on free tier via API.', 'ok');
+      }
+    } else { throw new Error('API ne reject kiya'); }
+  } catch(e) {
+    btn.className='sc-test-btn sc-err'; btn.textContent='✗ Fail';
+    pill.className='sc-pill err'; pill.textContent='✗ Error';
+    document.getElementById('scc-'+id)?.classList.add('key-error');
+    scLog(p.name + ' ✗ — ' + e.message, 'err');
+  }
+  setTimeout(()=>{ btn.className='sc-test-btn'; btn.textContent='Test'; }, 4000);
+}
+
+async function scLoadAssignTable() {
+  const tbody = document.getElementById('sc-assign-tbody');
+  if (!tbody) return;
+  const keys = scGetKeys();
+  const assignments = scGetAssign();
+  let sources = [];
+  try {
+    const { data } = await supabase.from('gov_sources').select('id,name,source_type,url,is_active').eq('is_active',true).order('name');
+    sources = data || [];
+  } catch(e) { scLog('Sources load error: '+e.message, 'err'); }
+
+  if (!sources.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#bbb;padding:20px;">Koi source nahi mila. Pehle Source Manager mein sources add karo.</td></tr>';
+    return;
+  }
+
+  const provOpts = '<option value="direct">Direct (No scraper)</option>' +
+    SC_PROVIDERS.map(p => keys[p.id] ? `<option value="${p.id}">${p.icon} ${p.name}</option>` : '').filter(Boolean).join('');
+
+  const jsRe = /mlsu|ssc\.nic|results\.gov|nta\.ac|rpsc|rajasthan\.gov|upsc|ibps|rbi|cbse|icai|indiaresults|sarkariresult/i;
+
+  tbody.innerHTML = sources.map(src => {
+    const isJs = jsRe.test(src.url) || src.source_type === 'website';
+    const typeKey = src.source_type==='telegram'?'tg': src.source_type==='google_doc'?'gdoc': isJs?'js':'rss';
+    const typeLabel = {tg:'Telegram',gdoc:'Google Doc',js:'JS Site',rss:'RSS'}[typeKey];
+    const assigned = assignments[src.id] || 'direct';
+    const shortUrl = (src.url||'').length>38 ? src.url.substring(0,38)+'…' : (src.url||'');
+    const safeUrl = (src.url||'').replace(/'/g,"\\'");
+    const optsHtml = provOpts.replace(`value="${assigned}"`, `value="${assigned}" selected`);
+    return `<tr>
+  <td><div style="font-weight:600;">${src.name}</div><div style="font-size:10px;color:#aaa;">${shortUrl}</div></td>
+  <td><span class="sc-type-chip ${typeKey}">${typeLabel}</span></td>
+  <td><select class="sc-select" id="scasgn-${src.id}" onchange="scSaveAssign('${src.id}',this.value);scUpdateStats()">${optsHtml}</select></td>
+  <td><button class="sc-fetch-btn" id="scfn-${src.id}" onclick="scFetchNow('${src.id}','${safeUrl}','${src.source_type}')">Fetch Now</button></td>
+</tr>`;
+  }).join('');
+  scUpdateStats();
+}
+
+async function scFetchNow(srcId, srcUrl, srcType) {
+  const btn = document.getElementById('scfn-'+srcId);
+  const pId = document.getElementById('scasgn-'+srcId)?.value || 'direct';
+  const keys = scGetKeys();
+  const p = SC_PROVIDERS.find(x=>x.id===pId);
+  const key = keys[pId];
+  if (pId==='direct') { scLog('Source ['+srcId+']: Direct fetch (scraper nahi lagega)', 'info'); return; }
+  if (!p||!key) { showToast(pId+' ka API key nahi mila!', ''); scLog('✗ Key missing — pehle add karo aur Test karo', 'err'); return; }
+  btn.className='sc-fetch-btn fetching'; btn.textContent='⏳...';
+  scLog('Fetching via '+p.name+': '+srcUrl.substring(0,55)+'...', 'info');
+  try {
+    const apiUrl = p.buildUrl(key, srcUrl, true);
+    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(35000) });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    let html = await res.text();
+    if (pId==='scrapfly') { try { html = JSON.parse(html).result?.content||html; } catch {} }
+    const links = [];
+    const re = /<a[^>]+href=["']([^"'#][^"']*)["'][^>]*>([^<]{10,})<\/a>/gi;
+    let m;
+    while ((m=re.exec(html))!==null && links.length<12) links.push(m[2].trim().substring(0,90));
+    btn.className='sc-fetch-btn done'; btn.textContent='✓ '+links.length+' links';
+    scLog('✓ '+p.name+' → '+links.length+' links found!', 'ok');
+    if (links[0]) scLog('  Sample: "'+links[0]+'"', 'ok');
+    if (links[1]) scLog('  Sample: "'+links[1]+'"', 'ok');
+  } catch(e) {
+    btn.className='sc-fetch-btn fail'; btn.textContent='✗ Failed';
+    scLog('✗ Fetch failed ('+p.name+'): '+e.message, 'err');
+  }
+  setTimeout(()=>{ btn.className='sc-fetch-btn'; btn.textContent='Fetch Now'; }, 5000);
+}
+
+function scUpdateStats() {
+  const keys = scGetKeys();
+  const a = scGetAssign();
+  const active = SC_PROVIDERS.filter(p=>keys[p.id]).length;
+  let jsCount = 0;
+  Object.values(a).forEach(v=>{ if(v&&v!=='direct') jsCount++; });
+  const cpd = jsCount * 12;
+  document.getElementById('sc-stat-active').textContent = active;
+  document.getElementById('sc-stat-js').textContent = jsCount;
+  document.getElementById('sc-stat-cpd').textContent = cpd||'—';
+  document.getElementById('sc-stat-cpm').textContent = cpd ? '~'+(cpd*30) : '—';
+}
+
+// Init stats on load
+setTimeout(scUpdateStats, 1000);
 
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
