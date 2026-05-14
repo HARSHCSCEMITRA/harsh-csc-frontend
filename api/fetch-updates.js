@@ -64,11 +64,21 @@ function makeSummary(text = '', max = 300) {
   return c.length > max ? c.substring(0, max) + '...' : c;
 }
 
-async function isDuplicate(title, sourceId) {
-  const data = await sbSelect('gov_updates',
+async function isDuplicate(title, sourceId, originalUrl) {
+  // Check 1: Title + source_id match
+  const byTitle = await sbSelect('gov_updates',
     `select=id&title=eq.${encodeURIComponent(title.substring(0,200))}&source_id=eq.${sourceId}&limit=1`
   );
-  return Array.isArray(data) && data.length > 0;
+  if (Array.isArray(byTitle) && byTitle.length > 0) return true;
+
+  // Check 2: original_url match (prevents re-insert after manual delete)
+  if (originalUrl) {
+    const byUrl = await sbSelect('gov_updates',
+      `select=id&original_url=eq.${encodeURIComponent(originalUrl)}&limit=1`
+    );
+    if (Array.isArray(byUrl) && byUrl.length > 0) return true;
+  }
+  return false;
 }
 
 // ── RSS Fetch ─────────────────────────────────────────
@@ -264,10 +274,16 @@ export default async function handler(req, res) {
   if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
   if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Supabase env vars missing' });
 
-  // days param — frontend se pass hota hai (default 30)
-  const days = Math.min(90, Math.max(1, parseInt(req.query.days) || 30));
+  // days param — manual fetch se aata hai (default 0 = sirf naya data)
+  // days=0 → only fetch items newer than last_fetched_at (cron mode)
+  // days>0 → fetch last N days (manual "Abhi Fetch Karo" mode)
+  const days = Math.min(90, Math.max(0, parseInt(req.query.days) || 0));
+  const isManualFetch = days > 0;
+
   const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
+  if (isManualFetch) {
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+  }
 
   const results = { rss: 0, telegram: 0, google_doc: 0, total: 0, errors: [], days };
 
@@ -279,9 +295,16 @@ export default async function handler(req, res) {
 
     for (const source of sources) {
       let items = [];
+
+      // Cron mode: sirf last_fetched_at ke baad ka data fetch karo
+      // Isse manually deleted items wapas nahi aayenge
+      const fetchSince = isManualFetch
+        ? cutoffDate
+        : (source.last_fetched_at ? new Date(source.last_fetched_at) : (() => { const d = new Date(); d.setDate(d.getDate()-1); return d; })());
+
       try {
-        if (source.source_type === 'rss')             items = await fetchRSS(source, days);
-        else if (source.source_type === 'telegram')   items = await fetchTelegram(source, days);
+        if (source.source_type === 'rss')             items = await fetchRSS(source, days || 1);
+        else if (source.source_type === 'telegram')   items = await fetchTelegram(source, days || 3);
         else if (source.source_type === 'google_doc') items = await fetchGoogleDoc(source);
         else continue;
       } catch(e) {
@@ -289,12 +312,21 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // Cutoff se purane items discard karo
-      items = items.filter(item => !item.published_at || new Date(item.published_at) >= cutoffDate);
+      // fetchSince se purane items filter karo (cron mode mein)
+      if (!isManualFetch) {
+        items = items.filter(item =>
+          !item.published_at || new Date(item.published_at) > fetchSince
+        );
+      } else {
+        // Manual mode mein cutoff apply karo
+        items = items.filter(item =>
+          !item.published_at || new Date(item.published_at) >= cutoffDate
+        );
+      }
 
       for (const item of items) {
         try {
-          if (await isDuplicate(item.title, source.id)) continue;
+          if (await isDuplicate(item.title, source.id, item.original_url)) continue;
           const ok = await sbInsert('gov_updates', item);
           if (ok) {
             const key = source.source_type === 'google_doc' ? 'google_doc' : source.source_type;
