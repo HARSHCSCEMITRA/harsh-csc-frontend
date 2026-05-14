@@ -2634,14 +2634,15 @@ async function addSource() {
 }
 
 async function toggleSource(id, currentState) {
-  const willDisable = currentState === true;
+  // Fix: string "true" aur boolean true dono handle karo
+  const isActive = currentState === true || currentState === 'true';
+  const willDisable = isActive;
 
   if (willDisable) {
-    // Confirm before deleting all updates
     if (!confirm('Is source ko disable karne par iske SAARE updates DB se permanently delete ho jaayenge.\n\nWapas enable karne par fresh data fetch hoga.\n\nConfirm karo?')) return;
   }
 
-  // Step 1: Source status update karo
+  // Step 1: Source status update
   await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id, {
     method: 'PATCH',
     headers: {
@@ -2649,27 +2650,36 @@ async function toggleSource(id, currentState) {
       'Authorization': 'Bearer ' + CCP_SB_KEY,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ is_active: !currentState })
+    body: JSON.stringify({ is_active: !isActive })
   });
 
   if (willDisable) {
-    // Step 2: Is source ke SAARE updates DB se delete karo
     showToast('🗑️ Updates delete ho rahe hain...', 'green');
-    const delRes = await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_id=eq.' + id, {
-      method: 'DELETE',
-      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-    });
-    // source_name se bhi delete karo (purani entries jinka source_id NULL hai)
-    // Pehle source ka naam lo
-    const srcData = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id + '&select=name', {
-      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-    }).then(r => r.json());
-    if (Array.isArray(srcData) && srcData[0]?.name) {
-      await fetch(CCP_SB_URL + '/rest/v1/gov_updates?source_name=eq.' + encodeURIComponent(srcData[0].name), {
-        method: 'DELETE',
-        headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-      });
+
+    // Pehle source ka naam fetch karo
+    const srcData = await fetch(
+      CCP_SB_URL + '/rest/v1/gov_sources?id=eq.' + id + '&select=id,name',
+      { headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+    ).then(r => r.json()).catch(() => []);
+
+    const srcName = Array.isArray(srcData) && srcData[0]?.name ? srcData[0].name : null;
+
+    // DELETE by source_id
+    const del1 = await fetch(
+      CCP_SB_URL + '/rest/v1/gov_updates?source_id=eq.' + id,
+      { method: 'DELETE', headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+    );
+    console.log('Delete by source_id:', del1.status, del1.statusText);
+
+    // DELETE by source_name (purani entries ke liye)
+    if (srcName) {
+      const del2 = await fetch(
+        CCP_SB_URL + '/rest/v1/gov_updates?source_name=eq.' + encodeURIComponent(srcName),
+        { method: 'DELETE', headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+      );
+      console.log('Delete by source_name (' + srcName + '):', del2.status, del2.statusText);
     }
+
     showToast('✅ Source disabled — saare updates delete ho gaye', 'green');
   } else {
     showToast('✅ Source enabled — agli fetch mein naya data aayega', 'green');
@@ -2677,7 +2687,7 @@ async function toggleSource(id, currentState) {
 
   activeSourceNames = null;
   loadSources();
-  setTimeout(() => loadUpdates(), 600);
+  setTimeout(() => loadUpdates(), 800);
 }
 
 async function deleteSource(id, name) {
