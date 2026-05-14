@@ -1139,12 +1139,13 @@ body {
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="font-size:13px;color:var(--muted);">News kitne din purani dikhani hai:</span>
         <select class="form-input" style="width:140px;padding:6px 10px;" onchange="updateMaxAge(this.value)" id="days-select">
+          <option value="999" selected>📅 Sab Dikhao</option>
+          <option value="1">Aaj ka</option>
           <option value="7">7 din</option>
           <option value="15">15 din</option>
-          <option value="30" selected>30 din</option>
+          <option value="30">30 din</option>
           <option value="60">60 din</option>
           <option value="90">90 din</option>
-          <option value="365">1 saal</option>
         </select>
       </div>
     </div>
@@ -1545,25 +1546,33 @@ async function loadUpdates() {
   document.getElementById('news-grid').innerHTML =
     '<div style="padding:30px;text-align:center;color:#aaa;">Loading updates...</div>';
 
-  // Step 1: Tags map build karo (source filter frontend pe nahi lagega)
-  // Backend (fetch-updates.js) pehle se is_active check karta hai naye updates ke liye
-  // Purane stored updates sabhi dikhenge — source disabled ho ya na ho
+  // Step 1: Active source IDs + tags map — ek hi query mein
+  let activeSourceIds = null;
   window._sourceTagMap = {};
   try {
-    const tagRes = await fetch(CCP_SB_URL + '/rest/v1/gov_sources?select=name,tags', {
-      headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
-    });
-    const tagSources = await tagRes.json();
-    if (Array.isArray(tagSources)) {
-      tagSources.forEach(s => {
+    const srcRes = await fetch(
+      CCP_SB_URL + '/rest/v1/gov_sources?select=id,name,is_active,tags',
+      { headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY } }
+    );
+    const allSources = await srcRes.json();
+    if (Array.isArray(allSources)) {
+      // Active source IDs collect karo (UUID se filter — name mismatch nahi hoga)
+      activeSourceIds = allSources
+        .filter(s => s.is_active === true)
+        .map(s => s.id);
+      // Tags map build karo
+      allSources.forEach(s => {
         if (s.tags && Array.isArray(s.tags) && s.tags.length) {
           window._sourceTagMap[s.name] = s.tags;
         }
       });
     }
-  } catch(e) { /* tags optional — fail ho toh chalo */ }
+  } catch(e) {
+    console.warn('Sources fetch failed:', e.message);
+    activeSourceIds = null;
+  }
 
-  // Step 2: Saare updates fetch karo — limit 500 taaki koi update miss na ho
+  // Step 2: Updates fetch — limit 500
   const { data, error } = await getCCPClient()
     .from('gov_updates')
     .select('*')
@@ -1579,49 +1588,40 @@ async function loadUpdates() {
 
   let updates = data || [];
 
-  // Step 3b: Junk / meaningless messages filter karo
+  // Step 3: DISABLED source ka data hide karo — source_id se match (reliable)
+  if (activeSourceIds && activeSourceIds.length > 0) {
+    const activeIdSet = new Set(activeSourceIds);
+    updates = updates.filter(u => {
+      // source_id nahi hai to dikhao (manually added entries)
+      if (!u.source_id) return true;
+      return activeIdSet.has(u.source_id);
+    });
+  }
+
+  // Step 4: Junk filter
   updates = updates.filter(u => {
     const title = (u.title || '').trim();
     const summary = (u.summary || '').trim();
-
-    // Empty title
     if (!title || title.length < 5) return false;
-
-    // Pure URL as title (YouTube links, bare URLs, t.me links)
     if (/^https?:\/\//i.test(title)) return false;
-
-    // Telegram system messages
-    const systemMsgPatterns = [
-      /^channel created$/i,
-      /^messages in this channel will/i,
-      /^pinned message/i,
-      /^document from\s*\.?\s*$/i,
-      /^voice message$/i,
-      /^video message$/i,
-      /^photo$/i,
-      /^sticker$/i,
-      /^poll:/i,
-      /^forwarded from/i,
+    const junk = [
+      /^channel created$/i, /^messages in this channel will/i,
+      /^pinned message/i, /^document from\s*\.?\s*$/i,
+      /^voice message$/i, /^video message$/i, /^photo$/i, /^sticker$/i,
+      /^poll:/i, /^forwarded from/i,
     ];
-    if (systemMsgPatterns.some(p => p.test(title))) return false;
-
-    // Sirf 1–2 word title with no summary — koi meaning nahi
+    if (junk.some(p => p.test(title))) return false;
     const wordCount = title.split(/\s+/).filter(Boolean).length;
     if (wordCount <= 2 && !summary) return false;
-
-    // Title + summary dono milake bahut chhote hain (< 20 chars total)
     if ((title + summary).replace(/\s/g,'').length < 15) return false;
-
     return true;
   });
 
-  // Step 4: Auto-fix categories + inject source tags
+  // Step 5: Auto-fix categories + inject tags
   updates = updates.map(u => {
-    // Better category if stored as 'other' or missing
     if (!u.category || u.category === 'other' || u.category === 'news') {
       u.category = detectCategoryFromContent(u.title, u.summary);
     }
-    // Merge source tags into update tags
     const sourceTags = (window._sourceTagMap && u.source_name)
       ? (window._sourceTagMap[u.source_name] || []) : [];
     const autoTags = autoDetectTags(u);
@@ -1630,8 +1630,7 @@ async function loadUpdates() {
     return u;
   });
 
-  // Step 5: Frontend duplicate remove — same title (first 80 chars) ek hi baar dikhao
-  // Duplicate IDs track karo DB cleanup ke liye
+  // Step 6: Frontend duplicate remove + DB cleanup
   const seenTitles = new Set();
   const dupIds = [];
   const allData = data || [];
@@ -1641,7 +1640,6 @@ async function loadUpdates() {
     seenTitles.add(key);
     return true;
   });
-  // Duplicate IDs collect karo (jo filter ho gaye)
   const keptIds = new Set(updates.map(u => u.id));
   allData.forEach(u => { if (!keptIds.has(u.id)) dupIds.push(u.id); });
 
@@ -1652,16 +1650,15 @@ async function loadUpdates() {
   document.getElementById('last-updated-txt').textContent =
     'Updated: ' + new Date().toLocaleTimeString('hi-IN');
 
-  // Background mein DB se bhi duplicates delete karo (silently)
+  // Background DB cleanup
   if (dupIds.length > 0) {
-    console.log('🧹 Duplicate cleanup:', dupIds.length, 'entries');
     dupIds.slice(0, 20).forEach(async (id) => {
       try {
         await fetch(CCP_SB_URL + '/rest/v1/gov_updates?id=eq.' + id, {
           method: 'DELETE',
           headers: { 'apikey': CCP_SB_KEY, 'Authorization': 'Bearer ' + CCP_SB_KEY }
         });
-      } catch(e) { /* silent */ }
+      } catch(e) {}
     });
   }
 }
@@ -1970,13 +1967,24 @@ function renderNews(data) {
 
     const cleanTitle   = cleanText(u.title);
     const cleanSummary = cleanText(u.summary);
+    // full_content available ho toh use karo — puri news dikhegi
+    const cleanFull    = u.full_content ? cleanText(u.full_content) : '';
 
-    const isSameContent = cleanSummary && cleanTitle.startsWith(cleanSummary.substring(0, 40));
-    const bodyContent = isSameContent
-      ? `<div class="news-title">${cleanTitle}</div>`
-      : `<div class="news-title">${cleanTitle}</div>${cleanSummary ? `<div class="news-summary">${cleanSummary}</div>` : ''}`;
+    // Agar full_content title+summary se zyada hai to full dikhao
+    const displayBody = cleanFull && cleanFull.length > (cleanTitle + cleanSummary).length
+      ? cleanFull
+      : (cleanTitle + (cleanSummary && cleanSummary !== cleanTitle ? '\n' + cleanSummary : ''));
 
-    const incompleteNote = looksIncomplete(cleanTitle) && !cleanSummary
+    // Title = pehli line, body = baaki sab
+    const bodyLines = displayBody.split('\n').filter(l => l.trim());
+    const displayTitle = bodyLines[0] || cleanTitle;
+    const displayRest  = bodyLines.slice(1).join('\n').trim();
+
+    const isSameContent = displayRest && cleanTitle.startsWith(displayRest.substring(0, 40));
+    const bodyContent = `<div class="news-title">${displayTitle}</div>` +
+      (displayRest && !isSameContent ? `<div class="news-summary">${displayRest}</div>` : '');
+
+    const incompleteNote = looksIncomplete(displayTitle) && !displayRest
       ? `<div style="font-size:10px;color:#f57f17;margin-top:2px;">⚠️ Puri news ke liye source dekho</div>`
       : '';
 
@@ -2016,7 +2024,7 @@ function renderNews(data) {
           📎 Source + Share
         </button>` : ''}
         <button class="action-btn" style="border-color:#c62828;color:#c62828;"
-          onclick="deleteNewsUpdate('${uid}', '${cleanTitle.substring(0,50).replace(/'/g,'').replace(/"/g,'')}')">
+          onclick="deleteNewsUpdate('${uid}', '${displayTitle.substring(0,50).replace(/'/g,'').replace(/"/g,'')}')">
           🗑️ Delete
         </button>
       </div>
@@ -2406,8 +2414,8 @@ function matchesScope(update) {
   return keywords.some(kw => text.includes(kw));
 }
 
-// Days filter — default 30 din
-var maxAgeDays = 30;
+// Days filter — default: sab dikhao
+var maxAgeDays = 999;
 
 function renderFilteredNews() {
   const term = document.getElementById('search-input')?.value || '';
