@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchCatalog } from '../utils/api';
 import { ProductCard }  from '../components/ProductCard';
 import { CartDrawer }   from '../components/CartDrawer';
+import { useLanguageStore } from '../store/languageStore';
 
 // ── Supabase config ───────────────────────────────────────────
 const SB_URL  = import.meta.env.VITE_SUPABASE_URL  || (window as any).SUPABASE_URL  || '';
@@ -202,6 +203,7 @@ function NewsCard({ item }: { item: NewsItem }) {
 
 // ── Main Component ────────────────────────────────────────────
 export default function Home() {
+  const { lang } = useLanguageStore();
   const [products, setProducts]   = useState<Product[]>([]);
   const [loadingP, setLoadingP]   = useState(true);
   const [errorP,   setErrorP]     = useState('');
@@ -414,7 +416,7 @@ export default function Home() {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      fallbackIcon={!product.image_url ? getFallbackIcon(product.name) : undefined}
+                      lang={lang}
                     />
                   ))}
                   {products.length > 4 && (
@@ -464,7 +466,7 @@ export default function Home() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  fallbackIcon={!product.image_url ? getFallbackIcon(product.name) : undefined}
+                  lang={lang}
                 />
               ))}
             </div>

@@ -1,0 +1,343 @@
+// /api/software.js
+// Vercel Serverless Function to manage trials, licenses and activation for the automation software.
+// Connects directly to Supabase REST API using service_role key.
+
+const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// ── Supabase Helpers ──────────────────────────────────────────
+async function sbSelect(table, params = '') {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase SELECT error: ${err}`);
+  }
+  return res.json();
+}
+
+async function sbInsert(table, data) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase INSERT error: ${err}`);
+  }
+  return res.json();
+}
+
+async function sbUpdate(table, match, data) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${match}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase UPDATE error: ${err}`);
+  }
+  return res.json();
+}
+
+// Helper to generate human-readable license key: CSC-AUTO-XXXX-XXXX-XXXX
+function generateLicenseKey() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const nums = '0123456789';
+  const part = (len, charSet) => Array.from({ length: len }, () => charSet[Math.floor(Math.random() * charSet.length)]).join('');
+  return `CSC-AUTO-${part(4, chars)}-${part(4, nums)}-${part(4, chars)}`;
+}
+
+// ── Main Handler ──────────────────────────────────────────────
+export default async function handler(req, res) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { action } = req.method === 'GET' ? req.query : req.body;
+
+  if (!action) {
+    return res.status(400).json({ error: 'Action parameter is required.' });
+  }
+
+  if (!SB_URL || !SB_KEY) {
+    return res.status(500).json({ error: 'Database environment variables are missing.' });
+  }
+
+  try {
+    switch (action) {
+      
+      // 1. Verify Status (Used by python script to check trial/license validation)
+      case 'verify': {
+        const { machine_id, license_key } = req.body;
+        if (!machine_id) {
+          return res.status(400).json({ error: 'machine_id is required.' });
+        }
+
+        // Action A: If user provided a license key, verify license first
+        if (license_key && license_key.trim().length > 0) {
+          const cleanKey = license_key.trim();
+          const licenses = await sbSelect('software_licenses', `license_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
+          
+          if (!licenses || licenses.length === 0) {
+            return res.status(400).json({ status: 'invalid', message: 'License key is invalid.' });
+          }
+
+          const license = licenses[0];
+
+          if (!license.is_active) {
+            return res.status(400).json({ status: 'inactive', message: 'License key has been deactivated.' });
+          }
+
+          const expiresAt = new Date(license.expires_at);
+          if (expiresAt < new Date()) {
+            return res.status(400).json({ status: 'expired', message: 'License key has expired.' });
+          }
+
+          // Lock to machine_id if not locked yet
+          if (!license.machine_id) {
+            await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id });
+            return res.status(200).json({
+              status: 'active',
+              type: 'license',
+              expires_at: license.expires_at,
+              customer_name: license.customer_name,
+              message: 'License activated and locked to this machine successfully.'
+            });
+          }
+
+          // If locked to this machine
+          if (license.machine_id === machine_id) {
+            return res.status(200).json({
+              status: 'active',
+              type: 'license',
+              expires_at: license.expires_at,
+              customer_name: license.customer_name,
+              message: 'License is active.'
+            });
+          }
+
+          // If locked to a different machine
+          return res.status(400).json({
+            status: 'mismatch',
+            message: 'This license key is already registered on another computer.'
+          });
+        }
+
+        // Action B: No license key provided, check for active trial
+        const trials = await sbSelect('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}&limit=1`);
+        
+        if (!trials || trials.length === 0) {
+          return res.status(200).json({ status: 'unregistered', message: 'No active trial or license found.' });
+        }
+
+        const trial = trials[0];
+        const trialEndsAt = new Date(trial.trial_ends_at);
+
+        if (trialEndsAt < new Date()) {
+          return res.status(200).json({ status: 'trial_expired', message: 'Your 7-day trial has ended. Please buy a subscription.' });
+        }
+
+        // Update trial usage count (increment by 1 when verifying/starting application)
+        await sbUpdate('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}`, {
+          usage_count: trial.usage_count + 1
+        });
+
+        const daysLeft = Math.ceil((trialEndsAt - new Date()) / (1000 * 60 * 60 * 24));
+        return res.status(200).json({
+          status: 'trial_active',
+          type: 'trial',
+          trial_ends_at: trial.trial_ends_at,
+          days_left: daysLeft,
+          usage_count: trial.usage_count + 1,
+          message: `Trial active. ${daysLeft} days remaining.`
+        });
+      }
+
+      // 2. Register Trial (Used by python script when first registering)
+      case 'trial-register': {
+        const { machine_id, name, email, phone } = req.body;
+        if (!machine_id || !name || !phone) {
+          return res.status(400).json({ error: 'machine_id, name, and phone are required.' });
+        }
+
+        // Check duplicate machine ID
+        const existing = await sbSelect('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}&limit=1`);
+        if (existing && existing.length > 0) {
+          return res.status(400).json({ error: 'A trial has already been activated on this computer.' });
+        }
+
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7 days trial
+
+        await sbInsert('software_trials', {
+          machine_id,
+          name,
+          email: email || null,
+          phone,
+          trial_ends_at: trialEndsAt.toISOString()
+        });
+
+        return res.status(200).json({
+          success: true,
+          trial_ends_at: trialEndsAt.toISOString(),
+          message: '7-day trial activated successfully.'
+        });
+      }
+
+      // 3. Activate License (Explicit key lock to machine)
+      case 'activate-license': {
+        const { machine_id, license_key } = req.body;
+        if (!machine_id || !license_key) {
+          return res.status(400).json({ error: 'machine_id and license_key are required.' });
+        }
+
+        const cleanKey = license_key.trim();
+        const licenses = await sbSelect('software_licenses', `license_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
+        
+        if (!licenses || licenses.length === 0) {
+          return res.status(400).json({ error: 'Invalid license key.' });
+        }
+
+        const license = licenses[0];
+
+        if (!license.is_active) {
+          return res.status(400).json({ error: 'License key is deactivated.' });
+        }
+
+        const expiresAt = new Date(license.expires_at);
+        if (expiresAt < new Date()) {
+          return res.status(400).json({ error: 'License key has expired.' });
+        }
+
+        if (license.machine_id && license.machine_id !== machine_id) {
+          return res.status(400).json({ error: 'This license is already registered on another computer.' });
+        }
+
+        // Update with machine lock
+        await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id });
+
+        return res.status(200).json({
+          success: true,
+          expires_at: license.expires_at,
+          customer_name: license.customer_name,
+          message: 'License key successfully activated and bound to this machine.'
+        });
+      }
+
+      // 4. Retrieve or Generate License Key (Used by frontend page when entering order_ref)
+      case 'retrieve-key': {
+        const { order_ref } = req.method === 'GET' ? req.query : req.body;
+        if (!order_ref) {
+          return res.status(400).json({ error: 'order_ref is required.' });
+        }
+
+        const cleanRef = order_ref.trim().toUpperCase();
+
+        // Step A: Check if license is already generated
+        const existingLicenses = await sbSelect('software_licenses', `order_ref=eq.${encodeURIComponent(cleanRef)}&limit=1`);
+        if (existingLicenses && existingLicenses.length > 0) {
+          return res.status(200).json({
+            success: true,
+            license_key: existingLicenses[0].license_key,
+            plan: existingLicenses[0].plan,
+            expires_at: existingLicenses[0].expires_at,
+            machine_id: existingLicenses[0].machine_id,
+            message: 'License key retrieved successfully.'
+          });
+        }
+
+        // Step B: Look up order in `orders` table
+        const orders = await sbSelect('orders', `order_ref=eq.${encodeURIComponent(cleanRef)}&limit=1`);
+        if (!orders || orders.length === 0) {
+          return res.status(404).json({ error: 'Order reference number not found.' });
+        }
+
+        const order = orders[0];
+
+        // Step C: Confirm payment
+        if (order.status !== 'paid' && order.status !== 'completed') {
+          return res.status(400).json({
+            error: `Order status is "${order.status}". License keys can only be retrieved after payment confirmation.`
+          });
+        }
+
+        // Step D: Confirm order contains software
+        // Orders usually have `items` as a JSON array or text.
+        let orderItems = [];
+        try {
+          orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+        } catch {
+          orderItems = [];
+        }
+
+        const softwareItem = orderItems.find(item => 
+          (item.product_id && item.product_id.includes('s_automation')) ||
+          (item.name && item.name.toLowerCase().includes('automation'))
+        );
+
+        if (!softwareItem) {
+          return res.status(400).json({ error: 'This order does not contain an automation software subscription.' });
+        }
+
+        // Step E: Generate a new License Key
+        const isYearly = softwareItem.product_id?.includes('yearly') || softwareItem.name?.toLowerCase().includes('1 year');
+        const plan = isYearly ? 'yearly' : 'monthly';
+        const licenseKey = generateLicenseKey();
+
+        const expiresAt = new Date();
+        if (isYearly) {
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year
+        } else {
+          expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 month
+        }
+
+        await sbInsert('software_licenses', {
+          license_key: licenseKey,
+          order_ref: cleanRef,
+          customer_name: order.customer_name || 'Valued Customer',
+          customer_phone: order.customer_phone || '',
+          plan,
+          expires_at: expiresAt.toISOString(),
+          is_active: true
+        });
+
+        return res.status(200).json({
+          success: true,
+          license_key: licenseKey,
+          plan,
+          expires_at: expiresAt.toISOString(),
+          message: 'License key generated successfully!'
+        });
+      }
+
+      default:
+        return res.status(400).json({ error: `Unknown action: ${action}` });
+    }
+  } catch (err) {
+    console.error('[SOFTWARE API] Error:', err);
+    return res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
+}

@@ -9,6 +9,7 @@ const ProductDetail   = lazy(() => import('./pages/ProductDetail'));
 const Checkout        = lazy(() => import('./pages/Checkout'));
 const OTPVerification = lazy(() => import('./pages/OTPVerification'));
 const OrderTracking   = lazy(() => import('./pages/OrderTracking'));
+const Software        = lazy(() => import('./pages/Software'));
 
 // ─── Admin Pages (alag lazy load) ────────────────────────────────────────────
 const AdminLogin      = lazy(() => import('./admin/Login'));
@@ -92,6 +93,7 @@ export default function App() {
                   <Route path="/verify-otp"  element={<OTPVerification />} />
                   <Route path="/track"       element={<OrderTracking />} />
                   <Route path="/track/:ref"  element={<OrderTracking />} />
+                  <Route path="/software"    element={<Software />} />
 
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />

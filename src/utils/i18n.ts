@@ -9,6 +9,7 @@ const en: Translations = {
   'nav.home': 'Home',
   'nav.cart': 'Cart',
   'nav.track': 'Track Order',
+  'nav.software': 'Automation Software',
 
   // Home / Catalog
   'catalog.title': 'Digital Services',
@@ -116,6 +117,7 @@ const hi: Translations = {
   'nav.home': 'होम',
   'nav.cart': 'कार्ट',
   'nav.track': 'ऑर्डर ट्रैक करें',
+  'nav.software': 'ऑटोमेशन सॉफ्टवेयर',
 
   // Home / Catalog
   'catalog.title': 'डिजिटल सेवाएं',

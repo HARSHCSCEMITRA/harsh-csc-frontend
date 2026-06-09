@@ -9,6 +9,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguageStore } from '../store/languageStore';
 import { useCartStore }     from '../store/cartStore';   // adjust path if needed
+import { createT }          from '../utils/i18n';
 
 // ── Inline SVG icons (zero extra dependencies) ────────────────
 const CartIcon = () => (
@@ -23,6 +24,7 @@ export const Header: React.FC = () => {
   const { lang, setLang }          = useLanguageStore();
   const { items, openCart }        = useCartStore();       // openCart toggles CartDrawer
   const totalQty = items.reduce((sum: number, i: any) => sum + (i.quantity ?? 1), 0);
+  const t = createT(lang);
 
   return (
     <nav style={{
@@ -96,6 +98,22 @@ export const Header: React.FC = () => {
         {/* ── RIGHT: Nav links + Language + Cart ──────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
 
+          {/* Software link */}
+          <Link to="/software" style={{
+            color:          '#cbd5e1',
+            fontSize:       '13px',
+            textDecoration: 'none',
+            fontWeight:     600,
+            padding:        '5px 8px',
+            borderRadius:   '6px',
+            transition:     'color 0.2s',
+          }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#60a5fa')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+          >
+            {t('nav.software')}
+          </Link>
+
           {/* Track Order link */}
           <Link to="/track" style={{
             color:          '#cbd5e1',
@@ -109,7 +127,7 @@ export const Header: React.FC = () => {
             onMouseEnter={(e) => (e.currentTarget.style.color = '#60a5fa')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e1')}
           >
-            {lang === 'hi' ? 'ट्रैक ऑर्डर' : 'Track Order'}
+            {t('nav.track')}
           </Link>
 
           {/* Language toggle */}
