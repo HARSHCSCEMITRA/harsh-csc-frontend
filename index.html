@@ -624,6 +624,7 @@
     </a>
     <div class="nav-links">
       <a href="#services">Services</a>
+      <a href="#software-section">💻 Software</a>
       <a href="#how-it-works">How It Works</a>
       <a href="#reviews">Reviews</a>
       <a href="#faq">FAQ</a>
@@ -760,6 +761,157 @@
 <!-- ══════════════════════════════════════════════════
      DIGITAL PRINTING SOLUTIONS CATEGORY — kept for ID anchor
 ══════════════════════════════════════════════════ -->
+<!-- ── AUTOMATION SOFTWARE SECTION ── -->
+<section class="section" id="software-section" style="background: var(--navy); color: #fff; position: relative; overflow: hidden; padding: 60px 20px;">
+  <!-- Style overrides/additions for this section -->
+  <style>
+    .sw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 32px; }
+    .sw-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .sw-card.premium { border-color: rgba(232,103,26,0.4); background: linear-gradient(135deg, rgba(232,103,26,0.1) 0%, rgba(11,31,75,0.4) 100%); }
+    .sw-title { font-family: var(--font-display); font-size: clamp(24px, 4vw, 36px); font-weight: 900; color: #fff; text-align: center; margin-bottom: 8px; }
+    .sw-subtitle { color: rgba(255,255,255,0.7); text-align: center; font-size: 15px; max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
+    .sw-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .sw-feat-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; gap: 12px; }
+    .sw-feat-icon { font-size: 28px; flex-shrink: 0; }
+    .sw-feat-text h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .sw-feat-text p { font-size: 12.5px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+    .sw-specs { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; margin-bottom: 40px; }
+    .sw-specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .sw-spec-col h5 { font-size: 13px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; }
+    .sw-spec-col p { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+    .sw-pricing-box { text-align: center; margin-top: 40px; }
+    .sw-pricing-grid { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 24px; }
+    .sw-price-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; width: 300px; text-align: left; display: flex; flex-direction: column; gap: 14px; }
+    .sw-price-card.featured { border-color: var(--saffron); background: rgba(232,103,26,0.05); }
+    .sw-price-card h4 { font-size: 18px; font-weight: 700; color: #fff; }
+    .sw-price-val { font-size: 32px; font-weight: 800; color: #fff; font-family: var(--font-display); }
+    .sw-price-val span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 400; }
+    .sw-price-desc { font-size: 12.5px; color: rgba(255,255,255,0.7); line-height: 1.5; flex: 1; }
+    .sw-btn-buy { background: var(--saffron); color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; width: 100%; transition: all 0.2s; font-family: var(--font-body); }
+    .sw-btn-buy:hover { background: #d05a14; transform: translateY(-1px); }
+    .sw-recovery-card { max-width: 580px; margin: 48px auto 0; background: rgba(5,9,19,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px; text-align: center; }
+    .sw-rec-input-group { display: flex; gap: 10px; margin: 16px 0; }
+    .sw-rec-input { flex: 1; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 12px; color: #fff; font-family: var(--font-body); font-size: 14px; outline: none; }
+    .sw-rec-input:focus { border-color: var(--saffron); background: rgba(255,255,255,0.08); }
+    .sw-btn-rec { background: var(--navy); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font-body); white-space: nowrap; }
+    .sw-btn-rec:hover { background: var(--saffron); border-color: var(--saffron); }
+    .sw-key-box { margin-top: 20px; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(232,103,26,0.3); border-radius: 12px; text-align: left; }
+    .sw-key-val-group { display: flex; gap: 8px; margin-top: 8px; }
+    .sw-key-input { flex: 1; background: #0a0f1e; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; color: #4ade80; font-family: var(--font-mono); font-size: 15px; font-weight: 700; text-align: center; outline: none; }
+    .sw-btn-copy { background: var(--saffron); border: none; padding: 10px 16px; color: #fff; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  </style>
+
+  <div class="section-inner">
+    <div style="text-align: center; margin-bottom: 16px;">
+      <span class="ann-badge" style="background: rgba(232,103,26,0.2); color: var(--gold); border: 1px solid rgba(232,103,26,0.4); padding: 4px 12px; font-size: 11px;">NEW AUTOMATION TOOL</span>
+    </div>
+    <h2 class="sw-title">Land Records Automation Suite</h2>
+    <p class="sw-subtitle">स्वचालित रूप से जमाबंदी नकल, नक्शा ट्रेस और बंटवारा शीट डाउनलोड करने का आसान पायथन सॉफ्टवेयर। आपके ई-मित्र के काम को 10 गुना तेज बनाएं!</p>
+
+    <!-- Features Grid -->
+    <div class="sw-features">
+      <div class="sw-feat-item">
+        <div class="sw-feat-icon">📄</div>
+        <div class="sw-feat-text">
+          <h4>Jamabandi Nakal Automation</h4>
+          <p>खाता संख्या, खसरा नंबर या नाम द्वारा राजस्थान भूमि रिकॉर्ड्स (जमाबंदी नकल) को सिंगल-क्लिक में डाउनलोड करें।</p>
+        </div>
+      </div>
+      <div class="sw-feat-item">
+        <div class="sw-feat-icon">🗺️</div>
+        <div class="sw-feat-text">
+          <h4>Naksha Trace Automation</h4>
+          <p>बिना किसी परेशानी के गांव का नक्शा और किसी भी खसरे का भूखंड ट्रेस इमेज फॉर्मेट में तुरंत निकालें।</p>
+        </div>
+      </div>
+      <div class="sw-feat-item">
+        <div class="sw-feat-icon">📊</div>
+        <div class="sw-feat-text">
+          <h4>Bantwara Sheet Creator</h4>
+          <p>हिस्सेदारी की गणना और बंटवारा पत्रक गतिशील रूप से 100% सही गणितीय सूत्रों के साथ जेनरेट करें।</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Specs Box -->
+    <div class="sw-specs">
+      <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 16px;">⚙️ Specifications & Requirements</h3>
+      <div class="sw-specs-grid">
+        <div class="sw-spec-col">
+          <h5>Compatible OS</h5>
+          <p>Windows 10 & 11 (64-bit PC Only)</p>
+        </div>
+        <div class="sw-spec-col">
+          <h5>Trial Details</h5>
+          <p>7-Days Free Trial enabled on first signup (limited daily usage)</p>
+        </div>
+        <div class="sw-spec-col">
+          <h5>Requirements</h5>
+          <p>Stable internet connection & Chrome browser installed</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download Block -->
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 48px;">
+      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px;">🚀 Try It For Free Today</h3>
+      <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 20px;">Download the software and activate your 7-day trial in 1 minute.</p>
+      <a href="/software/Harsh_CSC_Automation_Setup.zip" class="btn-primary" style="display: inline-block; text-decoration: none;">📥 Download Free Trial (7 Days)</a>
+    </div>
+
+    <!-- Pricing Plans -->
+    <div class="sw-pricing-box" id="software-pricing">
+      <h3 style="font-size: 20px; font-weight: 700; color: var(--gold); text-transform: uppercase;">💳 Subscription Plans</h3>
+      <div class="sw-pricing-grid">
+        <!-- Monthly -->
+        <div class="sw-price-card">
+          <span class="ann-badge" style="background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start;">POPULAR</span>
+          <h4>Monthly License</h4>
+          <div class="sw-price-val">₹499<span>/ month</span></div>
+          <p class="sw-price-desc">30 days of full automation for Jamabandi, Naksha and Bantwara. Automatic updates and standard node-locked license.</p>
+          <button class="sw-btn-buy" onclick="addToCart('s_automation_monthly', 'Land Records Automation Suite (1 Month)', 499, '💻')">🛒 Add to Cart</button>
+        </div>
+        <!-- Yearly -->
+        <div class="sw-price-card featured">
+          <span class="ann-badge" style="background: var(--saffron); color: #fff; align-self: flex-start;">BEST VALUE</span>
+          <h4>Yearly License</h4>
+          <div class="sw-price-val">₹2,999<span>/ year</span></div>
+          <p class="sw-price-desc">12 months of full access. Save 50% compared to monthly plan. Priority support and instant node-locked license keys.</p>
+          <button class="sw-btn-buy" onclick="addToCart('s_automation_yearly', 'Land Records Automation Suite (1 Year)', 2999, '👑')">👑 Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recovery Panel -->
+    <div class="sw-recovery-card">
+      <span style="font-size: 32px;">🔑</span>
+      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 12px 0 6px;">License Key Retrieval Console</h3>
+      <p style="font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5;">भुगतान सफल होने के बाद, यहाँ अपना Order Reference नंबर डालकर लाइसेंस की प्राप्त करें।</p>
+      
+      <div class="sw-rec-input-group">
+        <input type="text" class="sw-rec-input" id="swOrderRef" placeholder="e.g. CSC-123456" />
+        <button class="sw-btn-rec" onclick="retrieveSoftwareKey()">Get License Key</button>
+      </div>
+      <div id="swRetrieveError" style="display:none; color: #f87171; font-size: 13px; text-align: left; padding: 10px;"></div>
+      <div id="swKeyResult" style="display:none;" class="sw-key-box animate-scaleIn">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase;">
+          <span>License Key</span>
+          <span id="swKeyPlan" style="color:#4ade80;">Plan</span>
+        </div>
+        <div class="sw-key-val-group">
+          <input type="text" readonly id="swKeyValue" class="sw-key-input" />
+          <button class="sw-btn-copy" onclick="copySoftwareKey(this)">Copy</button>
+        </div>
+        <div style="margin-top: 10px; font-size: 11px; color: rgba(255,255,255,0.5); display: flex; justify-content: space-between;">
+          <span id="swKeyExpiry">Expiry: —</span>
+          <span id="swKeyBind">Bind: —</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <div id="printing"></div>
 
 <!-- ══════════════════════════════════════════════════
@@ -4591,6 +4743,73 @@ Hum jald hi contact karenge.`);
   }
 
   // ── INIT ──────────────────────────────────────────────────────
+  // ── SOFTWARE RETRIEVAL FUNCTIONS ─────────────────────────────
+  async function retrieveSoftwareKey() {
+    const input = document.getElementById('swOrderRef');
+    const errEl = document.getElementById('swRetrieveError');
+    const resultEl = document.getElementById('swKeyResult');
+    const keyValInput = document.getElementById('swKeyValue');
+    const keyPlanSpan = document.getElementById('swKeyPlan');
+    const keyExpirySpan = document.getElementById('swKeyExpiry');
+    const keyBindSpan = document.getElementById('swKeyBind');
+
+    const ref = input ? input.value.trim() : '';
+    if (!ref) {
+      alert('⚠️ Please enter an Order Reference.');
+      return;
+    }
+
+    errEl.style.display = 'none';
+    resultEl.style.display = 'none';
+
+    try {
+      const btn = document.querySelector('.sw-btn-rec');
+      if (btn) btn.textContent = 'Retrieving...';
+
+      const res = await fetch(`/api/software?action=retrieve-key&order_ref=${encodeURIComponent(ref.toUpperCase())}`);
+      const data = await res.json();
+
+      if (btn) btn.textContent = 'Get License Key';
+
+      if (res.ok && data.success) {
+        keyValInput.value = data.license_key;
+        keyPlanSpan.textContent = data.plan.toUpperCase() + ' PLAN';
+        
+        // Expiry Date Format
+        const expDate = new Date(data.expires_at).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        keyExpirySpan.textContent = `Expiry: ${expDate}`;
+        keyBindSpan.textContent = `Bind: ${data.machine_id ? 'LOCKED' : 'READY TO BIND'}`;
+        
+        resultEl.style.display = 'block';
+      } else {
+        errEl.textContent = '⚠️ ' + (data.error || 'Something went wrong. Please check your order ref.');
+        errEl.style.display = 'block';
+      }
+    } catch (e) {
+      const btn = document.querySelector('.sw-btn-rec');
+      if (btn) btn.textContent = 'Get License Key';
+      errEl.textContent = '⚠️ Failed to connect to server. Try again.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function copySoftwareKey(btn) {
+    const keyInput = document.getElementById('swKeyValue');
+    if (keyInput && keyInput.value) {
+      keyInput.select();
+      keyInput.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(keyInput.value);
+      
+      const oldText = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.background = '#059669';
+      setTimeout(() => {
+        btn.textContent = oldText;
+        btn.style.background = '';
+      }, 2000);
+    }
+  }
+
   initAuth();
   renderCart();
   loadProducts();
