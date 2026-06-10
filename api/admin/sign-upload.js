@@ -66,7 +66,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Ensure the 'software' bucket exists by trying to create it
+    const { version } = req.body;
+
+    // 1. If a version is provided, update latest_software_version in admin_settings
+    if (version) {
+      await fetch(`${SB_URL}/rest/v1/admin_settings?key=eq.latest_software_version`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          value: version.trim(),
+          updated_at: new Date().toISOString()
+        })
+      }).catch(err => console.error('[SIGN UPLOAD] Failed to save version:', err));
+    }
+
+    // 2. Ensure the 'software' bucket exists by trying to create it
     await fetch(`${SB_URL}/storage/v1/bucket`, {
       method: 'POST',
       headers: {
@@ -83,7 +102,7 @@ export default async function handler(req, res) {
       })
     }).catch(() => {}); // Ignore duplicate/error if bucket already exists
 
-    // 2. Request a signed upload URL from Supabase Storage
+    // 3. Request a signed upload URL from Supabase Storage
     const signRes = await fetch(`${SB_URL}/storage/v1/object/upload/sign/software/Harsh_CSC_Automation_Setup.zip`, {
       method: 'POST',
       headers: {

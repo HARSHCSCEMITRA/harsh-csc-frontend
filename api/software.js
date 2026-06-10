@@ -96,24 +96,37 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'machine_id is required.' });
         }
 
+        // Fetch latest version from admin_settings
+        let latestVersion = '1.0.0';
+        try {
+          const versionSettings = await sbSelect('admin_settings', 'key=eq.latest_software_version&select=value');
+          if (versionSettings && versionSettings.length > 0) {
+            latestVersion = versionSettings[0].value;
+          }
+        } catch (e) {
+          console.error('[SOFTWARE API] Version fetch failed:', e);
+        }
+
+        const downloadUrl = "https://qhqvmzrdncxddzlfrgrn.supabase.co/storage/v1/object/public/software/Harsh_CSC_Automation_Setup.zip";
+
         // Action A: If user provided a license key, verify license first
         if (license_key && license_key.trim().length > 0) {
           const cleanKey = license_key.trim();
           const licenses = await sbSelect('software_licenses', `license_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
           
           if (!licenses || licenses.length === 0) {
-            return res.status(400).json({ status: 'invalid', message: 'License key is invalid.' });
+            return res.status(400).json({ status: 'invalid', message: 'License key is invalid.', latest_version: latestVersion, download_url: downloadUrl });
           }
 
           const license = licenses[0];
 
           if (!license.is_active) {
-            return res.status(400).json({ status: 'inactive', message: 'License key has been deactivated.' });
+            return res.status(400).json({ status: 'inactive', message: 'License key has been deactivated.', latest_version: latestVersion, download_url: downloadUrl });
           }
 
           const expiresAt = new Date(license.expires_at);
           if (expiresAt < new Date()) {
-            return res.status(400).json({ status: 'expired', message: 'License key has expired.' });
+            return res.status(400).json({ status: 'expired', message: 'License key has expired.', latest_version: latestVersion, download_url: downloadUrl });
           }
 
           // Lock to machine_id if not locked yet
@@ -124,6 +137,8 @@ export default async function handler(req, res) {
               type: 'license',
               expires_at: license.expires_at,
               customer_name: license.customer_name,
+              latest_version: latestVersion,
+              download_url: downloadUrl,
               message: 'License activated and locked to this machine successfully.'
             });
           }
@@ -135,6 +150,8 @@ export default async function handler(req, res) {
               type: 'license',
               expires_at: license.expires_at,
               customer_name: license.customer_name,
+              latest_version: latestVersion,
+              download_url: downloadUrl,
               message: 'License is active.'
             });
           }
@@ -142,6 +159,8 @@ export default async function handler(req, res) {
           // If locked to a different machine
           return res.status(400).json({
             status: 'mismatch',
+            latest_version: latestVersion,
+            download_url: downloadUrl,
             message: 'This license key is already registered on another computer.'
           });
         }
@@ -150,17 +169,17 @@ export default async function handler(req, res) {
         const trials = await sbSelect('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}&limit=1`);
         
         if (!trials || trials.length === 0) {
-          return res.status(200).json({ status: 'unregistered', message: 'No active trial or license found.' });
+          return res.status(200).json({ status: 'unregistered', message: 'No active trial or license found.', latest_version: latestVersion, download_url: downloadUrl });
         }
 
         const trial = trials[0];
         const trialEndsAt = new Date(trial.trial_ends_at);
 
         if (trialEndsAt < new Date()) {
-          return res.status(200).json({ status: 'trial_expired', message: 'Your 7-day trial has ended. Please buy a subscription.' });
+          return res.status(200).json({ status: 'trial_expired', message: 'Your 7-day trial has ended. Please buy a subscription.', latest_version: latestVersion, download_url: downloadUrl });
         }
 
-        // Update trial usage count (increment by 1 when verifying/starting application)
+        // Update trial usage count
         await sbUpdate('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}`, {
           usage_count: trial.usage_count + 1
         });
@@ -172,6 +191,8 @@ export default async function handler(req, res) {
           trial_ends_at: trial.trial_ends_at,
           days_left: daysLeft,
           usage_count: trial.usage_count + 1,
+          latest_version: latestVersion,
+          download_url: downloadUrl,
           message: `Trial active. ${daysLeft} days remaining.`
         });
       }
