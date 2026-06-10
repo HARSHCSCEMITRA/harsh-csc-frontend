@@ -1,6 +1,6 @@
 // api/admin/orders.js
 // Vercel Serverless Function to fetch orders list from Supabase for the admin dashboard.
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

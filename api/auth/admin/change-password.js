@@ -1,6 +1,6 @@
 // api/auth/admin/change-password.js
 // Vercel Serverless Function to update the admin password in Supabase.
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

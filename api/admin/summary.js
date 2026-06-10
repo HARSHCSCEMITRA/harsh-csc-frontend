@@ -1,6 +1,6 @@
 // api/admin/summary.js
 // Vercel Serverless Function to generate dynamic summary and insights for the admin dashboard.
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
