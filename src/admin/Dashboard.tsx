@@ -16,7 +16,7 @@ interface Summary {
   summary_text?: string;
 }
 
-const BACKEND_URL = "https://emitra-worker.harshcscemitra.workers.dev";
+const BACKEND_URL = "";
 
 const STATUS_COLORS: Record<string, string> = {
   flagged:      'background: rgba(239,68,68,0.15); color: #ef4444;',

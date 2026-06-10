@@ -46,3 +46,16 @@ WITH CHECK (true);
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_software_licenses_key ON public.software_licenses(license_key);
 CREATE INDEX IF NOT EXISTS idx_software_licenses_order ON public.software_licenses(order_ref);
+
+-- Table for storing admin passwords and configuration
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Insert default admin password (HarshCSC@2026)
+INSERT INTO public.admin_settings (key, value)
+VALUES ('admin_password', 'HarshCSC@2026')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+

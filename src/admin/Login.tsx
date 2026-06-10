@@ -7,7 +7,7 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
 
   // 🔥 AAPKA BACKEND URL
-  const BACKEND_URL = "https://emitra-worker.harshcscemitra.workers.dev";
+  const BACKEND_URL = "";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
