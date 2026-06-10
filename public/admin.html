@@ -1553,10 +1553,10 @@ async function doLogin() {
   loginErr.style.display = 'none';
   
   try {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usernameOrEmail: u, password: p })
+      body: JSON.stringify({ action: 'login', usernameOrEmail: u, password: p })
     });
     
     const data = await res.json();
@@ -1613,10 +1613,10 @@ async function sendResetLink() {
   btn.textContent = 'Sending...';
 
   try {
-    const res = await fetch('/api/auth/forgot-password', {
+    const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usernameOrEmail: input })
+      body: JSON.stringify({ action: 'forgot-password', usernameOrEmail: input })
     });
 
     const data = await res.json();
@@ -1656,10 +1656,10 @@ async function recoverUsername() {
   btn.textContent = 'Sending...';
 
   try {
-    const res = await fetch('/api/auth/forgot-username', {
+    const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: input })
+      body: JSON.stringify({ action: 'forgot-username', email: input })
     });
 
     const data = await res.json();
