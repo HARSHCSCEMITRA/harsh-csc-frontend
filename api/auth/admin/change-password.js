@@ -13,28 +13,43 @@ async function verifyAuth(req) {
   }
   const token = authHeader.split(' ')[1];
 
-  // Fetch current password from Supabase
-  const dbRes = await fetch(`${SB_URL}/rest/v1/admin_settings?key=eq.admin_password&select=value`, {
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': `Bearer ${SB_KEY}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  let dbPassword = 'HarshCSC@2026'; // Default fallback
-
-  if (dbRes.ok) {
-    const data = await dbRes.json();
-    if (data && data.length > 0) {
-      dbPassword = data[0].value;
-    }
+  if (!SB_URL || !SB_KEY) {
+    return false;
   }
 
-  const secret = process.env.JWT_SECRET || 'harsh-csc-secret-key-12345';
-  const expectedToken = crypto.createHmac('sha256', secret).update(dbPassword).digest('hex');
+  try {
+    // Fetch admin password_hash from Supabase users table
+    const dbRes = await fetch(`${SB_URL}/rest/v1/users?role=eq.admin&select=password_hash`, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-  return token === expectedToken;
+    if (!dbRes.ok) {
+      return false;
+    }
+
+    const data = await dbRes.json();
+    if (!data || data.length === 0) {
+      return false;
+    }
+
+    const secret = process.env.JWT_SECRET || 'harsh-csc-secret-key-12345';
+    
+    // Check if token matches any admin's token
+    for (const admin of data) {
+      const expectedToken = crypto.createHmac('sha256', secret).update(admin.password_hash).digest('hex');
+      if (token === expectedToken) {
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('[AUTH VERIFY] Error:', err);
+  }
+
+  return false;
 }
 
 export default async function handler(req, res) {
@@ -68,8 +83,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Update the password in Supabase
-    const updateRes = await fetch(`${SB_URL}/rest/v1/admin_settings?key=eq.admin_password`, {
+    const newHash = crypto.createHash('sha256').update(newPassword).digest('hex');
+
+    // Update the password hash in the users table for the admin
+    const updateUsersRes = await fetch(`${SB_URL}/rest/v1/users?role=eq.admin`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ password_hash: newHash })
+    });
+
+    if (!updateUsersRes.ok) {
+      const errText = await updateUsersRes.text();
+      return res.status(500).json({ error: `Supabase users table update error: ${errText}` });
+    }
+
+    // Sync with the old admin_settings password for full backward compatibility
+    const updateSettingsRes = await fetch(`${SB_URL}/rest/v1/admin_settings?key=eq.admin_password`, {
       method: 'PATCH',
       headers: {
         'apikey': SB_KEY,
@@ -80,11 +114,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({ value: newPassword, updated_at: new Date().toISOString() })
     });
 
-    if (updateRes.ok) {
+    if (updateSettingsRes.ok) {
       return res.status(200).json({ success: true, message: 'Password successfully updated!' });
     } else {
-      const errText = await updateRes.text();
-      return res.status(500).json({ error: `Supabase update error: ${errText}` });
+      const errText = await updateSettingsRes.text();
+      return res.status(500).json({ error: `Supabase settings update error: ${errText}` });
     }
   } catch (err) {
     console.error('[CHANGE PASSWORD API] Error:', err);

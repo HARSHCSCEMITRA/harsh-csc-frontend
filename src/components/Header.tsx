@@ -130,6 +130,22 @@ export const Header: React.FC = () => {
             {t('nav.track')}
           </Link>
 
+          {/* Admin Portal link */}
+          <a href="/admin.html" style={{
+            color:          '#cbd5e1',
+            fontSize:       '13px',
+            textDecoration: 'none',
+            fontWeight:     600,
+            padding:        '5px 8px',
+            borderRadius:   '6px',
+            transition:     'color 0.2s',
+          }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#60a5fa')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+          >
+            {t('nav.admin')}
+          </a>
+
           {/* Language toggle */}
           <button
             onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}

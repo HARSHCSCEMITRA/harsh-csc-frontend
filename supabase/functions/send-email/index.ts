@@ -234,6 +234,71 @@ function statusUpdateEmail(order: any) {
   };
 }
 
+function passwordResetEmail(data: any) {
+  const content = `
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#fffbeb;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;">🔑</div>
+      <h2 style="margin:0;font-size:20px;color:#1a1a1a;">Password Reset Request</h2>
+      <p style="margin:6px 0 0;color:#666;font-size:13px;">Aapne password reset karne ka request kiya hai</p>
+    </div>
+
+    <p style="font-size:14px;color:#333;line-height:1.6;">
+      Namaste <strong>${data.username}</strong>,<br/><br/>
+      Aapke account ka password reset karne ke liye niche diye gaye button par click karein. Yeh link <strong>1 ghante</strong> ke liye valid hai:
+    </p>
+
+    <div style="text-align:center;margin-top:24px;margin-bottom:24px;">
+      <a href="${data.reset_link}" 
+         style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:700;font-size:14px;">
+        🔑 Reset Password
+      </a>
+    </div>
+
+    <p style="font-size:12px;color:#888;line-height:1.6;">
+      Agar button kaam nahi kar raha hai, toh is URL ko copy karke browser me paste karein:<br/>
+      <a href="${data.reset_link}" style="color:${ORANGE};word-break:break-all;">${data.reset_link}</a>
+    </p>
+
+    <p style="font-size:12px;color:#999;margin-top:20px;border-top:1px solid #eee;padding-top:12px;">
+      Agar aapne yeh request nahi kiya tha, toh is email ko ignore karein. Aapka password secure rahega.
+    </p>`;
+
+  return {
+    subject: `🔑 Password Reset Link | ${SITE_NAME}`,
+    html: baseTemplate(content),
+  };
+}
+
+function usernameRecoveryEmail(data: any) {
+  const content = `
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#e0f2fe;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>
+      <h2 style="margin:0;font-size:20px;color:#1a1a1a;">Username Recovery</h2>
+      <p style="margin:6px 0 0;color:#666;font-size:13px;">Aapka registered username niche diya gaya hai</p>
+    </div>
+
+    <p style="font-size:14px;color:#333;line-height:1.6;">
+      Namaste,<br/><br/>
+      Aapke email address se linked username ye hai:
+    </p>
+
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;text-align:center;font-size:18px;font-weight:800;color:#0369a1;letter-spacing:1px;margin:20px 0;">
+      ${data.username}
+    </div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <a href="${SITE_URL}/admin.html" 
+         style="display:inline-block;background:${ORANGE};color:#fff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:700;font-size:14px;">
+        🏛️ Login Portal Par Jaayein
+      </a>
+    </div>`;
+
+  return {
+    subject: `👤 Recovered Username | ${SITE_NAME}`,
+    html: baseTemplate(content),
+  };
+}
+
 // ─── Send Email via Resend ────────────────
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
@@ -269,6 +334,10 @@ serve(async (req) => {
       emailData = orderConfirmationEmail(order);
     } else if (type === "status_update") {
       emailData = statusUpdateEmail(order);
+    } else if (type === "password_reset") {
+      emailData = passwordResetEmail(body.data);
+    } else if (type === "username_recovery") {
+      emailData = usernameRecoveryEmail(body.data);
     } else {
       throw new Error(`Unknown email type: ${type}`);
     }

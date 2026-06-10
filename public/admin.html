@@ -285,7 +285,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 
 <!-- LOGIN -->
 <div id="loginScreen">
-  <div class="login-box">
+  <!-- LOGIN BOX -->
+  <div class="login-box" id="loginBox">
     <div class="login-logo">
       <div class="login-logo-icon">🏛️</div>
       <div class="login-logo-text">Harsh CSC eMitra<span>Admin Panel · Secured</span></div>
@@ -296,6 +297,40 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="login-field"><label>Username</label><input id="loginUser" type="text" placeholder="Enter username" autocomplete="username"/></div>
     <div class="login-field"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div style="display:flex; justify-content:space-between; margin-top:18px; font-size:13px;">
+      <a href="javascript:void(0)" onclick="toggleView('forgotPassBox')" style="color:var(--saffron2); text-decoration:none; font-weight:500;">Forgot Password?</a>
+      <a href="javascript:void(0)" onclick="toggleView('forgotUserBox')" style="color:var(--saffron2); text-decoration:none; font-weight:500;">Forgot Username?</a>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD BOX -->
+  <div class="login-box" id="forgotPassBox" style="display: none;">
+    <div class="login-logo">
+      <div class="login-logo-icon">🔑</div>
+      <div class="login-logo-text">Harsh CSC eMitra<span>Forgot Password</span></div>
+    </div>
+    <div class="login-title">Forgot Password</div>
+    <div class="login-sub">Enter your username or email to receive a password reset link.</div>
+    <div class="login-err" id="forgotPassErr"></div>
+    <div class="login-err" id="forgotPassSuccess" style="background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,0.3); color:var(--green);"></div>
+    <div class="login-field"><label>Username or Email</label><input id="forgotPassInput" type="text" placeholder="Enter username or email" onkeydown="if(event.key==='Enter')sendResetLink()"/></div>
+    <button class="btn-login" id="btnForgotPass" onclick="sendResetLink()">Send Reset Link →</button>
+    <a href="javascript:void(0)" onclick="toggleView('loginBox')" style="display:block; text-align:center; margin-top:18px; font-size:13px; color:var(--text2); text-decoration:none;">← Back to Sign In</a>
+  </div>
+
+  <!-- FORGOT USERNAME BOX -->
+  <div class="login-box" id="forgotUserBox" style="display: none;">
+    <div class="login-logo">
+      <div class="login-logo-icon">👤</div>
+      <div class="login-logo-text">Harsh CSC eMitra<span>Forgot Username</span></div>
+    </div>
+    <div class="login-title">Forgot Username</div>
+    <div class="login-sub">Enter your registered email address to retrieve your username.</div>
+    <div class="login-err" id="forgotUserErr"></div>
+    <div class="login-err" id="forgotUserSuccess" style="background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,0.3); color:var(--green);"></div>
+    <div class="login-field"><label>Email Address</label><input id="forgotUserInput" type="email" placeholder="Enter your email" onkeydown="if(event.key==='Enter')recoverUsername()"/></div>
+    <button class="btn-login" id="btnForgotUser" onclick="recoverUsername()">Recover Username →</button>
+    <a href="javascript:void(0)" onclick="toggleView('loginBox')" style="display:block; text-align:center; margin-top:18px; font-size:13px; color:var(--text2); text-decoration:none;">← Back to Sign In</a>
   </div>
 </div>
 
@@ -1507,10 +1542,10 @@ let ADMIN_TOKEN = sessionStorage.getItem('hsc_auth_token') || '';
 async function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
-  if (u !== 'admin' && u !== 'harsh') {
+  if (!u || !p) {
     const err = document.getElementById('loginErr');
     err.style.display = 'block';
-    err.textContent = '❌ Invalid username.';
+    err.textContent = '❌ Username and Password are required.';
     return;
   }
   
@@ -1518,14 +1553,19 @@ async function doLogin() {
   loginErr.style.display = 'none';
   
   try {
-    const res = await fetch('/api/auth/admin/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: p })
+      body: JSON.stringify({ usernameOrEmail: u, password: p })
     });
     
     const data = await res.json();
     if (res.ok && data.success) {
+      if (data.role !== 'admin') {
+        loginErr.style.display = 'block';
+        loginErr.textContent = '❌ Access Denied: Admin only portal.';
+        return;
+      }
       sessionStorage.setItem('hsc_auth', '1');
       sessionStorage.setItem('hsc_auth_token', data.token);
       ADMIN_TOKEN = data.token;
@@ -1534,11 +1574,109 @@ async function doLogin() {
       initApp();
     } else {
       loginErr.style.display = 'block';
-      loginErr.textContent = '❌ ' + (data.error || 'Incorrect password.');
+      loginErr.textContent = '❌ ' + (data.error || 'Incorrect username or password.');
     }
   } catch (e) {
     loginErr.style.display = 'block';
     loginErr.textContent = '❌ Network error: ' + e.message;
+  }
+}
+
+function toggleView(boxId) {
+  document.getElementById('loginBox').style.display = boxId === 'loginBox' ? 'block' : 'none';
+  document.getElementById('forgotPassBox').style.display = boxId === 'forgotPassBox' ? 'block' : 'none';
+  document.getElementById('forgotUserBox').style.display = boxId === 'forgotUserBox' ? 'block' : 'none';
+  // Clear messages and inputs
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('forgotPassErr').style.display = 'none';
+  document.getElementById('forgotPassSuccess').style.display = 'none';
+  document.getElementById('forgotUserErr').style.display = 'none';
+  document.getElementById('forgotUserSuccess').style.display = 'none';
+}
+
+async function sendResetLink() {
+  const input = document.getElementById('forgotPassInput').value.trim();
+  const errBox = document.getElementById('forgotPassErr');
+  const successBox = document.getElementById('forgotPassSuccess');
+  const btn = document.getElementById('btnForgotPass');
+
+  errBox.style.display = 'none';
+  successBox.style.display = 'none';
+
+  if (!input) {
+    errBox.textContent = '❌ Username ya Email likhna zaroori hai.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usernameOrEmail: input })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      successBox.textContent = '✅ ' + data.message;
+      successBox.style.display = 'block';
+      document.getElementById('forgotPassInput').value = '';
+    } else {
+      errBox.textContent = '❌ ' + (data.error || 'Request fail ho gaya.');
+      errBox.style.display = 'block';
+    }
+  } catch (e) {
+    errBox.textContent = '❌ Network error: ' + e.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Reset Link →';
+  }
+}
+
+async function recoverUsername() {
+  const input = document.getElementById('forgotUserInput').value.trim();
+  const errBox = document.getElementById('forgotUserErr');
+  const successBox = document.getElementById('forgotUserSuccess');
+  const btn = document.getElementById('btnForgotUser');
+
+  errBox.style.display = 'none';
+  successBox.style.display = 'none';
+
+  if (!input) {
+    errBox.textContent = '❌ Email address likhna zaroori hai.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('/api/auth/forgot-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: input })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      successBox.textContent = '✅ ' + data.message;
+      successBox.style.display = 'block';
+      document.getElementById('forgotUserInput').value = '';
+    } else {
+      errBox.textContent = '❌ ' + (data.error || 'Request fail ho gaya.');
+      errBox.style.display = 'block';
+    }
+  } catch (e) {
+    errBox.textContent = '❌ Network error: ' + e.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Recover Username →';
   }
 }
 function doLogout() {

@@ -59,3 +59,35 @@ INSERT INTO public.admin_settings (key, value)
 VALUES ('admin_password', 'HarshCSC@2026')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
+-- Table for storing user and admin login details
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL, -- SHA-256 hash of password
+    role TEXT DEFAULT 'user' NOT NULL, -- 'admin' or 'user'
+    reset_token TEXT,
+    reset_token_expires TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for users
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow service_role full access to users" 
+ON public.users 
+FOR ALL 
+TO service_role 
+USING (true) 
+WITH CHECK (true);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_username ON public.users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+
+-- Seed initial admin user: username 'admin', email 'harshcscemitra@gmail.com', password 'HarshCSC@2026'
+-- SHA-256 hash of 'HarshCSC@2026' is 'c0e583fb0d04daf9f5fd5409a68ba47e9afab0f9317fd178d7312eed50a2ae6b'
+INSERT INTO public.users (username, email, password_hash, role)
+VALUES ('admin', 'harshcscemitra@gmail.com', 'c0e583fb0d04daf9f5fd5409a68ba47e9afab0f9317fd178d7312eed50a2ae6b', 'admin')
+ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, email = EXCLUDED.email;
+
