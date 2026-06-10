@@ -821,11 +821,41 @@ harshcscemitra.vercel.app
           </div>
 
           <div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">🔌 Connection Settings</div></div>
               <div style="padding:16px 20px;">
                 <div id="dbStatus"><div class="spinner"></div> Checking connection…</div>
                 <button class="btn-sm btn-blue" style="margin-top:12px;width:100%;" onclick="testDB()">🔌 Test Connection</button>
               </div>
             </div>
+
+            <!-- SOFTWARE UPLOAD CARD -->
+            <div class="card" style="margin-top:20px;">
+              <div class="card-head"><div class="card-title">💻 Automation Software Upload</div></div>
+              <div style="padding:16px 20px;">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.4;">
+                  Yahan se aap apne land records automation suite ka setup (.zip format) upload kar sakte hain. Yeh website par download link ko automatic update kar dega.
+                </div>
+                
+                <div class="f-group" style="margin-bottom:14px;">
+                  <label>Select Setup ZIP File</label>
+                  <input type="file" id="softwareZipFile" accept=".zip" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;" />
+                </div>
+                
+                <div id="uploadProgressContainer" style="display:none;margin-bottom:14px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;">
+                    <span id="uploadStatusText">Uploading...</span>
+                    <span id="uploadPercentText">0%</span>
+                  </div>
+                  <div style="width:100%;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+                    <div id="uploadProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg, var(--saffron), var(--saffron2));transition:width 0.1s;"></div>
+                  </div>
+                </div>
+
+                <button class="btn-sm btn-primary" style="width:100%;padding:11px;" onclick="uploadSoftwareZip()">📤 Upload Software ZIP</button>
+              </div>
+            </div>
+          </div>
           </div>
         </div>
       </div>
@@ -4497,6 +4527,91 @@ function savePaymentSettings() {
   if (s.upi_id) window._upi_id = s.upi_id;
   if (s.qr_url) window._qr_url = s.qr_url;
   showToast('✅ Payment settings saved!', 'success');
+}
+
+async function uploadSoftwareZip() {
+  const fileInput = document.getElementById('softwareZipFile');
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    showToast('Please select a .zip file first.', 'error');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  if (!file.name.endsWith('.zip')) {
+    showToast('Only .zip files are allowed.', 'error');
+    return;
+  }
+
+  const token = sessionStorage.getItem('hsc_auth_token');
+  if (!token) {
+    showToast('Unauthorized. Kripya login karein.', 'error');
+    return;
+  }
+
+  const progContainer = document.getElementById('uploadProgressContainer');
+  const progBar = document.getElementById('uploadProgressBar');
+  const percentText = document.getElementById('uploadPercentText');
+  const statusText = document.getElementById('uploadStatusText');
+
+  progContainer.style.display = 'block';
+  progBar.style.width = '0%';
+  percentText.textContent = '0%';
+  statusText.textContent = 'Requesting secure upload authorization...';
+
+  try {
+    // 1. Get signed upload URL from backend
+    const signRes = await fetch('/api/admin/sign-upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const signData = await signRes.json();
+    if (!signRes.ok || !signData.success) {
+      throw new Error(signData.error || 'Failed to request signed upload URL.');
+    }
+
+    const { signedUrl, publicUrl } = signData;
+    statusText.textContent = 'Uploading setup ZIP directly to Supabase...';
+
+    // 2. Perform direct upload to Supabase storage using XMLHttpRequest to track progress
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', signedUrl, true);
+    xhr.setRequestHeader('Content-Type', 'application/zip');
+    
+    xhr.upload.onprogress = function(event) {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        progBar.style.width = percent + '%';
+        percentText.textContent = percent + '%';
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status === 200 || xhr.status === 201) {
+        statusText.textContent = 'Upload completed successfully!';
+        showToast('🚀 Software setup uploaded and live!', 'success');
+        fileInput.value = '';
+        setTimeout(() => { progContainer.style.display = 'none'; }, 3000);
+      } else {
+        statusText.textContent = 'Upload failed.';
+        showToast('Upload failed. Status: ' + xhr.status + ' - ' + xhr.responseText, 'error');
+      }
+    };
+
+    xhr.onerror = function() {
+      statusText.textContent = 'Network error during upload.';
+      showToast('Network error during file upload.', 'error');
+    };
+
+    xhr.send(file);
+
+  } catch (err) {
+    statusText.textContent = 'Error: ' + err.message;
+    showToast(err.message, 'error');
+  }
 }
 
 // ══════════════════════════════════════════
