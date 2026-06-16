@@ -103,7 +103,8 @@ async function handleLogin(req, res) {
     }
 
     if (password === dbPassword) {
-      const token = generateToken(dbPassword);
+      const passwordHash = crypto.createHash('sha256').update(dbPassword).digest('hex');
+      const token = generateToken(passwordHash);
       return res.status(200).json({ success: true, token });
     } else {
       return res.status(401).json({ error: 'Galat password. Kripya sahi password dalein.' });
