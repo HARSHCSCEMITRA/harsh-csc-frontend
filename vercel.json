@@ -8,6 +8,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/admin/:endpoint",
+      "destination": "/api/admin.js?endpoint=:endpoint"
+    },
+    {
+      "source": "/api/auth/admin/:endpoint",
+      "destination": "/api/auth-admin.js?endpoint=:endpoint"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
