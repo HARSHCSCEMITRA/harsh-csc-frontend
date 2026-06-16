@@ -29,6 +29,7 @@ ALTER TABLE public.software_licenses ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write since API verification and activation calls are made server-side
 -- (Alternatively, we use Service Role key in the Vercel function, which bypasses RLS policies)
+DROP POLICY IF EXISTS "Allow service_role full access to software_trials" ON public.software_trials;
 CREATE POLICY "Allow service_role full access to software_trials" 
 ON public.software_trials 
 FOR ALL 
@@ -36,6 +37,7 @@ TO service_role
 USING (true) 
 WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow service_role full access to software_licenses" ON public.software_licenses;
 CREATE POLICY "Allow service_role full access to software_licenses" 
 ON public.software_licenses 
 FOR ALL 
@@ -74,6 +76,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Enable RLS for users
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow service_role full access to users" ON public.users;
 CREATE POLICY "Allow service_role full access to users" 
 ON public.users 
 FOR ALL 
@@ -90,4 +93,25 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 INSERT INTO public.users (username, email, password_hash, role)
 VALUES ('admin', 'harshcscemitra@gmail.com', 'c0e583fb0d04daf9f5fd5409a68ba47e9afab0f9317fd178d7312eed50a2ae6b', 'admin')
 ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, email = EXCLUDED.email;
+
+-- Table for managing hardware lock / PC reset requests
+CREATE TABLE IF NOT EXISTS public.license_resets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    license_key TEXT NOT NULL REFERENCES public.software_licenses(license_key) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    status TEXT DEFAULT 'pending' NOT NULL, -- 'pending', 'approved', 'rejected'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for license_resets
+ALTER TABLE public.license_resets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow service_role full access to license_resets" ON public.license_resets;
+CREATE POLICY "Allow service_role full access to license_resets" 
+ON public.license_resets 
+FOR ALL 
+TO service_role 
+USING (true) 
+WITH CHECK (true);
 

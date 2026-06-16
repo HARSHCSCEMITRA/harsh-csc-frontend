@@ -5,7 +5,7 @@
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// ── Supabase Helpers ──────────────────────────────────────────
+// ─── Supabase Helpers ──────────────────────────────────────────
 async function sbSelect(table, params = '') {
   const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
     headers: {
@@ -65,7 +65,18 @@ function generateLicenseKey() {
   return `CSC-AUTO-${part(4, chars)}-${part(4, nums)}-${part(4, chars)}`;
 }
 
-// ── Main Handler ──────────────────────────────────────────────
+// Helper to mask email address: g****@gmail.com
+function maskEmail(email) {
+  if (!email) return '';
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  const name = parts[0];
+  const domain = parts[1];
+  if (name.length <= 2) return `${name[0]}***@${domain}`;
+  return `${name.substring(0, 2)}***${name.substring(name.length - 1)}@${domain}`;
+}
+
+// ─── Main Handler ──────────────────────────────────────────────
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -268,7 +279,7 @@ export default async function handler(req, res) {
         });
       }
 
-      // 4. Retrieve or Generate License Key (Used by frontend page when entering order_ref)
+      // 4. Retrieve or Generate License Key & Email it to Customer (Secure delivery, no UI leak)
       case 'retrieve-key': {
         const { order_ref } = req.method === 'GET' ? req.query : req.body;
         if (!order_ref) {
@@ -280,13 +291,39 @@ export default async function handler(req, res) {
         // Step A: Check if license is already generated
         const existingLicenses = await sbSelect('software_licenses', `order_ref=eq.${encodeURIComponent(cleanRef)}&limit=1`);
         if (existingLicenses && existingLicenses.length > 0) {
+          const lic = existingLicenses[0];
+          // Find email from order
+          const orders = await sbSelect('orders', `order_ref=eq.${encodeURIComponent(cleanRef)}&limit=1`);
+          const order = orders && orders.length > 0 ? orders[0] : {};
+          const toEmail = order.customer_email || order.email || '';
+          
+          if (toEmail) {
+            try {
+              await fetch(`${SB_URL}/functions/v1/send-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SB_KEY}`
+                },
+                body: JSON.stringify({
+                  type: 'license_activation',
+                  email: toEmail,
+                  data: {
+                    license_key: lic.license_key,
+                    plan: lic.plan,
+                    expires_at: lic.expires_at
+                  }
+                })
+              });
+            } catch (e) {
+              console.error('[SOFTWARE API] Email resend failed:', e);
+            }
+          }
+          
           return res.status(200).json({
             success: true,
-            license_key: existingLicenses[0].license_key,
-            plan: existingLicenses[0].plan,
-            expires_at: existingLicenses[0].expires_at,
-            machine_id: existingLicenses[0].machine_id,
-            message: 'License key retrieved successfully.'
+            email_masked: maskEmail(toEmail),
+            message: 'License key has been resent to your registered email address.'
           });
         }
 
@@ -299,14 +336,13 @@ export default async function handler(req, res) {
         const order = orders[0];
 
         // Step C: Confirm payment
-        if (order.status !== 'paid' && order.status !== 'completed') {
+        if (order.status !== 'paid' && order.status !== 'completed' && order.payment_status !== 'Payment Received') {
           return res.status(400).json({
             error: `Order status is "${order.status}". License keys can only be retrieved after payment confirmation.`
           });
         }
 
         // Step D: Confirm order contains software
-        // Orders usually have `items` as a JSON array or text.
         let orderItems = [];
         try {
           orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
@@ -345,12 +381,83 @@ export default async function handler(req, res) {
           is_active: true
         });
 
+        // Trigger email sending
+        const toEmail = order.customer_email || order.email || '';
+        if (toEmail) {
+          try {
+            await fetch(`${SB_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SB_KEY}`
+              },
+              body: JSON.stringify({
+                type: 'license_activation',
+                email: toEmail,
+                data: {
+                  license_key: licenseKey,
+                  plan,
+                  expires_at: expiresAt.toISOString()
+                }
+              })
+            });
+          } catch (e) {
+            console.error('[SOFTWARE API] Email trigger failed:', e);
+          }
+        }
+
         return res.status(200).json({
           success: true,
-          license_key: licenseKey,
-          plan,
-          expires_at: expiresAt.toISOString(),
-          message: 'License key generated successfully!'
+          email_masked: maskEmail(toEmail),
+          message: 'License key generated successfully and sent to your registered email!'
+        });
+      }
+
+      // 5. Submit PC Reset Request (Customer Facing)
+      case 'request-reset': {
+        const { license_key, email, reason } = req.body;
+        if (!license_key || !email || !reason) {
+          return res.status(400).json({ error: 'License key, email, and reason are required.' });
+        }
+        
+        // Verify license key is valid
+        const licenses = await sbSelect('software_licenses', `license_key=eq.${encodeURIComponent(license_key.trim())}&limit=1`);
+        if (!licenses || licenses.length === 0) {
+          return res.status(400).json({ error: 'License key is invalid.' });
+        }
+        
+        const lic = licenses[0];
+        
+        // Fetch order to verify email match
+        const orders = await sbSelect('orders', `order_ref=eq.${encodeURIComponent(lic.order_ref)}&limit=1`);
+        if (!orders || orders.length === 0) {
+          return res.status(400).json({ error: 'Order not found for this license key.' });
+        }
+        
+        const order = orders[0];
+        const registeredEmail = (order.customer_email || order.email || '').trim().toLowerCase();
+        
+        if (registeredEmail !== email.trim().toLowerCase()) {
+          return res.status(400).json({ error: 'Email does not match the registered purchase email.' });
+        }
+        
+        // Check duplicate pending requests
+        const existingResets = await sbSelect('license_resets', `license_key=eq.${encodeURIComponent(license_key.trim())}&status=eq.pending&limit=1`);
+        if (existingResets && existingResets.length > 0) {
+          return res.status(400).json({ error: 'A reset request is already pending for this license key.' });
+        }
+        
+        // Create request
+        await sbInsert('license_resets', {
+          license_key: license_key.trim(),
+          email: email.trim().toLowerCase(),
+          reason: reason.trim(),
+          status: 'pending'
+        });
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Reset request submitted successfully. It will be reviewed by admin.'
         });
       }
 

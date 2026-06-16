@@ -22,6 +22,52 @@ export default function Software() {
   const [retrieveError, setRetrieveError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // License Reset State
+  const [resetKey, setResetKey] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetReason, setResetReason] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [resetError, setResetError] = useState('');
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetKey.trim() || !resetEmail.trim() || !resetReason.trim()) return;
+
+    setResetting(true);
+    setResetError('');
+    setResetSuccess('');
+
+    try {
+      const res = await fetch('/api/software', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'request-reset',
+          license_key: resetKey.trim().toUpperCase(),
+          email: resetEmail.trim(),
+          reason: resetReason.trim()
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setResetSuccess(lang === 'hi' 
+          ? 'रीसेट रिक्वेस्ट सफलतापूर्वक भेज दी गई है। एडमिन द्वारा रिव्यु के बाद इसे अप्रूव कर दिया जाएगा।'
+          : 'Reset request submitted successfully. It will be active once approved by the admin.');
+        setResetKey('');
+        setResetEmail('');
+        setResetReason('');
+      } else {
+        setResetError(data.error || 'Failed to submit reset request. Please check details.');
+      }
+    } catch (err) {
+      setResetError('Failed to connect to server. Please try again later.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const handlePurchase = (planId: string) => {
     const product = MOCK_PRODUCTS.find(p => p.id === planId);
     if (product) {
@@ -311,45 +357,94 @@ export default function Software() {
             </div>
           )}
 
-          {/* Key Output Render */}
+          {/* Key Output Render (Email Confirmation instead of raw key leak) */}
           {retrievedKey && (
-            <div className="animate-scaleIn" style={{ padding: '20px', background: 'rgba(5,9,19,0.6)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#60a5fa', letterSpacing: '0.05em' }}>
-                  🔑 {lang === 'hi' ? 'आपका लाइसेंस की' : 'Your License Key'}
-                </span>
-                <span className="badge badge-green" style={{ textTransform: 'uppercase' }}>
-                  {retrievedKey.plan} Plan
+            <div className="animate-scaleIn" style={{ padding: '20px', background: 'rgba(5,9,19,0.6)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '12px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '1.5rem' }}>📩</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#34d399' }}>
+                  {lang === 'hi' ? 'लाइसेंस की ईमेल पर भेज दी गई है!' : 'License Key Sent to Email!'}
                 </span>
               </div>
-
-              {/* Copy Key Box */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-                <input
-                  type="text"
-                  readOnly
-                  value={retrievedKey.license_key}
-                  style={{ flex: 1, background: '#0a0f1e', border: '1px solid rgba(255,255,255,0.1)', color: '#34d399', fontFamily: 'monospace', fontSize: '15px', fontWeight: 700, padding: '10px 14px', borderRadius: '8px', outline: 'none', textAlign: 'center', letterSpacing: '1px' }}
-                />
-                <button
-                  onClick={handleCopyKey}
-                  className="btn-primary"
-                  style={{ padding: '10px 18px', background: copySuccess ? '#059669' : '#2563eb', flexShrink: 0, fontSize: '12px', fontWeight: 700 }}
-                >
-                  {copySuccess ? (lang === 'hi' ? 'कॉपी हो गया!' : 'Copied!') : (lang === 'hi' ? 'कॉपी करें' : 'Copy')}
-                </button>
-              </div>
-
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
-                <span>📅 {lang === 'hi' ? 'वैधता समाप्ति:' : 'Expiry:'} <strong>{formatDate(retrievedKey.expires_at)}</strong></span>
-                <span>💻 {lang === 'hi' ? 'पीसी बाइंड स्थिति:' : 'Binned PC:'} <strong>{retrievedKey.machine_id ? 'LOCKED' : 'READY TO BIND'}</strong></span>
-              </div>
-
-              <div style={{ background: 'rgba(251,191,36,0.05)', borderLeft: '3px solid #fbbf24', padding: '10px 12px', borderRadius: '4px', fontSize: '11px', color: '#fbbf24', marginTop: '12px', lineHeight: 1.4 }}>
+              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, marginBottom: '12px' }}>
+                {lang === 'hi' 
+                  ? `आपकी सुरक्षा के लिए लाइसेंस की (Key) सीधे स्क्रीन पर नहीं दिखाई जाएगी। इसे आपके रजिस्टर्ड ईमेल आईडी (${retrievedKey.email_masked}) पर भेज दिया गया है।`
+                  : `For your security, the license key is not displayed on the screen. It has been successfully sent to your registered email address (${retrievedKey.email_masked}).`}
+              </p>
+              <div style={{ background: 'rgba(251,191,36,0.05)', borderLeft: '3px solid #fbbf24', padding: '10px 12px', borderRadius: '4px', fontSize: '11px', color: '#fbbf24', lineHeight: 1.4 }}>
                 ℹ️ {lang === 'hi'
-                  ? 'निर्देश: सॉफ्टवेयर खोलें, "Activate Key" पर क्लिक करें और ऊपर दी गई की (Key) को पेस्ट करें। एक बार एक्टिवेट होने के बाद यह की उसी कंप्यूटर पर लॉक हो जाएगी।'
-                  : 'Instructions: Open the software, click "Activate Key" and paste this key. Once activated, the license key binds only to that specific computer hardware.'}
+                  ? 'निर्देश: अपना ईमेल इनबॉक्स (या स्पैम फोल्डर) चेक करें। वहां से की (Key) को कॉपी करके सॉफ्टवेयर के "Activate Key" सेक्शन में पेस्ट करें।'
+                  : 'Instructions: Check your email inbox (or spam folder). Copy the key from the email and paste it into the software\'s "Activate Key" section.'}
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* ── LICENSE PC RESET PORTAL ── */}
+        <section className="glass-card animate-fadeUp animate-delay-300" style={{ padding: '36px 30px', maxWidth: '640px', margin: '24px auto 0', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <span style={{ fontSize: '2.2rem' }}>🔄</span>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 800, color: '#fff', marginTop: '10px', marginBottom: '6px' }}>
+              {lang === 'hi' ? 'पीसी रीसेट / ट्रांसफर रिक्वेस्ट' : 'PC Reset / License Transfer'}
+            </h2>
+            <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+              {lang === 'hi'
+                ? 'यदि आपने कंप्यूटर बदला है, तो लाइसेंस की को नए कंप्यूटर में चलाने के लिए यहाँ रीसेट रिक्वेस्ट भेजें।'
+                : 'If you have changed your computer, request a hardware lock reset to run your key on the new PC.'}
+            </p>
+          </div>
+
+          <form onSubmit={handleRequestReset} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <input
+              type="text"
+              className="input-field"
+              placeholder={lang === 'hi' ? 'अपनी लाइसेंस की दर्ज करें (उदा. CSC-AUTO-XXXX-...)' : 'Enter License Key (e.g. CSC-AUTO-XXXX-...)'}
+              value={resetKey}
+              onChange={e => setResetKey(e.target.value.toUpperCase())}
+              style={{ width: '100%', textTransform: 'uppercase' }}
+              disabled={resetting}
+              required
+            />
+            <input
+              type="email"
+              className="input-field"
+              placeholder={lang === 'hi' ? 'पंजीकृत ईमेल आईडी दर्ज करें' : 'Enter Registered Email Address'}
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              style={{ width: '100%' }}
+              disabled={resetting}
+              required
+            />
+            <textarea
+              className="input-field"
+              placeholder={lang === 'hi' ? 'रीसेट करने का कारण (उदा. नया लैपटॉप खरीदा है)' : 'Reason for Transfer (e.g. Bought a new laptop)'}
+              value={resetReason}
+              onChange={e => setResetReason(e.target.value)}
+              style={{ width: '100%', minHeight: '80px', resize: 'vertical', padding: '10px 14px' }}
+              disabled={resetting}
+              required
+            />
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ padding: '12px 24px', fontWeight: 700, width: '100%' }}
+              disabled={resetting || !resetKey.trim() || !resetEmail.trim() || !resetReason.trim()}
+            >
+              {resetting ? <div className="spinner" /> : (lang === 'hi' ? 'रीसेट रिक्वेस्ट सबमिट करें' : 'Submit Reset Request')}
+            </button>
+          </form>
+
+          {/* Reset Message */}
+          {resetError && (
+            <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#f87171', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span>⚠️</span>
+              <span>{resetError}</span>
+            </div>
+          )}
+          {resetSuccess && (
+            <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '8px', color: '#34d399', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span>✅</span>
+              <span>{resetSuccess}</span>
             </div>
           )}
         </section>

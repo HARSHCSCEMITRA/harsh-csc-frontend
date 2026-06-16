@@ -299,6 +299,76 @@ function usernameRecoveryEmail(data: any) {
   };
 }
 
+function licenseActivationEmail(data: any) {
+  const content = `
+    <!-- Key Icon -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#ecfdf5;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid #10b981;">🔑</div>
+      <h2 style="margin:0;font-size:20px;color:#1a1a1a;">Zamify License Activated!</h2>
+      <p style="margin:6px 0 0;color:#666;font-size:13px;">Aapka software activation key niche diya gaya hai</p>
+    </div>
+
+    <!-- Key Box -->
+    <div style="background:#f0fdf4;border:2px dashed #10b981;border-radius:10px;padding:18px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:11px;color:#047857;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700;">Your Software License Key</div>
+      <div style="font-size:22px;font-weight:800;color:#065f46;letter-spacing:1.5px;font-family:monospace;background:#ffffff;padding:8px 12px;border-radius:6px;display:inline-block;border:1px solid #d1fae5;">${data.license_key}</div>
+      <div style="font-size:12px;color:#047857;margin-top:8px;">Plan: <strong>${data.plan.toUpperCase()} Subscription</strong></div>
+      <div style="font-size:12px;color:#047857;">Expires On: <strong>${new Date(data.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong></div>
+    </div>
+
+    <!-- Instructions -->
+    <div style="background:#f0f7ff;border-left:4px solid #3b82f6;border-radius:4px;padding:14px 16px;margin-top:20px;">
+      <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:8px;">🚀 Activate Kaise Karein:</div>
+      <ol style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:2;">
+        <li><strong>Zamify Software</strong> open karein (Windows PC)</li>
+        <li><strong>Activate Key</strong> option par click karein</li>
+        <li>Upar di gayi Key ko paste karein aur verify par click karein</li>
+        <li>Aapka software usi PC hardware par lock ho jaega aur active ho jaega</li>
+      </ol>
+    </div>
+
+    <p style="background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 12px;border-radius:4px;font-size:11px;color:#b45309;margin-top:16px;">
+      ⚠️ <strong>Note:</strong> Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta jab tak aap transfer request na lagayein.
+    </p>
+  `;
+
+  return {
+    subject: `🔑 Zamify Software Activation Key | ${SITE_NAME}`,
+    html: baseTemplate(content),
+  };
+}
+
+function resetApprovedEmail(data: any) {
+  const content = `
+    <!-- Success Icon -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#ecfdf5;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid #10b981;">🔄</div>
+      <h2 style="margin:0;font-size:20px;color:#1a1a1a;">PC Reset Approved!</h2>
+      <p style="margin:6px 0 0;color:#666;font-size:13px;">Aapka hardware lock transfer request approve ho gaya hai</p>
+    </div>
+
+    <p style="font-size:14px;color:#333;line-height:1.6;">
+      Namaste,<br/><br/>
+      Aapke license key <strong>${data.license_key}</strong> ka hardware reset request approve kar diya gaya hai. Ab aap is key ko apne naye computer me daalkar activate kar sakte hain.
+    </p>
+
+    <!-- Instructions -->
+    <div style="background:#f0f7ff;border-left:4px solid #3b82f6;border-radius:4px;padding:14px 16px;margin-top:20px;">
+      <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:8px;">🚀 Agla Kadam:</div>
+      <ol style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:2;">
+        <li>Apne naye computer me <strong>Zamify Software</strong> open karein</li>
+        <li>Wahi Key paste karke check karein</li>
+        <li>Software ab automatically naye computer ke hardware se lock ho jaega</li>
+      </ol>
+    </div>
+  `;
+
+  return {
+    subject: `🔄 PC Reset Approved — Key Unlocked | ${SITE_NAME}`,
+    html: baseTemplate(content),
+  };
+}
+
 // ─── Send Email via Resend ────────────────
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
@@ -338,6 +408,10 @@ serve(async (req) => {
       emailData = passwordResetEmail(body.data);
     } else if (type === "username_recovery") {
       emailData = usernameRecoveryEmail(body.data);
+    } else if (type === "license_activation") {
+      emailData = licenseActivationEmail(body.data);
+    } else if (type === "reset_approved") {
+      emailData = resetApprovedEmail(body.data);
     } else {
       throw new Error(`Unknown email type: ${type}`);
     }
