@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
 import { useLanguageStore } from '../store/languageStore';
@@ -11,12 +11,38 @@ export default function Software() {
   const { lang } = useLanguageStore();
   const t = createT(lang);
 
-  // Retrieve products
-  const monthlyProduct = MOCK_PRODUCTS.find(p => p.id === 's_automation_monthly');
-  const yearlyProduct = MOCK_PRODUCTS.find(p => p.id === 's_automation_yearly');
+  // Subscription plans fetched from database
+  const [plans, setPlans] = useState<any[]>([]);
+  const verifiedOrderRef = sessionStorage.getItem('csc_order_ref') || '';
+  const isLoggedIn = !!verifiedOrderRef;
+
+  useEffect(() => {
+    fetch('/api/software?action=get-plans')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.plans) {
+          setPlans(data.plans);
+          // Sync prices in MOCK_PRODUCTS for consistent cart/checkout behavior
+          data.plans.forEach((dbPlan: any) => {
+            const mockId = dbPlan.id === 'single_monthly' ? 's_automation_single_monthly'
+                         : dbPlan.id === 'single_yearly' ? 's_automation_single_yearly'
+                         : dbPlan.id === 'multi_monthly' ? 's_automation_multi_monthly'
+                         : dbPlan.id === 'multi_yearly' ? 's_automation_multi_yearly'
+                         : dbPlan.id;
+            const p = MOCK_PRODUCTS.find(item => item.id === mockId);
+            if (p) {
+              p.price = dbPlan.price;
+              if (dbPlan.description) {
+                p.description = dbPlan.description;
+              }
+            }
+          });
+        }
+      })
+      .catch(err => console.error('Failed to load plans:', err));
+  }, []);
 
   // License Key Retrieval State
-  const [orderRef, setOrderRef] = useState('');
   const [retrieving, setRetrieving] = useState(false);
   const [retrievedKey, setRetrievedKey] = useState<any>(null);
   const [retrieveError, setRetrieveError] = useState('');
@@ -76,9 +102,8 @@ export default function Software() {
     }
   };
 
-  const handleRetrieveKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orderRef.trim()) return;
+  const handleRetrieveKey = async () => {
+    if (!verifiedOrderRef) return;
 
     setRetrieving(true);
     setRetrieveError('');
@@ -87,7 +112,7 @@ export default function Software() {
 
     try {
       // Direct call to Vercel Serverless Function
-      const res = await fetch(`/api/software?action=retrieve-key&order_ref=${encodeURIComponent(orderRef.trim().toUpperCase())}`);
+      const res = await fetch(`/api/software?action=retrieve-key&order_ref=${encodeURIComponent(verifiedOrderRef.trim().toUpperCase())}`);
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -254,68 +279,56 @@ export default function Software() {
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 320px))', gap: '24px', justifyContent: 'center' }}>
-            
-            {/* Monthly Card */}
-            {monthlyProduct && (
-              <div className="glass-card animate-fadeUp animate-delay-100" style={{ padding: '30px', border: '1px solid rgba(255,255,255,0.08)', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <span className="badge badge-blue" style={{ alignSelf: 'flex-start' }}>{monthlyProduct.badge}</span>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{lang === 'hi' ? monthlyProduct.nameHi : monthlyProduct.name}</h3>
-                  <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{lang === 'hi' ? '30 दिन की वैधता' : '30 Days validity'}</p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{ fontSize: '32px', fontWeight: 800, color: '#fff' }}>₹{monthlyProduct.price}</span>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>/ {lang === 'hi' ? 'महीना' : 'month'}</span>
-                </div>
-                <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, flex: 1 }}>
-                  {lang === 'hi' ? monthlyProduct.descriptionHi : monthlyProduct.description}
-                </p>
-                <button
-                  onClick={() => handlePurchase(monthlyProduct.id)}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '12px', fontWeight: 700, background: 'rgba(37,99,235,0.2)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.4)', boxShadow: 'none' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--blue)'; e.currentTarget.style.color = '#fff'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.2)'; e.currentTarget.style.color = '#60a5fa'; }}
-                >
-                  🛒 {lang === 'hi' ? 'प्लान खरीदें' : 'Buy Monthly Plan'}
-                </button>
-              </div>
-            )}
+            {plans.length > 0 ? (
+              plans.map((plan: any) => {
+                const mockId = plan.id === 'single_monthly' ? 's_automation_single_monthly'
+                             : plan.id === 'single_yearly' ? 's_automation_single_yearly'
+                             : plan.id === 'multi_monthly' ? 's_automation_multi_monthly'
+                             : plan.id === 'multi_yearly' ? 's_automation_multi_yearly'
+                             : plan.id;
+                const product = MOCK_PRODUCTS.find(p => p.id === mockId);
+                if (!product) return null;
+                const isYearly = plan.billing === 'yearly';
 
-            {/* Yearly Card (Best Value) */}
-            {yearlyProduct && (
-              <div className="glass-card animate-fadeUp animate-delay-200" style={{ padding: '30px', border: '1px solid rgba(139,92,246,0.3)', background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(5,9,19,0.5) 100%)', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
-                  <span className="badge badge-amber" style={{ animation: 'pulse 2s infinite' }}>⭐ {yearlyProduct.badge}</span>
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{lang === 'hi' ? yearlyProduct.nameHi : yearlyProduct.name}</h3>
-                  <p style={{ fontSize: '12px', color: '#a78bfa', marginTop: '4px' }}>✨ {lang === 'hi' ? '12 महीने की वैधता (सर्वोत्तम बचत)' : '12 Months validity (Best value)'}</p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{ fontSize: '32px', fontWeight: 800, color: '#fff' }}>₹{yearlyProduct.price}</span>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>/ {lang === 'hi' ? 'वर्ष' : 'year'}</span>
-                  {yearlyProduct.originalPrice && (
-                    <span style={{ fontSize: '14px', color: '#64748b', textDecoration: 'line-through', marginLeft: '6px' }}>₹{yearlyProduct.originalPrice}</span>
-                  )}
-                </div>
-                <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, flex: 1 }}>
-                  {lang === 'hi' ? yearlyProduct.descriptionHi : yearlyProduct.description}
-                </p>
-                <button
-                  onClick={() => handlePurchase(yearlyProduct.id)}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '12px', fontWeight: 700, background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
-                >
-                  👑 {lang === 'hi' ? 'प्रीमियम प्लान खरीदें' : 'Buy Yearly Plan'}
-                </button>
-              </div>
+                return (
+                  <div key={plan.id} className="glass-card animate-fadeUp" style={{ padding: '30px', border: isYearly ? '1px solid rgba(139,92,246,0.3)' : '1px solid rgba(255,255,255,0.08)', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {isYearly && (
+                      <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                        <span className="badge badge-amber" style={{ animation: 'pulse 2s infinite' }}>⭐ Best Value</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{lang === 'hi' ? product.nameHi : product.name}</h3>
+                      <p style={{ fontSize: '12px', color: isYearly ? '#a78bfa' : '#64748b', marginTop: '4px' }}>
+                        {lang === 'hi'
+                          ? `${plan.billing === 'yearly' ? '12 महीने' : '30 दिन'} की वैधता (${plan.allowed_devices} डिवाइस)`
+                          : `${plan.billing === 'yearly' ? '12 Months' : '30 Days'} validity (${plan.allowed_devices} Devices)`}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <span style={{ fontSize: '32px', fontWeight: 800, color: '#fff' }}>₹{plan.price}</span>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>/ {lang === 'hi' ? (plan.billing === 'yearly' ? 'वर्ष' : 'महीना') : (plan.billing === 'yearly' ? 'year' : 'month')}</span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, flex: 1 }}>
+                      {lang === 'hi' ? product.descriptionHi : plan.description}
+                    </p>
+                    <button
+                      onClick={() => handlePurchase(product.id)}
+                      className="btn-primary"
+                      style={{ width: '100%', padding: '12px', fontWeight: 700 }}
+                    >
+                      🛒 {lang === 'hi' ? 'प्लान खरीदें' : 'Buy Plan'}
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading subscription plans...</div>
             )}
-
           </div>
         </section>
 
-        {/* ── LICENSE KEY RETRIEVAL PORTAL ── */}
+        {/* ── LICENSE KEY RETRIEVAL PORTAL (Restricted to logged-in users) ── */}
         <section className="glass-card animate-fadeUp animate-delay-300" style={{ padding: '36px 30px', maxWidth: '640px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <span style={{ fontSize: '2.2rem' }}>🔑</span>
@@ -324,40 +337,54 @@ export default function Software() {
             </h2>
             <p style={{ fontSize: '12px', color: '#94a3b8' }}>
               {lang === 'hi'
-                ? 'भुगतान सफल होने के बाद, यहाँ अपना ऑर्डर रेफेरेंस नंबर (Order Ref) डालकर तुरंत लाइसेंस की प्राप्त करें।'
-                : 'After successful payment, enter your order reference ID below to generate and retrieve your key.'}
+                ? 'सुरक्षित रीकॉल के लिए आपको ऑर्डर सत्यापित (OTP Verified) होना आवश्यक है।'
+                : 'For secure retrieval, you must be logged in with a verified order reference.'}
             </p>
           </div>
 
-          <form onSubmit={handleRetrieveKey} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <input
-              type="text"
-              className="input-field"
-              placeholder={lang === 'hi' ? 'ऑर्डर संदर्भ दर्ज करें (उदा. CSC-123456)' : 'Enter Order Ref (e.g. CSC-123456)'}
-              value={orderRef}
-              onChange={e => setOrderRef(e.target.value.toUpperCase())}
-              style={{ flex: 1, textTransform: 'uppercase' }}
-              disabled={retrieving}
-            />
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{ padding: '12px 24px', fontWeight: 700, flexShrink: 0 }}
-              disabled={retrieving || !orderRef.trim()}
-            >
-              {retrieving ? <div className="spinner" /> : (lang === 'hi' ? 'प्राप्त करें' : 'Get Key')}
-            </button>
-          </form>
+          {isLoggedIn ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ padding: '12px', background: 'rgba(5,9,19,0.4)', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '20px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  {lang === 'hi' ? 'सत्यापित ऑर्डर संदर्भ' : 'Verified Order Ref'}:{' '}
+                  <strong style={{ fontFamily: 'monospace', color: 'var(--blue-light)' }}>{verifiedOrderRef}</strong>
+                </span>
+              </div>
+              <button
+                onClick={handleRetrieveKey}
+                className="btn-primary"
+                style={{ padding: '14px 28px', fontWeight: 700, width: '100%' }}
+                disabled={retrieving}
+              >
+                {retrieving ? <div className="spinner" /> : (lang === 'hi' ? '📩 मेरे ईमेल पर लाइसेंस की भेजें' : '📩 Send License Key to my Email')}
+              </button>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <p style={{ fontSize: '13px', color: '#f87171', marginBottom: '16px' }}>
+                ⚠️ {lang === 'hi'
+                  ? 'लाइसेंस की प्राप्त करने के लिए कृपया पहले अपने ऑर्डर को ट्रैक/सत्यापित करें।'
+                  : 'Please track and verify your order first to retrieve your license key.'}
+              </p>
+              <button
+                onClick={() => navigate('/track')}
+                className="btn-ghost"
+                style={{ padding: '10px 20px', border: '1px solid rgba(255,255,255,0.15)' }}
+              >
+                🔍 {lang === 'hi' ? 'ऑर्डर ट्रैक करें' : 'Track Order'}
+              </button>
+            </div>
+          )}
 
           {/* Error Message */}
           {retrieveError && (
-            <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#f87171', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#f87171', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span>⚠️</span>
               <span>{retrieveError}</span>
             </div>
           )}
 
-          {/* Key Output Render (Email Confirmation instead of raw key leak) */}
+          {/* Key Output Render */}
           {retrievedKey && (
             <div className="animate-scaleIn" style={{ padding: '20px', background: 'rgba(5,9,19,0.6)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '12px', marginTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
@@ -368,8 +395,8 @@ export default function Software() {
               </div>
               <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.5, marginBottom: '12px' }}>
                 {lang === 'hi' 
-                  ? `आपकी सुरक्षा के लिए लाइसेंस की (Key) सीधे स्क्रीन पर नहीं दिखाई जाएगी। इसे आपके रजिस्टर्ड ईमेल आईडी (${retrievedKey.email_masked}) पर भेज दिया गया है।`
-                  : `For your security, the license key is not displayed on the screen. It has been successfully sent to your registered email address (${retrievedKey.email_masked}).`}
+                  ? `सुरक्षा कारणों से लाइसेंस की (Key) सीधे स्क्रीन पर नहीं दिखाई जाएगी। इसे आपके रजिस्टर्ड ईमेल आईडी (${retrievedKey.email_masked}) पर भेज दिया गया है।`
+                  : `For security reasons, the license key is not displayed on the screen. It has been successfully sent to your registered email address (${retrievedKey.email_masked}).`}
               </p>
               <div style={{ background: 'rgba(251,191,36,0.05)', borderLeft: '3px solid #fbbf24', padding: '10px 12px', borderRadius: '4px', fontSize: '11px', color: '#fbbf24', lineHeight: 1.4 }}>
                 ℹ️ {lang === 'hi'

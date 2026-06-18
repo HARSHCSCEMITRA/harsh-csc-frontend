@@ -87,6 +87,8 @@ export default async function handler(req, res) {
       return handleSummary(req, res);
     case 'update-order':
       return handleUpdateOrder(req, res);
+    case 'plans':
+      return handlePlans(req, res);
     default:
       return res.status(404).json({ error: `Not Found: Sub-route "${endpoint}" not matched.` });
   }
@@ -94,30 +96,56 @@ export default async function handler(req, res) {
 
 // Handler: Trials
 async function handleTrials(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
-  try {
-    const dbRes = await fetch(`${SB_URL}/rest/v1/software_trials?select=*&order=activated_at.desc&limit=1000`, {
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': `Bearer ${SB_KEY}`,
-        'Content-Type': 'application/json'
+  if (req.method === 'GET') {
+    try {
+      const dbRes = await fetch(`${SB_URL}/rest/v1/software_trials?select=*&order=activated_at.desc&limit=1000`, {
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!dbRes.ok) {
+        const errText = await dbRes.text();
+        return res.status(500).json({ error: `Supabase query error: ${errText}` });
       }
-    });
 
-    if (!dbRes.ok) {
-      const errText = await dbRes.text();
-      return res.status(500).json({ error: `Supabase query error: ${errText}` });
+      const trials = await dbRes.json();
+      return res.status(200).json({ success: true, trials });
+    } catch (err) {
+      console.error('[TRIALS API] Error:', err);
+      return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
-
-    const trials = await dbRes.json();
-    return res.status(200).json({ success: true, trials });
-  } catch (err) {
-    console.error('[TRIALS API] Error:', err);
-    return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
+
+  if (req.method === 'DELETE') {
+    try {
+      const machine_id = req.query?.machine_id || req.body?.machine_id;
+      if (!machine_id) {
+        return res.status(400).json({ error: 'machine_id is required.' });
+      }
+      const dbRes = await fetch(`${SB_URL}/rest/v1/software_trials?machine_id=eq.${encodeURIComponent(machine_id)}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Prefer': 'return=minimal'
+        }
+      });
+      if (!dbRes.ok) {
+        const errText = await dbRes.text();
+        return res.status(500).json({ error: `Supabase delete error: ${errText}` });
+      }
+      return res.status(200).json({ success: true, message: 'Trial deleted successfully.' });
+    } catch (err) {
+      console.error('[TRIALS API DELETE] Error:', err);
+      return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'DELETE']);
+  return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
 }
 
 // Handler: Licenses
@@ -147,29 +175,156 @@ async function handleLicenses(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { license_id, is_active } = req.body;
-      if (!license_id) {
-        return res.status(400).json({ error: 'license_id is required.' });
+      const { action, license_id } = req.body;
+      const actualAction = action || (license_id ? 'toggle' : 'create');
+
+      if (actualAction === 'create') {
+        const { customer_name, customer_phone, customer_email, order_ref, plan, machine_id, allowed_devices } = req.body;
+        if (!customer_name || !customer_phone) {
+          return res.status(400).json({ error: 'customer_name and customer_phone are required.' });
+        }
+
+        const cleanPhone = customer_phone.trim();
+        const cleanEmail = customer_email ? customer_email.trim().toLowerCase() : null;
+
+        // Check duplicate active license on phone or email
+        let dupQuery = `customer_phone=eq.${encodeURIComponent(cleanPhone)}&is_active=eq.true`;
+        if (cleanEmail) {
+          dupQuery = `or=(customer_phone.eq.${encodeURIComponent(cleanPhone)},customer_email.eq.${encodeURIComponent(cleanEmail)})&is_active=eq.true`;
+        }
+
+        const checkRes = await fetch(`${SB_URL}/rest/v1/software_licenses?${dupQuery}`, {
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        if (checkRes.ok) {
+          const existingLicenses = await checkRes.json();
+          const activeLic = existingLicenses.find(l => new Date(l.expires_at) > new Date());
+          if (activeLic) {
+            return res.status(400).json({ error: `An active license is already registered with this phone number or email (${activeLic.license_key}).` });
+          }
+        }
+
+        const licenseKey = generateLicenseKey();
+        const expiresAt = new Date();
+        if (plan === 'yearly') {
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        } else {
+          expiresAt.setMonth(expiresAt.getMonth() + 1);
+        }
+
+        const dbRes = await fetch(`${SB_URL}/rest/v1/software_licenses`, {
+          method: 'POST',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            license_key: licenseKey,
+            order_ref: order_ref || 'MANUAL-' + Date.now(),
+            customer_name,
+            customer_phone: cleanPhone,
+            customer_email: cleanEmail,
+            plan: plan || 'monthly',
+            machine_id: machine_id || null,
+            allowed_devices: parseInt(allowed_devices) || 1,
+            expires_at: expiresAt.toISOString(),
+            is_active: true
+          })
+        });
+
+        if (!dbRes.ok) {
+          const errText = await dbRes.text();
+          return res.status(500).json({ error: `Supabase insert error: ${errText}` });
+        }
+
+        const data = await dbRes.json();
+        const generatedLicense = data[0];
+
+        // Send email automatically if email is provided
+        if (cleanEmail) {
+          try {
+            await fetch(`${SB_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SB_KEY}`
+              },
+              body: JSON.stringify({
+                type: 'license_activation',
+                email: cleanEmail,
+                data: {
+                  license_key: licenseKey,
+                  plan: plan || 'monthly',
+                  expires_at: expiresAt.toISOString()
+                }
+              })
+            });
+          } catch (e) {
+            console.error('[LICENSES API POST] Email sending failed:', e);
+          }
+        }
+
+        return res.status(200).json({ success: true, license: generatedLicense });
       }
 
-      const dbRes = await fetch(`${SB_URL}/rest/v1/software_licenses?id=eq.${license_id}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SB_KEY,
-          'Authorization': `Bearer ${SB_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({ is_active: !!is_active })
-      });
+      if (actualAction === 'toggle') {
+        const { is_active } = req.body;
+        if (!license_id) {
+          return res.status(400).json({ error: 'license_id is required.' });
+        }
 
-      if (!dbRes.ok) {
-        const errText = await dbRes.text();
-        return res.status(500).json({ error: `Supabase update error: ${errText}` });
+        const dbRes = await fetch(`${SB_URL}/rest/v1/software_licenses?id=eq.${license_id}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ is_active: !!is_active })
+        });
+
+        if (!dbRes.ok) {
+          const errText = await dbRes.text();
+          return res.status(500).json({ error: `Supabase update error: ${errText}` });
+        }
+
+        const data = await dbRes.json();
+        return res.status(200).json({ success: true, license: data[0] });
       }
 
-      const data = await dbRes.json();
-      return res.status(200).json({ success: true, license: data[0] });
+      if (actualAction === 'extend') {
+        const { expires_at } = req.body;
+        if (!license_id || !expires_at) {
+          return res.status(400).json({ error: 'license_id and expires_at are required.' });
+        }
+
+        const dbRes = await fetch(`${SB_URL}/rest/v1/software_licenses?id=eq.${license_id}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ expires_at })
+        });
+
+        if (!dbRes.ok) {
+          const errText = await dbRes.text();
+          return res.status(500).json({ error: `Supabase extend error: ${errText}` });
+        }
+
+        const data = await dbRes.json();
+        return res.status(200).json({ success: true, license: data[0] });
+      }
+
+      return res.status(400).json({ error: `Unknown action: ${actualAction}` });
     } catch (err) {
       console.error('[LICENSES API POST] Error:', err);
       return res.status(500).json({ error: err.message || 'Internal Server Error' });
@@ -526,6 +681,37 @@ async function handleUpdateOrder(req, res) {
         } else {
           const isYearly = softwareItem.product_id?.includes('yearly') || softwareItem.name?.toLowerCase().includes('1 year');
           plan = isYearly ? 'yearly' : 'monthly';
+
+          const toEmail = order.customer_email || order.email || '';
+          const cleanPhone = (order.customer_phone || '').trim();
+          const cleanEmail = toEmail ? toEmail.trim().toLowerCase() : null;
+
+          // Check duplicate active license on phone or email
+          if (cleanPhone || cleanEmail) {
+            let dupQuery = `is_active=eq.true`;
+            if (cleanPhone && cleanEmail) {
+              dupQuery += `&or=(customer_phone.eq.${encodeURIComponent(cleanPhone)},customer_email.eq.${encodeURIComponent(cleanEmail)})`;
+            } else if (cleanPhone) {
+              dupQuery += `&customer_phone=eq.${encodeURIComponent(cleanPhone)}`;
+            } else {
+              dupQuery += `&customer_email=eq.${encodeURIComponent(cleanEmail)}`;
+            }
+
+            const dupRes = await fetch(`${SB_URL}/rest/v1/software_licenses?${dupQuery}`, {
+              headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`
+              }
+            });
+            if (dupRes.ok) {
+              const existingLicenses = await dupRes.json();
+              const activeLic = existingLicenses.find(l => new Date(l.expires_at) > new Date());
+              if (activeLic) {
+                return res.status(400).json({ error: `Customer already has an active license (${activeLic.license_key}). Please deactivate it first.` });
+              }
+            }
+          }
+
           finalKey = generateLicenseKey();
 
           const expDate = new Date();
@@ -548,8 +734,10 @@ async function handleUpdateOrder(req, res) {
               license_key: finalKey,
               order_ref: order_ref.toUpperCase(),
               customer_name: order.customer_name || 'Valued Customer',
-              customer_phone: order.customer_phone || '',
+              customer_phone: cleanPhone,
+              customer_email: cleanEmail,
               plan,
+              allowed_devices: 1,
               expires_at: expiresAt,
               is_active: true
             })
@@ -593,3 +781,71 @@ async function handleUpdateOrder(req, res) {
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
+
+// Handler: Plans
+async function handlePlans(req, res) {
+  if (req.method === 'GET') {
+    try {
+      const dbRes = await fetch(`${SB_URL}/rest/v1/subscription_plans?select=*&order=price.asc`, {
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!dbRes.ok) {
+        const errText = await dbRes.text();
+        return res.status(500).json({ error: `Supabase query error: ${errText}` });
+      }
+
+      const plans = await dbRes.json();
+      return res.status(200).json({ success: true, plans });
+    } catch (err) {
+      console.error('[PLANS API GET] Error:', err);
+      return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+  }
+
+  if (req.method === 'POST') {
+    try {
+      const { id, price, description, name, allowed_devices } = req.body;
+      if (!id) {
+        return res.status(400).json({ error: 'Plan ID is required.' });
+      }
+
+      const updateData = {};
+      if (price !== undefined) updateData.price = parseInt(price);
+      if (description !== undefined) updateData.description = description;
+      if (name !== undefined) updateData.name = name;
+      if (allowed_devices !== undefined) updateData.allowed_devices = parseInt(allowed_devices);
+      updateData.updated_at = new Date().toISOString();
+
+      const dbRes = await fetch(`${SB_URL}/rest/v1/subscription_plans?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!dbRes.ok) {
+        const errText = await dbRes.text();
+        return res.status(500).json({ error: `Supabase update error: ${errText}` });
+      }
+
+      const data = await dbRes.json();
+      return res.status(200).json({ success: true, plan: data[0] });
+    } catch (err) {
+      console.error('[PLANS API POST] Error:', err);
+      return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+}
+

@@ -100,6 +100,23 @@ export default async function handler(req, res) {
   try {
     switch (action) {
       
+      // Get Subscription Plans
+      case 'get-plans': {
+        try {
+          const plans = await sbSelect('subscription_plans', 'order=price.asc');
+          return res.status(200).json({ success: true, plans });
+        } catch (e) {
+          console.error('[SOFTWARE API] plans fetch failed, returning static fallback:', e);
+          const fallbackPlans = [
+            { id: 'single_monthly', name: 'Single Device - Monthly', price: 50, allowed_devices: 1, billing: 'monthly', description: 'Single device license for 30 days' },
+            { id: 'single_yearly', name: 'Single Device - Yearly', price: 500, allowed_devices: 1, billing: 'yearly', description: 'Single device license for 365 days (Best Value)' },
+            { id: 'multi_monthly', name: 'Multiple Devices - Monthly', price: 150, allowed_devices: 3, billing: 'monthly', description: 'Up to 3 devices license for 30 days' },
+            { id: 'multi_yearly', name: 'Multiple Devices - Yearly', price: 1500, allowed_devices: 3, billing: 'yearly', description: 'Up to 3 devices license for 365 days (Best Value)' }
+          ];
+          return res.status(200).json({ success: true, plans: fallbackPlans });
+        }
+      }
+
       // 1. Verify Status (Used by python script to check trial/license validation)
       case 'verify': {
         const { machine_id, license_key } = req.body;
@@ -154,8 +171,9 @@ export default async function handler(req, res) {
             });
           }
 
-          // If locked to this machine
-          if (license.machine_id === machine_id) {
+          // If locked to one or more machines (comma-separated list)
+          const devices = license.machine_id.split(',').map(d => d.trim()).filter(Boolean);
+          if (devices.includes(machine_id)) {
             return res.status(200).json({
               status: 'active',
               type: 'license',
@@ -167,12 +185,28 @@ export default async function handler(req, res) {
             });
           }
 
-          // If locked to a different machine
+          // If current machine is not locked yet, check allowed limit
+          const allowedLimit = license.allowed_devices || 1;
+          if (devices.length < allowedLimit) {
+            const updatedMachineIds = [...devices, machine_id].join(',');
+            await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id: updatedMachineIds });
+            return res.status(200).json({
+              status: 'active',
+              type: 'license',
+              expires_at: license.expires_at,
+              customer_name: license.customer_name,
+              latest_version: latestVersion,
+              download_url: downloadUrl,
+              message: 'License activated and bound to this additional machine successfully.'
+            });
+          }
+
+          // If locked to different machines and limit reached
           return res.status(400).json({
             status: 'mismatch',
             latest_version: latestVersion,
             download_url: downloadUrl,
-            message: 'This license key is already registered on another computer.'
+            message: `This license has reached the maximum allowed devices limit (${allowedLimit} devices).`
           });
         }
 
@@ -215,10 +249,36 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'machine_id, name, and phone are required.' });
         }
 
-        // Check duplicate machine ID
+        const cleanPhone = phone.trim();
+        const cleanEmail = email ? email.trim().toLowerCase() : null;
+
+        // 1. Check duplicate machine ID
         const existing = await sbSelect('software_trials', `machine_id=eq.${encodeURIComponent(machine_id)}&limit=1`);
         if (existing && existing.length > 0) {
           return res.status(400).json({ error: 'A trial has already been activated on this computer.' });
+        }
+
+        // 2. Check duplicate phone/email in software_trials
+        let trialQuery = `phone=eq.${encodeURIComponent(cleanPhone)}`;
+        if (cleanEmail) {
+          trialQuery = `or=(phone.eq.${encodeURIComponent(cleanPhone)},email.eq.${encodeURIComponent(cleanEmail)})`;
+        }
+        const existingTrial = await sbSelect('software_trials', `${trialQuery}&limit=1`);
+        if (existingTrial && existingTrial.length > 0) {
+          return res.status(400).json({ error: 'This phone number or email is already registered for a trial.' });
+        }
+
+        // 3. Check duplicate phone/email in software_licenses (only active/unexpired licenses)
+        let licenseQuery = `customer_phone=eq.${encodeURIComponent(cleanPhone)}`;
+        if (cleanEmail) {
+          licenseQuery = `or=(customer_phone.eq.${encodeURIComponent(cleanPhone)},customer_email.eq.${encodeURIComponent(cleanEmail)})`;
+        }
+        const existingLicense = await sbSelect('software_licenses', `${licenseQuery}&is_active=eq.true&limit=10`);
+        if (existingLicense && existingLicense.length > 0) {
+          const activeLic = existingLicense.find(l => new Date(l.expires_at) > new Date());
+          if (activeLic) {
+            return res.status(400).json({ error: 'An active license is already registered with this phone number or email.' });
+          }
         }
 
         const trialEndsAt = new Date();
@@ -227,8 +287,8 @@ export default async function handler(req, res) {
         await sbInsert('software_trials', {
           machine_id,
           name,
-          email: email || null,
-          phone,
+          email: cleanEmail,
+          phone: cleanPhone,
           trial_ends_at: trialEndsAt.toISOString()
         });
 
@@ -264,12 +324,31 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'License key has expired.' });
         }
 
-        if (license.machine_id && license.machine_id !== machine_id) {
-          return res.status(400).json({ error: 'This license is already registered on another computer.' });
-        }
+        // Check machine lock limits
+        if (license.machine_id) {
+          const devices = license.machine_id.split(',').map(d => d.trim()).filter(Boolean);
+          const allowedLimit = license.allowed_devices || 1;
 
-        // Update with machine lock
-        await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id });
+          if (devices.includes(machine_id)) {
+            return res.status(200).json({
+              success: true,
+              expires_at: license.expires_at,
+              customer_name: license.customer_name,
+              message: 'License key is already activated and bound to this machine.'
+            });
+          }
+
+          if (devices.length >= allowedLimit) {
+            return res.status(400).json({ error: `This license has reached the maximum allowed devices limit (${allowedLimit} devices).` });
+          }
+
+          // Append machine lock
+          const updatedMachineIds = [...devices, machine_id].join(',');
+          await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id: updatedMachineIds });
+        } else {
+          // Lock to this machine first
+          await sbUpdate('software_licenses', `id=eq.${license.id}`, { machine_id });
+        }
 
         return res.status(200).json({
           success: true,
