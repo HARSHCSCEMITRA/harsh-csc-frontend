@@ -135,7 +135,7 @@ export default async function handler(req, res) {
           console.error('[SOFTWARE API] Version fetch failed:', e);
         }
 
-        const downloadUrl = "https://qhqvmzrdncxddzlfrgrn.supabase.co/storage/v1/object/public/software/Harsh_CSC_Automation_Setup.zip";
+        const downloadUrl = "https://drive.google.com/drive/folders/1TAhnbOI2-wVw4usLDd7MI5m_7vAEBHYY?usp=sharing";
 
         // Action A: If user provided a license key, verify license first
         if (license_key && license_key.trim().length > 0) {

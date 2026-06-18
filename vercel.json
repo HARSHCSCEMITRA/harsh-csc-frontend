@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/software/Harsh_CSC_Automation_Setup.zip",
+      "destination": "https://drive.google.com/drive/folders/1TAhnbOI2-wVw4usLDd7MI5m_7vAEBHYY?usp=sharing",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/admin/:endpoint",
