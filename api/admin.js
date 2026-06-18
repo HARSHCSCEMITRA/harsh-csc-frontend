@@ -248,6 +248,8 @@ async function handleLicenses(req, res) {
         // Send email automatically if email is provided
         if (cleanEmail) {
           try {
+            const expDateStr = new Date(expiresAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
+            const note = `Aapka Zamify Software Activation details niche diye gaye hain:\n\nLicense Key: ${licenseKey}\nPlan: ${(plan || 'monthly').toUpperCase()} Subscription\nExpires On: ${expDateStr}\n\nActivate Kaise Karein:\n1. Zamify Software open karein (Windows PC)\n2. Activate Key option par click karein\n3. Upar di gayi Key ko paste karein aur verify par click karein\n\nNote: Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta.`;
             await fetch(`${SB_URL}/functions/v1/send-email`, {
               method: 'POST',
               headers: {
@@ -255,12 +257,14 @@ async function handleLicenses(req, res) {
                 'Authorization': `Bearer ${SB_KEY}`
               },
               body: JSON.stringify({
-                type: 'license_activation',
+                type: 'status_update',
                 email: cleanEmail,
-                data: {
-                  license_key: licenseKey,
-                  plan: plan || 'monthly',
-                  expires_at: expiresAt.toISOString()
+                order: {
+                  ref_id: order_ref || 'MANUAL-' + Date.now(),
+                  service_type: 'Zamify Software License Key',
+                  customer_name: customer_name,
+                  status: 'completed',
+                  admin_note: note
                 }
               })
             });
@@ -347,6 +351,8 @@ async function handleLicenses(req, res) {
           return res.status(400).json({ error: 'No registered email found for this customer.' });
         }
         // Send email
+        const expDateStr = new Date(license.expires_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
+        const note = `Aapka Zamify Software Activation details niche diye gaye hain:\n\nLicense Key: ${license.license_key}\nPlan: ${(license.plan || 'monthly').toUpperCase()} Subscription\nExpires On: ${expDateStr}\n\nActivate Kaise Karein:\n1. Zamify Software open karein (Windows PC)\n2. Activate Key option par click karein\n3. Upar di gayi Key ko paste karein aur verify par click karein\n\nNote: Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta.`;
         const emailRes = await fetch(`${SB_URL}/functions/v1/send-email`, {
           method: 'POST',
           headers: {
@@ -354,12 +360,14 @@ async function handleLicenses(req, res) {
             'Authorization': `Bearer ${SB_KEY}`
           },
           body: JSON.stringify({
-            type: 'license_activation',
+            type: 'status_update',
             email: license.customer_email,
-            data: {
-              license_key: license.license_key,
-              plan: license.plan || 'monthly',
-              expires_at: license.expires_at
+            order: {
+              ref_id: license.order_ref || 'MANUAL-' + Date.now(),
+              service_type: 'Zamify Software License Key',
+              customer_name: license.customer_name,
+              status: 'completed',
+              admin_note: note
             }
           })
         });
@@ -838,6 +846,8 @@ async function handleUpdateOrder(req, res) {
         const toEmail = order.customer_email || order.email || '';
         if (toEmail && finalKey) {
           try {
+            const expDateStr = new Date(expiresAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
+            const note = `Aapka Zamify Software Activation details niche diye gaye hain:\n\nLicense Key: ${finalKey}\nPlan: ${(plan || 'monthly').toUpperCase()} Subscription\nExpires On: ${expDateStr}\n\nActivate Kaise Karein:\n1. Zamify Software open karein (Windows PC)\n2. Activate Key option par click karein\n3. Upar di gayi Key ko paste karein aur verify par click karein\n\nNote: Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta.`;
             await fetch(`${SB_URL}/functions/v1/send-email`, {
               method: 'POST',
               headers: {
@@ -845,12 +855,14 @@ async function handleUpdateOrder(req, res) {
                 'Authorization': `Bearer ${SB_KEY}`
               },
               body: JSON.stringify({
-                type: 'license_activation',
+                type: 'status_update',
                 email: toEmail,
-                data: {
-                  license_key: finalKey,
-                  plan,
-                  expires_at: expiresAt
+                order: {
+                  ref_id: order_ref.toUpperCase(),
+                  service_type: 'Zamify Software License Key',
+                  customer_name: order.customer_name || 'Valued Customer',
+                  status: 'completed',
+                  admin_note: note
                 }
               })
             });

@@ -4942,9 +4942,14 @@ async function loadLicensesData() {
     document.getElementById('lic_deactivated').textContent = deactivatedLic;
     document.getElementById('lic_trials').textContent = activeTrials;
 
-    // Revenue estimate (monthly=₹499, yearly=₹2999)
+    // Revenue estimate based on plan prices: Single (50/500), Multi (150/1500)
     const revenue = _allLicenses.reduce((sum, l) => {
-      return sum + (l.plan === 'yearly' ? 2999 : 499);
+      const isMulti = l.allowed_devices && parseInt(l.allowed_devices) > 1;
+      if (l.plan === 'yearly') {
+        return sum + (isMulti ? 1500 : 500);
+      } else {
+        return sum + (isMulti ? 150 : 50);
+      }
     }, 0);
     document.getElementById('lic_revenue').textContent = '₹' + revenue.toLocaleString('en-IN');
 
