@@ -899,6 +899,7 @@ harshcscemitra.vercel.app
             <div class="card-head">
               <div class="card-title">🔑 License Keys</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-sm" onclick="exportLicensesToCSV()" style="background:#107c41;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;" title="Export filtered licenses to CSV/Excel">📊 Export Excel</button>
                 <input class="search-box" id="licSearchInput" placeholder="Search by key, name, phone..." oninput="renderLicensesTable()" style="width:200px;"/>
                 <select class="filter-select" id="licFilterStatus" onchange="renderLicensesTable()">
                   <option value="">All Status</option>
@@ -932,7 +933,8 @@ harshcscemitra.vercel.app
           <div class="card">
             <div class="card-head">
               <div class="card-title">🧪 Software Trials</div>
-              <div style="display:flex;gap:8px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-sm" onclick="exportTrialsToCSV()" style="background:#107c41;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;" title="Export filtered trials to CSV/Excel">📊 Export Excel</button>
                 <input class="search-box" id="trialSearchInput" placeholder="Search trials..." oninput="renderTrialsTable()" style="width:200px;"/>
                 <select class="filter-select" id="trialFilterStatus" onchange="renderTrialsTable()">
                   <option value="">All</option>
@@ -1011,6 +1013,36 @@ harshcscemitra.vercel.app
           <div class="modal-foot">
             <button class="btn-sm btn-secondary" onclick="closeModal('editPlanModal')">Cancel</button>
             <button class="btn-sm btn-primary" onclick="savePlanChanges()">💾 Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- EDIT CUSTOMER DETAILS MODAL -->
+      <div class="modal-bg" id="editCustomerModal">
+        <div class="modal" style="max-width:460px;">
+          <div class="modal-head">
+            <div class="modal-title">✏️ Edit Customer Details</div>
+            <button class="modal-close" onclick="closeModal('editCustomerModal')">✕</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editCustLicId" />
+            <div style="margin-bottom:14px;">
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2);">Customer Name</label>
+              <input class="input-field" type="text" id="editCustName" style="width:100%;box-sizing:border-box;" required />
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2);">Mobile Number</label>
+              <input class="input-field" type="text" id="editCustPhone" style="width:100%;box-sizing:border-box;" required />
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2);">Email Address</label>
+              <input class="input-field" type="email" id="editCustEmail" style="width:100%;box-sizing:border-box;" placeholder="customer@email.com (Optional)" />
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-sm btn-secondary" onclick="closeModal('editCustomerModal')">Cancel</button>
+            <button class="btn-sm btn-primary" onclick="saveCustomerDetails()">💾 Save Changes</button>
           </div>
         </div>
       </div>
@@ -4997,9 +5029,9 @@ function renderLicensesTable() {
     const activeDevices = l.machine_id ? l.machine_id.split(',').map(d => d.trim()).filter(Boolean) : [];
     const maxDevices = l.allowed_devices || 1;
     const machineDisplay = `
-      <div style="font-size:11px;">
+      <div style="font-size:11px;max-width:250px;">
         <strong>${activeDevices.length} / ${maxDevices} Devices</strong>
-        ${activeDevices.length > 0 ? `<br/><span style="color:var(--text3);font-family:monospace;font-size:9px;">${activeDevices.map(d => d.substring(0, 8) + '...').join(', ')}</span>` : ''}
+        ${activeDevices.length > 0 ? `<br/><span style="color:var(--text3);font-family:monospace;font-size:10px;word-break:break-all;display:block;margin-top:2px;line-height:1.2;">${activeDevices.join(', ')}</span>` : ''}
       </div>
     `;
 
@@ -5007,10 +5039,16 @@ function renderLicensesTable() {
       ? '<span style="background:rgba(var(--green-rgb),0.15);color:var(--green);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Yearly</span>' 
       : '<span style="background:rgba(var(--blue-rgb,59,130,246),0.15);color:#3b82f6;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Monthly</span>';
 
+    const emailButton = l.customer_email 
+      ? `<button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:11px;" title="Send License Email" onclick="sendLicenseEmail('${l.id}')">✉️</button>`
+      : `<button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:11px;opacity:0.5;" title="No Email Registered (Edit first)" onclick="showToast('Kripya pehle email address edit karke add karein.', 'error')">✉️</button>`;
+
+    const editButton = `<button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:11px;" title="Edit Customer Details" onclick="openEditCustomerModal('${l.id}', \`${(l.customer_name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, '${l.customer_phone || ''}', '${l.customer_email || ''}')">✏️</button>`;
+
     let actions = '';
     if (isActive) {
-      actions = `<button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="openExtendLicenseModal('${l.id}','${l.license_key}')">📅</button>
-        <button class="btn-sm" style="padding:4px 8px;font-size:11px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;" onclick="toggleLicenseActive('${l.id}',false)">🚫</button>`;
+      actions = `<button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="openExtendLicenseModal('${l.id}','${l.license_key}')" title="Extend Expiry">📅</button>
+        <button class="btn-sm" style="padding:4px 8px;font-size:11px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;" onclick="toggleLicenseActive('${l.id}',false)" title="Deactivate">🚫</button>`;
     } else if (!l.is_active) {
       actions = `<button class="btn-sm btn-primary" style="padding:4px 8px;font-size:11px;" onclick="toggleLicenseActive('${l.id}',true)">✅ Reactivate</button>`;
     } else {
@@ -5024,7 +5062,7 @@ function renderLicensesTable() {
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${machineDisplay}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${expiryDate}</td>
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${statusBadge}</td>
-      <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border);"><div style="display:flex;gap:4px;justify-content:center;">${actions}</div></td>
+      <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border);"><div style="display:flex;gap:4px;justify-content:center;">${emailButton} ${editButton} ${actions}</div></td>
     </tr>`;
   }).join('');
 }
@@ -5060,13 +5098,15 @@ function renderTrialsTable() {
       ? '<span class="badge badge-pending">Expired</span>' 
       : '<span class="badge badge-completed">Active</span>';
     const endDate = new Date(t.trial_ends_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-    const machineShort = t.machine_id ? t.machine_id.substring(0, 16) + '...' : '—';
+    const machineDisplay = t.machine_id 
+      ? `<span style="font-family:monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px;word-break:break-all;display:block;max-width:200px;line-height:1.2;">${t.machine_id}</span>` 
+      : '—';
 
     return `<tr>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);font-weight:600;">${t.name}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${t.phone}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${t.email || '—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-family:monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px;">${machineShort}</span></td>
+      <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${machineDisplay}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${endDate}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${t.usage_count || 0}x</td>
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${statusBadge}</td>
@@ -5218,6 +5258,192 @@ async function deleteTrial(machineId) {
   } catch (err) {
     showToast('Delete error: ' + err.message, 'error');
   }
+}
+
+async function sendLicenseEmail(licenseId) {
+  if (!confirm('Kya aap is customer ko license key details ka email bhejna chahte hain?')) return;
+  
+  try {
+    const res = await fetch(`/api/admin/licenses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_TOKEN}`
+      },
+      body: JSON.stringify({
+        action: 'send_email',
+        license_id: licenseId
+      })
+    });
+    
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Email sending failed.');
+    
+    showToast('📧 Activation Email successfully sent to the customer!', 'success');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+function openEditCustomerModal(id, name, phone, email) {
+  document.getElementById('editCustLicId').value = id;
+  document.getElementById('editCustName').value = name || '';
+  document.getElementById('editCustPhone').value = phone || '';
+  document.getElementById('editCustEmail').value = email || '';
+  openModal('editCustomerModal');
+}
+
+async function saveCustomerDetails() {
+  const id = document.getElementById('editCustLicId').value;
+  const name = document.getElementById('editCustName').value.trim();
+  const phone = document.getElementById('editCustPhone').value.trim();
+  const email = document.getElementById('editCustEmail').value.trim();
+
+  if (!name || !phone) {
+    showToast('Customer Name aur Phone Number field required hai.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/licenses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_TOKEN}`
+      },
+      body: JSON.stringify({
+        action: 'edit_customer',
+        license_id: id,
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: email || null
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Update failed.');
+
+    closeModal('editCustomerModal');
+    showToast('✅ Customer details updated successfully!', 'success');
+    loadLicensesData();
+  } catch (err) {
+    showToast('Update Error: ' + err.message, 'error');
+  }
+}
+
+function exportLicensesToCSV() {
+  if (!_allLicenses || _allLicenses.length === 0) {
+    showToast('Export karne ke liye koi data nahi hai.', 'error');
+    return;
+  }
+
+  const search = (document.getElementById('licSearchInput')?.value || '').toLowerCase();
+  const filter = document.getElementById('licFilterStatus')?.value || '';
+  const now = new Date();
+
+  let filtered = _allLicenses.filter(l => {
+    const matchSearch = !search || 
+      l.license_key.toLowerCase().includes(search) ||
+      (l.customer_name || '').toLowerCase().includes(search) ||
+      (l.customer_phone || '').toLowerCase().includes(search) ||
+      (l.order_ref || '').toLowerCase().includes(search) ||
+      (l.machine_id || '').toLowerCase().includes(search);
+
+    let matchFilter = true;
+    if (filter === 'active') matchFilter = l.is_active && new Date(l.expires_at) >= now;
+    if (filter === 'expired') matchFilter = new Date(l.expires_at) < now;
+    if (filter === 'deactivated') matchFilter = !l.is_active;
+
+    return matchSearch && matchFilter;
+  });
+
+  if (filtered.length === 0) {
+    showToast('Filtered data empty hai. Export nahi kiya ja sakta.', 'error');
+    return;
+  }
+
+  const headers = ['License Key', 'Customer Name', 'Phone', 'Email', 'Plan', 'Machine IDs', 'Expires At', 'Status'];
+  const rows = filtered.map(l => {
+    const expired = new Date(l.expires_at) < now;
+    const status = !l.is_active ? 'Deactivated' : expired ? 'Expired' : 'Active';
+    return [
+      l.license_key || '',
+      l.customer_name || '',
+      l.customer_phone || '',
+      l.customer_email || '',
+      l.plan || '',
+      l.machine_id || '',
+      l.expires_at || '',
+      status
+    ];
+  });
+
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `licenses_export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportTrialsToCSV() {
+  if (!_allTrials || _allTrials.length === 0) {
+    showToast('Export karne ke liye koi data nahi hai.', 'error');
+    return;
+  }
+
+  const search = (document.getElementById('trialSearchInput')?.value || '').toLowerCase();
+  const filter = document.getElementById('trialFilterStatus')?.value || '';
+  const now = new Date();
+
+  let filtered = _allTrials.filter(t => {
+    const matchSearch = !search || 
+      (t.name || '').toLowerCase().includes(search) ||
+      (t.phone || '').toLowerCase().includes(search) ||
+      (t.email || '').toLowerCase().includes(search) ||
+      (t.machine_id || '').toLowerCase().includes(search);
+
+    let matchFilter = true;
+    if (filter === 'active') matchFilter = new Date(t.trial_ends_at) >= now;
+    if (filter === 'expired') matchFilter = new Date(t.trial_ends_at) < now;
+
+    return matchSearch && matchFilter;
+  });
+
+  if (filtered.length === 0) {
+    showToast('Filtered data empty hai. Export nahi kiya ja sakta.', 'error');
+    return;
+  }
+
+  const headers = ['Name', 'Phone', 'Email', 'Machine ID', 'Trial Ends At', 'Usage Count', 'Status'];
+  const rows = filtered.map(t => {
+    const expired = new Date(t.trial_ends_at) < now;
+    const status = expired ? 'Expired' : 'Active';
+    return [
+      t.name || '',
+      t.phone || '',
+      t.email || '',
+      t.machine_id || '',
+      t.trial_ends_at || '',
+      t.usage_count || 0,
+      status
+    ];
+  });
+
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `trials_export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 // ══════════════════════════════════════════

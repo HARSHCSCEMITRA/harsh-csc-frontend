@@ -324,6 +324,85 @@ async function handleLicenses(req, res) {
         return res.status(200).json({ success: true, license: data[0] });
       }
 
+      if (actualAction === 'send_email') {
+        if (!license_id) {
+          return res.status(400).json({ error: 'license_id is required.' });
+        }
+        // Fetch license details
+        const licQuery = await fetch(`${SB_URL}/rest/v1/software_licenses?id=eq.${license_id}&limit=1`, {
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        if (!licQuery.ok) {
+          return res.status(500).json({ error: 'Failed to fetch license details.' });
+        }
+        const licData = await licQuery.json();
+        if (!licData || licData.length === 0) {
+          return res.status(404).json({ error: 'License not found.' });
+        }
+        const license = licData[0];
+        if (!license.customer_email) {
+          return res.status(400).json({ error: 'No registered email found for this customer.' });
+        }
+        // Send email
+        const emailRes = await fetch(`${SB_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SB_KEY}`
+          },
+          body: JSON.stringify({
+            type: 'license_activation',
+            email: license.customer_email,
+            data: {
+              license_key: license.license_key,
+              plan: license.plan || 'monthly',
+              expires_at: license.expires_at
+            }
+          })
+        });
+        if (!emailRes.ok) {
+          const errText = await emailRes.text();
+          return res.status(500).json({ error: `Failed to send email: ${errText}` });
+        }
+        return res.status(200).json({ success: true, message: 'Email sent successfully.' });
+      }
+
+      if (actualAction === 'edit_customer') {
+        const { customer_name, customer_phone, customer_email } = req.body;
+        if (!license_id) {
+          return res.status(400).json({ error: 'license_id is required.' });
+        }
+        if (!customer_name || !customer_phone) {
+          return res.status(400).json({ error: 'customer_name and customer_phone are required.' });
+        }
+        const cleanPhone = customer_phone.trim();
+        const cleanEmail = customer_email ? customer_email.trim().toLowerCase() : null;
+
+        const updateRes = await fetch(`${SB_URL}/rest/v1/software_licenses?id=eq.${license_id}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            customer_name,
+            customer_phone: cleanPhone,
+            customer_email: cleanEmail
+          })
+        });
+        if (!updateRes.ok) {
+          const errText = await updateRes.text();
+          return res.status(500).json({ error: `Database update error: ${errText}` });
+        }
+        const data = await updateRes.json();
+        return res.status(200).json({ success: true, license: data[0] });
+      }
+
       return res.status(400).json({ error: `Unknown action: ${actualAction}` });
     } catch (err) {
       console.error('[LICENSES API POST] Error:', err);
