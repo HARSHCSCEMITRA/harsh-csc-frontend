@@ -862,51 +862,14 @@
     <!-- Pricing Plans -->
     <div class="sw-pricing-box" id="software-pricing">
       <h3 style="font-size: 20px; font-weight: 700; color: var(--gold); text-transform: uppercase;">💳 Subscription Plans</h3>
-      <div class="sw-pricing-grid">
-        <!-- Monthly -->
-        <div class="sw-price-card">
-          <span class="ann-badge" style="background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start;">POPULAR</span>
-          <h4>Monthly License</h4>
-          <div class="sw-price-val">₹499<span>/ month</span></div>
-          <p class="sw-price-desc">30 days of full automation for Jamabandi, Naksha and Bantwara. Automatic updates and standard node-locked license.</p>
-          <button class="sw-btn-buy" onclick="addToCart('s_automation_monthly', 'Land Records Automation Suite (1 Month)', 499, '💻')">🛒 Add to Cart</button>
-        </div>
-        <!-- Yearly -->
-        <div class="sw-price-card featured">
-          <span class="ann-badge" style="background: var(--saffron); color: #fff; align-self: flex-start;">BEST VALUE</span>
-          <h4>Yearly License</h4>
-          <div class="sw-price-val">₹2,999<span>/ year</span></div>
-          <p class="sw-price-desc">12 months of full access. Save 50% compared to monthly plan. Priority support and instant node-locked license keys.</p>
-          <button class="sw-btn-buy" onclick="addToCart('s_automation_yearly', 'Land Records Automation Suite (1 Year)', 2999, '👑')">👑 Add to Cart</button>
-        </div>
+      <div class="sw-pricing-grid" id="swPricingGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.6);">⏳ Loading subscription plans...</div>
       </div>
     </div>
 
     <!-- Recovery Panel -->
-    <div class="sw-recovery-card">
-      <span style="font-size: 32px;">🔑</span>
-      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 12px 0 6px;">License Key Retrieval Console</h3>
-      <p style="font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5;">भुगतान सफल होने के बाद, यहाँ अपना Order Reference नंबर डालकर लाइसेंस की प्राप्त करें।</p>
-      
-      <div class="sw-rec-input-group">
-        <input type="text" class="sw-rec-input" id="swOrderRef" placeholder="e.g. CSC-123456" />
-        <button class="sw-btn-rec" onclick="retrieveSoftwareKey()">Get License Key</button>
-      </div>
-      <div id="swRetrieveError" style="display:none; color: #f87171; font-size: 13px; text-align: left; padding: 10px;"></div>
-      <div id="swKeyResult" style="display:none;" class="sw-key-box animate-scaleIn">
-        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase;">
-          <span>License Key</span>
-          <span id="swKeyPlan" style="color:#4ade80;">Plan</span>
-        </div>
-        <div class="sw-key-val-group">
-          <input type="text" readonly id="swKeyValue" class="sw-key-input" />
-          <button class="sw-btn-copy" onclick="copySoftwareKey(this)">Copy</button>
-        </div>
-        <div style="margin-top: 10px; font-size: 11px; color: rgba(255,255,255,0.5); display: flex; justify-content: space-between;">
-          <span id="swKeyExpiry">Expiry: —</span>
-          <span id="swKeyBind">Bind: —</span>
-        </div>
-      </div>
+    <div class="sw-recovery-card" id="swRecoveryCard">
+      <!-- Dynamically rendered by JS depending on login state -->
     </div>
 
   </div>
@@ -4743,70 +4706,114 @@ Hum jald hi contact karenge.`);
   }
 
   // ── INIT ──────────────────────────────────────────────────────
-  // ── SOFTWARE RETRIEVAL FUNCTIONS ─────────────────────────────
-  async function retrieveSoftwareKey() {
-    const input = document.getElementById('swOrderRef');
-    const errEl = document.getElementById('swRetrieveError');
-    const resultEl = document.getElementById('swKeyResult');
-    const keyValInput = document.getElementById('swKeyValue');
-    const keyPlanSpan = document.getElementById('swKeyPlan');
-    const keyExpirySpan = document.getElementById('swKeyExpiry');
-    const keyBindSpan = document.getElementById('swKeyBind');
-
-    const ref = input ? input.value.trim() : '';
-    if (!ref) {
-      alert('⚠️ Please enter an Order Reference.');
-      return;
-    }
-
-    errEl.style.display = 'none';
-    resultEl.style.display = 'none';
-
+  // ── SOFTWARE RETRIEVAL & PLANS FUNCTIONS ─────────────────────
+  async function loadSoftwarePlans() {
+    const grid = document.getElementById('swPricingGrid');
+    if (!grid) return;
     try {
-      const btn = document.querySelector('.sw-btn-rec');
-      if (btn) btn.textContent = 'Retrieving...';
-
-      const res = await fetch(`/api/software?action=retrieve-key&order_ref=${encodeURIComponent(ref.toUpperCase())}`);
+      const res = await fetch('/api/software?action=get-plans');
       const data = await res.json();
-
-      if (btn) btn.textContent = 'Get License Key';
-
-      if (res.ok && data.success) {
-        keyValInput.value = data.license_key;
-        keyPlanSpan.textContent = data.plan.toUpperCase() + ' PLAN';
-        
-        // Expiry Date Format
-        const expDate = new Date(data.expires_at).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-        keyExpirySpan.textContent = `Expiry: ${expDate}`;
-        keyBindSpan.textContent = `Bind: ${data.machine_id ? 'LOCKED' : 'READY TO BIND'}`;
-        
-        resultEl.style.display = 'block';
-      } else {
-        errEl.textContent = '⚠️ ' + (data.error || 'Something went wrong. Please check your order ref.');
-        errEl.style.display = 'block';
+      if (data.success && data.plans) {
+        grid.innerHTML = data.plans.map(plan => {
+          const isYearly = plan.billing === 'yearly';
+          const isMulti = plan.id.includes('multi');
+          const badgeText = isYearly ? 'BEST VALUE' : (isMulti ? 'MULTI-PC' : 'POPULAR');
+          const cardClass = isYearly ? 'sw-price-card featured' : 'sw-price-card';
+          const emoji = isYearly ? '👑' : '💻';
+          
+          return `
+            <div class="${cardClass}">
+              <span class="ann-badge" style="background: ${isYearly ? 'var(--saffron)' : 'rgba(255,255,255,0.1)'}; color: #fff; align-self: flex-start;">${badgeText}</span>
+              <h4>${plan.name}</h4>
+              <div class="sw-price-val">₹${plan.price}<span>/ ${plan.billing}</span></div>
+              <p class="sw-price-desc">${plan.description || ''}</p>
+              <button class="sw-btn-buy" onclick="addToCart('${plan.id}', '${plan.name}', ${plan.price}, '${emoji}')">🛒 Add to Cart</button>
+            </div>
+          `;
+        }).join('');
       }
     } catch (e) {
-      const btn = document.querySelector('.sw-btn-rec');
-      if (btn) btn.textContent = 'Get License Key';
-      errEl.textContent = '⚠️ Failed to connect to server. Try again.';
-      errEl.style.display = 'block';
+      console.error('Failed to load software plans on landing page:', e);
     }
   }
 
-  function copySoftwareKey(btn) {
-    const keyInput = document.getElementById('swKeyValue');
-    if (keyInput && keyInput.value) {
-      keyInput.select();
-      keyInput.setSelectionRange(0, 99999);
-      navigator.clipboard.writeText(keyInput.value);
+  function renderSoftwareRecovery() {
+    const card = document.getElementById('swRecoveryCard');
+    if (!card) return;
+    
+    const verifiedOrderRef = sessionStorage.getItem('csc_order_ref') || '';
+    if (verifiedOrderRef) {
+      card.innerHTML = `
+        <span style="font-size: 32px;">🔑</span>
+        <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 12px 0 6px;">लाइसेंस की प्राप्ति पोर्टल</h3>
+        <p style="font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5;">सुरक्षित रीकॉल के लिए आपको ऑर्डर सत्यापित होना आवश्यक है।</p>
+        
+        <div style="padding: 12px; background: rgba(5,9,19,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin: 16px 0;">
+          <span style="font-size: 13px; color: rgba(255,255,255,0.7);">
+            सत्यापित ऑर्डर संदर्भ: <strong style="font-family: monospace; color: var(--gold);">${verifiedOrderRef}</strong>
+          </span>
+        </div>
+        
+        <button class="sw-btn-rec" onclick="retrieveSoftwareKeyDirect()" style="width:100%;">📩 मेरे ईमेल पर लाइसेंस की भेजें</button>
+        <div id="swRetrieveError" style="display:none; color: #f87171; font-size: 13px; text-align: left; padding: 10px; margin-top:10px;"></div>
+        <div id="swKeyResult" style="display:none; margin-top:16px;" class="sw-key-box">
+          <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 1.5rem;">📩</span>
+            <span style="font-size: 14px; font-weight: 700; color: #34d399;" id="swKeyPlan">लाइसेंस की ईमेल पर भेज दी गई है!</span>
+          </div>
+          <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;" id="swKeyEmailMsg"></p>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <span style="font-size: 32px;">🔑</span>
+        <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin: 12px 0 6px;">लाइसेंस की प्राप्ति पोर्टल</h3>
+        <p style="font-size: 13px; color: #f87171; margin-bottom: 16px;">
+          ⚠️ लाइसेंस की प्राप्त करने के लिए कृपया पहले अपने ऑर्डर को ट्रैक/सत्यापित करें।
+        </p>
+        <button class="sw-btn-rec" onclick="window.location.href='/track'" style="width:auto; padding:10px 20px;">🔍 ऑर्डर ट्रैक करें</button>
+      `;
+    }
+  }
+
+  async function retrieveSoftwareKeyDirect() {
+    const verifiedOrderRef = sessionStorage.getItem('csc_order_ref') || '';
+    if (!verifiedOrderRef) return;
+    
+    const errEl = document.getElementById('swRetrieveError');
+    const resultEl = document.getElementById('swKeyResult');
+    const msgEl = document.getElementById('swKeyEmailMsg');
+    
+    if (errEl) errEl.style.display = 'none';
+    if (resultEl) resultEl.style.display = 'none';
+    
+    try {
+      const btn = document.querySelector('.sw-btn-rec');
+      if (btn) btn.textContent = 'भेज रहे हैं...';
       
-      const oldText = btn.textContent;
-      btn.textContent = 'Copied!';
-      btn.style.background = '#059669';
-      setTimeout(() => {
-        btn.textContent = oldText;
-        btn.style.background = '';
-      }, 2000);
+      const res = await fetch(`/api/software?action=retrieve-key&order_ref=${encodeURIComponent(verifiedOrderRef.toUpperCase())}`);
+      const data = await res.json();
+      
+      if (btn) btn.textContent = '📩 मेरे ईमेल पर लाइसेंस की भेजें';
+      
+      if (res.ok && data.success) {
+        if (msgEl) {
+          msgEl.textContent = `आपकी सुरक्षा के लिए लाइसेंस की सीधे स्क्रीन पर नहीं दिखाई जाएगी। इसे आपके रजिस्टर्ड ईमेल आईडी (${data.email_masked}) पर भेज दिया गया है।`;
+        }
+        if (resultEl) resultEl.style.display = 'block';
+      } else {
+        if (errEl) {
+          errEl.textContent = '⚠️ ' + (data.error || 'Something went wrong. Please check your order ref.');
+          errEl.style.display = 'block';
+        }
+      }
+    } catch (e) {
+      const btn = document.querySelector('.sw-btn-rec');
+      if (btn) btn.textContent = '📩 मेरे ईमेल पर लाइसेंस की भेजें';
+      if (errEl) {
+        errEl.textContent = '⚠️ Failed to connect to server. Try again.';
+        errEl.style.display = 'block';
+      }
     }
   }
 
@@ -4815,6 +4822,8 @@ Hum jald hi contact karenge.`);
   loadProducts();
   loadReviewsOnSite();
   updateProfileSection();
+  loadSoftwarePlans();
+  renderSoftwareRecovery();
 </script>
 <script type="text/javascript">
   function googleTranslateElementInit() {
