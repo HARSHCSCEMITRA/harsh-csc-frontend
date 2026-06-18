@@ -639,6 +639,7 @@ const AdminDashboard = () => {
                       <td style={s.td}>
                         <div style={s.name}>{license.customer_name}</div>
                         <div style={s.phone}>Ref: {license.order_ref} | Phone: {license.customer_phone}</div>
+                        <div style={{ ...s.phone, fontStyle: 'italic', fontSize: '11px', color: '#94a3b8' }}>{license.customer_email || 'No Email'}</div>
                       </td>
                       <td style={s.td}>
                         <span className={`badge ${license.plan === 'yearly' ? 'badge-amber' : 'badge-blue'}`} style={{ textTransform: 'uppercase' }}>
