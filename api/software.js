@@ -400,26 +400,7 @@ export default async function handler(req, res) {
           
           if (toEmail) {
             try {
-              const expDateStr = new Date(lic.expires_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
-              const note = `Aapka Zamify Software Activation details niche diye gaye hain:\n\nLicense Key: ${lic.license_key}\nPlan: ${(lic.plan || 'monthly').toUpperCase()} Subscription\nExpires On: ${expDateStr}\n\nActivate Kaise Karein:\n1. Zamify Software open karein (Windows PC)\n2. Activate Key option par click karein\n3. Upar di gayi Key ko paste karein aur verify par click karein\n\nNote: Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta.`;
-              await fetch(`${SB_URL}/functions/v1/send-email`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${SB_KEY}`
-                },
-                body: JSON.stringify({
-                  type: 'status_update',
-                  email: toEmail,
-                  order: {
-                    ref_id: cleanRef.toUpperCase(),
-                    service_type: 'Zamify Software License Key',
-                    customer_name: order.customer_name || 'Valued Customer',
-                    status: 'completed',
-                    admin_note: note
-                  }
-                })
-              });
+              await sendDirectLicenseEmail(toEmail, lic.license_key, lic.plan, lic.expires_at, order.customer_name);
             } catch (e) {
               console.error('[SOFTWARE API] Email resend failed:', e);
             }
@@ -486,30 +467,9 @@ export default async function handler(req, res) {
           is_active: true
         });
 
-        // Trigger email sending
-        const toEmail = order.customer_email || order.email || '';
         if (toEmail) {
           try {
-            const expDateStr = new Date(expiresAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
-            const note = `Aapka Zamify Software Activation details niche diye gaye hain:\n\nLicense Key: ${licenseKey}\nPlan: ${(plan || 'monthly').toUpperCase()} Subscription\nExpires On: ${expDateStr}\n\nActivate Kaise Karein:\n1. Zamify Software open karein (Windows PC)\n2. Activate Key option par click karein\n3. Upar di gayi Key ko paste karein aur verify par click karein\n\nNote: Yeh key sirf ek computer par lock ho sakti hai. Ek baar activate hone ke baad isse kisi dusre PC me use nahi kiya ja sakta.`;
-            await fetch(`${SB_URL}/functions/v1/send-email`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SB_KEY}`
-              },
-              body: JSON.stringify({
-                type: 'status_update',
-                email: toEmail,
-                order: {
-                  ref_id: order.order_ref || 'MANUAL-' + Date.now(),
-                  service_type: 'Zamify Software License Key',
-                  customer_name: order.customer_name || 'Valued Customer',
-                  status: 'completed',
-                  admin_note: note
-                }
-              })
-            });
+            await sendDirectLicenseEmail(toEmail, licenseKey, plan, expiresAt.toISOString(), order.customer_name);
           } catch (e) {
             console.error('[SOFTWARE API] Email trigger failed:', e);
           }
@@ -577,4 +537,121 @@ export default async function handler(req, res) {
     console.error('[SOFTWARE API] Error:', err);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
+}
+
+// Resend helpers
+async function getResendCredentials() {
+  let resendKey = process.env.RESEND_API_KEY;
+  let fromEmail = process.env.FROM_EMAIL || 'noreply@harshcsc.com';
+
+  try {
+    const dbRes = await fetch(`${SB_URL}/rest/v1/admin_settings?select=*`, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`
+      }
+    });
+    if (dbRes.ok) {
+      const settings = await dbRes.json();
+      const keySetting = settings.find(s => s.key === 'resend_api_key');
+      const fromSetting = settings.find(s => s.key === 'from_email');
+      if (keySetting && keySetting.value) resendKey = keySetting.value.trim();
+      if (fromSetting && fromSetting.value) fromEmail = fromSetting.value.trim();
+    }
+  } catch (err) {
+    console.error('[SETTINGS] Error loading resend credentials from db:', err);
+  }
+
+  return { resendKey, fromEmail };
+}
+
+async function sendDirectLicenseEmail(toEmail, licenseKey, plan, expiresAt, customerName) {
+  const { resendKey, fromEmail } = await getResendCredentials();
+  if (!resendKey) {
+    throw new Error('Resend API Key is not configured. Kripya Admin Panel > Settings tab me save karein.');
+  }
+
+  const planName = (plan || 'monthly').toUpperCase();
+  const expiryDate = new Date(expiresAt).toLocaleDateString("en-US", { day: '2-digit', month: 'long', year: 'numeric' });
+  const displayCustomer = customerName || 'Valued Customer';
+
+  const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zamify Software Activation</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f7; margin: 0; padding: 0; -webkit-text-size-adjust: none; width: 100% !important;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f7; padding: 24px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 600px; width: 100%;">
+          <tr>
+            <td style="background-color: #0f1117; padding: 32px; text-align: center;">
+              <h1 style="color: #E8671A; margin: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px;">Harsh CSC eMitra</h1>
+              <p style="color: #aaaaaa; margin: 4px 0 0 0; font-size: 12px; letter-spacing: 0.5px;">Digital Experts & Documents Consultation</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px; color: #333333; line-height: 1.6; font-size: 15px;">
+              <h2 style="color: #111111; margin-top: 0; font-size: 20px; text-align: center;">Your Zamify License is Active!</h2>
+              <p>Dear ${displayCustomer},</p>
+              <p>Thank you for your purchase. Your software activation key has been generated successfully. Please find your license details below:</p>
+              
+              <div style="background-color: #f0fdf4; border: 2px dashed #10b981; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 11px; color: #047857; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; display: block; margin-bottom: 8px;">Your License Key</span>
+                <span style="font-size: 22px; font-weight: bold; color: #065f46; letter-spacing: 2px; font-family: monospace; background-color: #ffffff; padding: 8px 16px; border-radius: 4px; display: inline-block; border: 1px solid #d1fae5;">${licenseKey}</span>
+                <span style="font-size: 13px; color: #047857; display: block; margin-top: 12px;">Plan: <strong>${planName} Subscription</strong></span>
+                <span style="font-size: 13px; color: #047857; display: block; margin-top: 4px;">Expires On: <strong>${expiryDate}</strong></span>
+              </div>
+              
+              <div style="background-color: #f0f7ff; border-left: 4px solid #3b82f6; border-radius: 4px; padding: 16px; margin: 24px 0;">
+                <h3 style="color: #1e40af; margin-top: 0; font-size: 14px; font-weight: bold; margin-bottom: 8px;">🚀 How to Activate:</h3>
+                <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; line-height: 1.8;">
+                  <li>Open <strong>Zamify Software</strong> on your Windows PC.</li>
+                  <li>Click on the <strong>Activate Key</strong> option.</li>
+                  <li>Copy and paste the license key shown above, then click <strong>Verify</strong>.</li>
+                  <li>The software will be locked to your PC hardware and activated.</li>
+                </ol>
+              </div>
+              
+              <p style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 4px; font-size: 12px; color: #b45309; margin: 0;">
+                ⚠️ <strong>Note:</strong> This key can only be locked to a single computer. Once activated, it cannot be used on another PC without a transfer request.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f9f9f9; border-top: 1px solid #eeeeee; padding: 24px; text-align: center; font-size: 12px; color: #888888;">
+              <p style="margin: 0 0 8px 0; font-weight: bold; color: #555555;">Harsh CSC eMitra</p>
+              <p style="margin: 0 0 16px 0;">WhatsApp Support: +91 70230 29903</p>
+              <p style="margin: 0; font-size: 11px; color: #aaaaaa;">This is an automated email. Please do not reply directly to this message.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${resendKey}`,
+    },
+    body: JSON.stringify({
+      from: `Harsh CSC eMitra <${fromEmail}>`,
+      to: toEmail,
+      subject: `🔑 Zamify Software Activation Key | Harsh CSC eMitra`,
+      html: emailHtml
+    })
+  });
+
+  const resData = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(resData.message || 'Failed to send direct email via Resend API.');
+  }
+
+  return resData;
 }

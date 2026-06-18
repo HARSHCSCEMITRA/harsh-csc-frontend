@@ -6257,14 +6257,34 @@ async function cacheDataForAnalytics() {
 // ══════════════════════════════════════════
 //  EMAIL CONFIG (Settings page)
 // ══════════════════════════════════════════
-function saveEmailConfig() {
+async function saveEmailConfig() {
   const key  = document.getElementById('s_resend_key')?.value.trim();
   const from = document.getElementById('s_from_email')?.value.trim();
   if (!key)  { showToast('Resend API Key required!', 'error'); return; }
   if (!from) { showToast('From Email required!', 'error'); return; }
+  
   localStorage.setItem('hsc_resend_key',  key);
   localStorage.setItem('hsc_from_email',  from);
-  showToast('✅ Email config saved! Supabase Edge Function mein bhi set karo.', 'success');
+
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_TOKEN}`
+      },
+      body: JSON.stringify({
+        settings: [
+          { key: 'resend_api_key', value: key },
+          { key: 'from_email', value: from }
+        ]
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast('✅ Email config saved to database successfully!', 'success');
+  } catch (err) {
+    showToast('Database sync error: ' + err.message, 'error');
+  }
 }
 
 async function sendTestEmail() {
@@ -6293,9 +6313,29 @@ async function sendTestEmail() {
 }
 
 // Load email config on settings page
-function loadEmailConfig() {
-  const key  = localStorage.getItem('hsc_resend_key');
-  const from = localStorage.getItem('hsc_from_email');
+async function loadEmailConfig() {
+  let key  = localStorage.getItem('hsc_resend_key');
+  let from = localStorage.getItem('hsc_from_email');
+
+  try {
+    const res = await fetch('/api/admin/settings', {
+      headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const keySetting = data.settings?.find(s => s.key === 'resend_api_key');
+      const fromSetting = data.settings?.find(s => s.key === 'from_email');
+      if (keySetting && keySetting.value) {
+        key = keySetting.value;
+        localStorage.setItem('hsc_resend_key', key);
+      }
+      if (fromSetting && fromSetting.value) {
+        from = fromSetting.value;
+        localStorage.setItem('hsc_from_email', from);
+      }
+    }
+  } catch (err) {}
+
   if (key  && document.getElementById('s_resend_key'))  document.getElementById('s_resend_key').value  = key;
   if (from && document.getElementById('s_from_email'))  document.getElementById('s_from_email').value = from;
 }
