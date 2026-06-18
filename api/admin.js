@@ -852,36 +852,71 @@ async function handlePlans(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { id, price, description, name, allowed_devices } = req.body;
+      const { action, id, price, description, name, allowed_devices, billing } = req.body;
       if (!id) {
         return res.status(400).json({ error: 'Plan ID is required.' });
       }
 
-      const updateData = {};
-      if (price !== undefined) updateData.price = parseInt(price);
-      if (description !== undefined) updateData.description = description;
-      if (name !== undefined) updateData.name = name;
-      if (allowed_devices !== undefined) updateData.allowed_devices = parseInt(allowed_devices);
-      updateData.updated_at = new Date().toISOString();
+      if (action === 'create') {
+        if (!name || price === undefined || !billing || allowed_devices === undefined) {
+          return res.status(400).json({ error: 'All fields (name, price, billing, allowed_devices) are required for a new plan.' });
+        }
+        
+        const insertData = {
+          id: id.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+          name,
+          price: parseInt(price),
+          billing,
+          allowed_devices: parseInt(allowed_devices),
+          description: description || '',
+          updated_at: new Date().toISOString()
+        };
 
-      const dbRes = await fetch(`${SB_URL}/rest/v1/subscription_plans?id=eq.${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SB_KEY,
-          'Authorization': `Bearer ${SB_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(updateData)
-      });
+        const dbRes = await fetch(`${SB_URL}/rest/v1/subscription_plans`, {
+          method: 'POST',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(insertData)
+        });
 
-      if (!dbRes.ok) {
-        const errText = await dbRes.text();
-        return res.status(500).json({ error: `Supabase update error: ${errText}` });
+        if (!dbRes.ok) {
+          const errText = await dbRes.text();
+          return res.status(500).json({ error: `Supabase insert error: ${errText}` });
+        }
+
+        const data = await dbRes.json();
+        return res.status(200).json({ success: true, plan: data[0] });
+      } else {
+        const updateData = {};
+        if (price !== undefined) updateData.price = parseInt(price);
+        if (description !== undefined) updateData.description = description;
+        if (name !== undefined) updateData.name = name;
+        if (allowed_devices !== undefined) updateData.allowed_devices = parseInt(allowed_devices);
+        updateData.updated_at = new Date().toISOString();
+
+        const dbRes = await fetch(`${SB_URL}/rest/v1/subscription_plans?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        if (!dbRes.ok) {
+          const errText = await dbRes.text();
+          return res.status(500).json({ error: `Supabase update error: ${errText}` });
+        }
+
+        const data = await dbRes.json();
+        return res.status(200).json({ success: true, plan: data[0] });
       }
-
-      const data = await dbRes.json();
-      return res.status(200).json({ success: true, plan: data[0] });
     } catch (err) {
       console.error('[PLANS API POST] Error:', err);
       return res.status(500).json({ error: err.message || 'Internal Server Error' });
