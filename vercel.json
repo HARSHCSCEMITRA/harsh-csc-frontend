@@ -1,11 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/software/Harsh_CSC_Automation_Setup.zip",
-      "destination": "https://qhqvmzrdncxddzlfrgrn.supabase.co/storage/v1/object/public/software/Harsh_CSC_Automation_Setup.zip",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/admin/:endpoint",
