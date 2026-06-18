@@ -220,7 +220,7 @@ const AdminDashboard = () => {
 
   // Order Actions: Mark software order as Paid (manual approval)
   const handleMarkAsPaid = async (orderRef: string) => {
-    if (!window.confirm(`Kya aap order ${orderRef} ko PAID mark karna chahte hain? Isse automatically license key generate hokar client ke email par send ho jaegi.`)) {
+    if (!window.confirm(`Are you sure you want to mark order ${orderRef} as PAID? This will automatically generate a license key and email it to the customer.`)) {
       return;
     }
     try {
@@ -234,7 +234,7 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert('Order successfully mark paid & license sent to email!');
+        alert('Order successfully marked paid & license sent to email!');
         fetchOrders();
       } else {
         alert(data.error || 'Failed to update order.');
@@ -247,7 +247,7 @@ const AdminDashboard = () => {
   // License Actions: Toggle status (Activate / Block Key)
   const handleToggleLicenseStatus = async (licenseId: string, currentStatus: boolean) => {
     const actionText = currentStatus ? 'BLOCK (deactivate)' : 'ACTIVATE';
-    if (!window.confirm(`Kya aap is license key ko ${actionText} karna chahte hain?`)) return;
+    if (!window.confirm(`Are you sure you want to ${actionText} this license key?`)) return;
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/licenses`, {
@@ -272,7 +272,7 @@ const AdminDashboard = () => {
 
   // Reset Actions: Approve Reset (Unlock machine_id)
   const handleApproveReset = async (requestId: string, licenseKey: string) => {
-    if (!window.confirm(`Kya aap license key ${licenseKey} ka reset request APPROVE karna chahte hain? Isse purana hardware binding delete ho jaega.`)) {
+    if (!window.confirm(`Are you sure you want to APPROVE the hardware lock reset for license ${licenseKey}? This will clear the existing machine association.`)) {
       return;
     }
     try {
@@ -298,7 +298,7 @@ const AdminDashboard = () => {
 
   // Reset Actions: Reject Reset
   const handleRejectReset = async (requestId: string) => {
-    if (!window.confirm('Kya aap is reset request को REJECT करना चाहते हैं?')) return;
+    if (!window.confirm('Are you sure you want to REJECT this reset request?')) return;
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/reset-requests`, {
         method: 'POST',
