@@ -657,8 +657,8 @@ async function handleUpdateOrder(req, res) {
       }
 
       const softwareItem = orderItems.find(item => 
-        (item.product_id && item.product_id.includes('s_automation')) ||
-        (item.name && item.name.toLowerCase().includes('automation'))
+        (item.product_id && (item.product_id.includes('s_automation') || item.product_id.toLowerCase().includes('device') || item.product_id.toLowerCase().includes('subscription') || item.product_id.toLowerCase().includes('license') || item.product_id.toLowerCase().includes('licence'))) ||
+        (item.name && (item.name.toLowerCase().includes('automation') || item.name.toLowerCase().includes('device') || item.name.toLowerCase().includes('subscription') || item.name.toLowerCase().includes('license') || item.name.toLowerCase().includes('licence')))
       );
 
       if (softwareItem) {
@@ -673,18 +673,25 @@ async function handleUpdateOrder(req, res) {
         let finalKey = '';
         let expiresAt = '';
         let plan = '';
+        let allowedDevices = 1;
 
         if (existingLic && existingLic.length > 0) {
           finalKey = existingLic[0].license_key;
           expiresAt = existingLic[0].expires_at;
           plan = existingLic[0].plan;
+          allowedDevices = existingLic[0].allowed_devices || 1;
         } else {
-          const isYearly = softwareItem.product_id?.includes('yearly') || softwareItem.name?.toLowerCase().includes('1 year');
+          const isYearly = (softwareItem.product_id && (softwareItem.product_id.toLowerCase().includes('yearly') || softwareItem.product_id.toLowerCase().includes('year'))) ||
+                           (softwareItem.name && (softwareItem.name.toLowerCase().includes('yearly') || softwareItem.name.toLowerCase().includes('year')));
           plan = isYearly ? 'yearly' : 'monthly';
 
-          const toEmail = order.customer_email || order.email || '';
-          const cleanPhone = (order.customer_phone || '').trim();
-          const cleanEmail = toEmail ? toEmail.trim().toLowerCase() : null;
+          const isMulti = (softwareItem.product_id && (softwareItem.product_id.toLowerCase().includes('multi') || softwareItem.product_id.toLowerCase().includes('multiple'))) ||
+                          (softwareItem.name && (softwareItem.name.toLowerCase().includes('multi') || softwareItem.name.toLowerCase().includes('multiple')));
+          allowedDevices = isMulti ? 3 : 1;
+
+          const toEmail = (order.customer_email || order.email || '').trim().toLowerCase();
+          const cleanPhone = (order.customer_phone || order.mobile || order.phone || '').toString().trim();
+          const cleanEmail = toEmail || null;
 
           // Check duplicate active license on phone or email
           if (cleanPhone || cleanEmail) {
@@ -737,7 +744,7 @@ async function handleUpdateOrder(req, res) {
               customer_phone: cleanPhone,
               customer_email: cleanEmail,
               plan,
-              allowed_devices: 1,
+              allowed_devices: allowedDevices,
               expires_at: expiresAt,
               is_active: true
             })

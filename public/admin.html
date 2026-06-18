@@ -5019,7 +5019,7 @@ function renderLicensesTable() {
 
     return `<tr>
       <td style="padding:10px 14px;font-size:12px;font-family:monospace;border-bottom:1px solid var(--border);letter-spacing:0.5px;">${l.license_key}</td>
-      <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);"><strong>${l.customer_name}</strong><br/><span style="color:var(--text3);font-size:11px;">${l.customer_phone}</span></td>
+      <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);"><strong>${l.customer_name}</strong><br/><span style="color:var(--text3);font-size:11px;">${l.customer_phone}</span><br/><span style="color:var(--text3);font-size:11px;font-style:italic;">${l.customer_email || ''}</span></td>
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${planBadge}</td>
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);">${machineDisplay}</td>
       <td style="padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);">${expiryDate}</td>

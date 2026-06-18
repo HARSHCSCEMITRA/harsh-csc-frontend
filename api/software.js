@@ -301,12 +301,16 @@ export default async function handler(req, res) {
 
       // 3. Activate License (Explicit key lock to machine)
       case 'activate-license': {
-        const { machine_id, license_key } = req.body;
-        if (!machine_id || !license_key) {
-          return res.status(400).json({ error: 'machine_id and license_key are required.' });
+        const { machine_id, license_key, name, email, phone } = req.body;
+        if (!machine_id || !license_key || !name || !email || !phone) {
+          return res.status(400).json({ error: 'All fields (machine_id, license_key, name, email, phone) are required.' });
         }
 
         const cleanKey = license_key.trim();
+        const cleanName = name.trim().toLowerCase();
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanPhone = phone.trim().toLowerCase();
+
         const licenses = await sbSelect('software_licenses', `license_key=eq.${encodeURIComponent(cleanKey)}&limit=1`);
         
         if (!licenses || licenses.length === 0) {
@@ -314,6 +318,24 @@ export default async function handler(req, res) {
         }
 
         const license = licenses[0];
+
+        // Verify customer details (case-insensitive)
+        const dbName = (license.customer_name || '').trim().toLowerCase();
+        const dbEmail = (license.customer_email || '').trim().toLowerCase();
+        const dbPhone = (license.customer_phone || '').trim().toLowerCase();
+
+        if (dbName !== cleanName || dbPhone !== cleanPhone) {
+          return res.status(400).json({ error: 'Verification failed: Name or Phone does not match our records.' });
+        }
+
+        if (dbEmail && dbEmail !== cleanEmail) {
+          return res.status(400).json({ error: 'Verification failed: Email does not match our records.' });
+        }
+
+        // If email is not in db but provided, save it
+        if (!dbEmail && cleanEmail) {
+          await sbUpdate('software_licenses', `id=eq.${license.id}`, { customer_email: cleanEmail });
+        }
 
         if (!license.is_active) {
           return res.status(400).json({ error: 'License key is deactivated.' });

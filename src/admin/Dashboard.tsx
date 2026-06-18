@@ -110,12 +110,24 @@ const AdminDashboard = () => {
   const fetchTrials = async () => {
     setLoadingTrials(true);
     try {
+      if (!token) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       const res = await fetch(`${BACKEND_URL}/api/admin/trials`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setTrials(data.trials || []);
+      } else {
+        setError(`Trials fetch failed: ${res.status}`);
       }
     } catch {
       setError('Network error fetching trials.');
@@ -128,12 +140,24 @@ const AdminDashboard = () => {
   const fetchLicenses = async () => {
     setLoadingLicenses(true);
     try {
+      if (!token) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       const res = await fetch(`${BACKEND_URL}/api/admin/licenses`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setLicenses(data.licenses || []);
+      } else {
+        setError(`Licenses fetch failed: ${res.status}`);
       }
     } catch {
       setError('Network error fetching licenses.');
@@ -146,12 +170,24 @@ const AdminDashboard = () => {
   const fetchResets = async () => {
     setLoadingResets(true);
     try {
+      if (!token) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       const res = await fetch(`${BACKEND_URL}/api/admin/reset-requests`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin/login';
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setResets(data.requests || []);
+      } else {
+        setError(`Resets fetch failed: ${res.status}`);
       }
     } catch {
       setError('Network error fetching reset requests.');
