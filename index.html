@@ -1238,13 +1238,13 @@
         </div>
         <div class="form-group">
           <label>City / District</label>
-          <input class="form-input" id="gc_city" type="text" placeholder="Aapka shehar"/>
+          <input class="form-input" id="gc_city" type="text" placeholder="Your City / District"/>
         </div>
       </div>
       <div class="form-section-title">📝 Your Requirement</div>
       <div class="form-group">
         <label>Brief Description</label>
-        <textarea class="form-input" id="gc_notes" rows="3" placeholder="Kya kaam karna hai, koi khaas jaankari ho to batayein…" style="resize:vertical;"></textarea>
+        <textarea class="form-input" id="gc_notes" rows="3" placeholder="Describe your requirements or any specific information here..." style="resize:vertical;"></textarea>
       </div>
       <div class="form-actions" style="margin-top:20px;display:flex;gap:10px;">
         <button class="btn-cancel" onclick="closeGenericConsult()">Cancel</button>
@@ -1288,7 +1288,7 @@
         </div>
       </div>
       <div style="background:rgba(232,103,26,0.06);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--slate);">
-        🎉 <strong>5+ cards pe 10% OFF</strong> automatically milta hai!
+        🎉 <strong>10% OFF automatically applied</strong> for 5+ cards!
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
         <label style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;">Quantity:</label>
@@ -1333,7 +1333,7 @@
   <div class="section-inner">
     <div class="section-label">Order Tracking</div>
     <h2 class="section-title">My Orders & Profile</h2>
-    <p class="section-sub">Apne orders aur consultations track karein. Login hone ke baad sab automatically load hoga.</p>
+    <p class="section-sub">Track your orders and consultation requests. All details will load automatically after signing in.</p>
 
     <!-- If logged in — show profile header -->
     <div id="profileHeader" style="display:none;background:var(--cream);border:1.5px solid rgba(11,31,75,0.08);border-radius:16px;padding:20px 24px;margin-bottom:24px;">
@@ -1367,8 +1367,8 @@
 
     <!-- UTR Payment Form -->
     <div id="utrPaymentSection" style="display:none;max-width:520px;margin:24px auto 0;background:var(--white);border-radius:20px;padding:24px 28px;box-shadow:0 4px 24px rgba(11,31,75,0.08);border:2px solid rgba(232,103,26,0.2);">
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">💳 Payment Confirm Karein</h3>
-      <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">UPI se payment kar di? UTR number darj karein — hum verify karke confirm karenge.</p>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">💳 Confirm Payment</h3>
+      <p style="font-size:13px;color:var(--slate);margin-bottom:16px;">Paid via UPI? Enter your UTR / transaction reference number below — we will verify and confirm your order shortly.</p>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <input class="form-input" id="utrOrderRef" type="text" placeholder="Order Ref # (e.g. HSC-AB1234)" style="font-family:var(--font-mono);"/>
         <input class="form-input" id="utrMobile" type="tel" placeholder="Registered Mobile Number" maxlength="10"/>
@@ -1404,9 +1404,9 @@
           <span style="margin-left:8px">Harsh CSC AI Assistant</span>
         </div>
         <div class="chat-body">
-          <div class="chat-bubble bot">नमस्ते! 👋 मैं आपकी सेवा के लिए 24×7 तैयार हूँ। किसी भी सरकारी योजना, परीक्षा या दस्तावेज़ के बारे में पूछें।</div>
-          <div class="chat-bubble user">Business loan ke liye Project Report chahiye.</div>
-          <div class="chat-bubble bot">बिल्कुल! हम ₹1,499 में bank-ready DPR बनाते हैं।<br/><br/>✅ PMEGP, Mudra, SBI सभी के लिए accepted<br/>✅ 24–48 घंटे में WhatsApp पर मिलेगा<br/><br/><strong style="color:var(--gold)">Cart में add करें — primary expert advice मिलेगी! 📞</strong></div>
+          <div class="chat-bubble bot">Hello! 👋 I am your 24/7 AI assistant. Feel free to ask about any government scheme, exam, or document service.</div>
+          <div class="chat-bubble user">I need a Project Report (DPR) for a business loan.</div>
+          <div class="chat-bubble bot">Absolutely! We prepare bank-ready DPRs for ₹1,499.<br/><br/>✅ Accepted by PMEGP, Mudra, SBI, and all major banks<br/>✅ Delivered via WhatsApp within 24–48 hours<br/><br/><strong style="color:var(--gold)">Add to Cart to get started — primary expert consultation included! 📞</strong></div>
           <div class="chat-bubble bot" style="padding:10px 15px"><span class="typing-dot"></span> <span class="typing-dot"></span> <span class="typing-dot"></span></div>
         </div>
       </div>
@@ -2684,7 +2684,7 @@
            <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-left:4px;">${o.tracking_number}</span>
            <a href="https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx" target="_blank" style="display:block;font-size:12px;color:var(--saffron);font-weight:600;margin-top:2px;">Track on India Post →</a>
          </div>`
-      : `<span style="font-size:12px;color:var(--slate);">Tracking akan update hoga dispatch ke baad</span>`;
+      : `<span style="font-size:12px;color:var(--slate);">Tracking details will be updated after dispatch.</span>`;
 
     const isPaid2 = ps === 'Payment Received';
     // Show UTR form trigger if payment pending
@@ -4310,11 +4310,11 @@ Payment receive ho gaya! 🙏
       msgEl.textContent = msg;
     };
 
-    if (!orderRef) { showMsg('⚠️ Order Ref darj karein (e.g. HSC-ABCD12)', false); return; }
-    if (!/^[6-9]\d{9}$/.test(mobile)) { showMsg('⚠️ Valid 10-digit mobile number darj karein', false); return; }
-    if (!utr || utr.length < 6) { showMsg('⚠️ Valid UTR / Transaction ID darj karein', false); return; }
+    if (!orderRef) { showMsg('⚠️ Please enter Order Ref (e.g. HSC-ABCD12)', false); return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { showMsg('⚠️ Please enter a valid 10-digit mobile number', false); return; }
+    if (!utr || utr.length < 6) { showMsg('⚠️ Please enter a valid UTR / Transaction ID', false); return; }
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Submit ho raha hai...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Submitting...'; }
     showMsg('⏳ Verifying...', true);
 
     const payload = { utr_number: utr, payment_status: 'Payment Not Received' };
@@ -4362,7 +4362,7 @@ Payment receive ho gaya! 🙏
     if (btn) { btn.disabled = false; btn.textContent = '✅ Submit UTR Number'; }
 
     if (saved) {
-      showMsg('✅ UTR received! हम verify करके WhatsApp pe confirm करेंगे।', true);
+      showMsg('✅ UTR received! We will verify and confirm via WhatsApp shortly.', true);
       document.getElementById('utrOrderRef').value = '';
       document.getElementById('utrNumber').value = '';
       const waMsg = `💰 *UTR Submitted — Harsh CSC eMitra*
@@ -4371,10 +4371,10 @@ Payment receive ho gaya! 🙏
 📱 Mobile: ${mobile}
 🏦 UTR/Transaction ID: *${utr}*
 
-Kripya verify karke confirm karein. 🙏`;
+Please verify and confirm. 🙏`;
       setTimeout(() => window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(waMsg)}`, '_blank'), 300);
     } else {
-      showMsg('❌ Order Ref ya Mobile number match nahi kiya. Apna registered mobile number check karein.', false);
+      showMsg('❌ Order Reference or Mobile number did not match. Please verify your registered mobile number.', false);
     }
   }
 
