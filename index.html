@@ -104,12 +104,12 @@
   /* ── NAV ── */
   nav{position:sticky;top:0;z-index:100;background:rgba(11,31,75,0.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(232,103,26,0.25);padding:0 clamp(16px,5vw,80px);}
   .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;gap:24px;}
-  .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0;}
   .nav-logo{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--saffron);}
-  .nav-name{font-family:var(--font-display);font-size:18px;color:var(--white);line-height:1.1;}
+  .nav-name{font-family:var(--font-display);font-size:18px;color:var(--white);line-height:1.1;white-space:nowrap;}
   .nav-name span{display:block;font-size:10px;font-family:var(--font-body);font-weight:500;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;}
   .nav-links{display:flex;align-items:center;gap:4px;}
-  .nav-links a{color:rgba(255,255,255,0.75);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;transition:all 0.2s;}
+  .nav-links a{color:rgba(255,255,255,0.75);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:8px;transition:all 0.2s;}
   .nav-links a:hover{color:var(--white);background:rgba(255,255,255,0.08);}
   .nav-right{display:flex;align-items:center;gap:10px;}
   .lang-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;font-family:var(--font-body);}
@@ -626,14 +626,16 @@
       <a href="#services">Services</a>
       <a href="#software-section">💻 Software</a>
       <a href="#how-it-works">How It Works</a>
-      <a href="#reviews">Reviews</a>
       <a href="#faq">FAQ</a>
-      <a href="#my-orders">My Orders</a>
-      <a href="#team">Our Team</a>
       <a href="#contact">Contact</a>
     </div>
     <div class="nav-right">
       <div id="google_translate_element"></div>
+      
+      <!-- Direct Admin Portal Button -->
+      <a href="/admin.html" target="_blank" style="color:var(--gold);font-weight:600;font-size:13px;text-decoration:none;padding:8px 14px;border:1px dashed rgba(245,166,35,0.6);border-radius:20px;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(245,166,35,0.1)'" onmouseout="this.style.borderColor='rgba(245,166,35,0.6)';this.style.background='transparent'">
+        <span>🔑</span> Admin Portal
+      </a>
 
       <!-- User Auth Button -->
       <div class="user-menu-wrap" id="userMenuWrap">
@@ -647,6 +649,7 @@
             <span id="userMenuEmail">—</span>
           </div>
           <a href="#my-orders" onclick="closeUserMenu()">📦 My Orders</a>
+          <a href="/admin.html" target="_blank">🔑 Admin Portal</a>
           <div class="user-menu-divider"></div>
           <button onclick="openAuthModal('signin')" id="menuSignIn">🔐 Sign In</button>
           <button onclick="openAuthModal('signup')" id="menuSignUp">✨ Create Account</button>
