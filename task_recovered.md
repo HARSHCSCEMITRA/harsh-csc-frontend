@@ -1,0 +1,15 @@
+- [x] Fix PyInstaller compilation dateutil missing module error
+- [x] Upgrade send-email edge function with new templates (`license_activation` & `reset_approved`)
+- [x] Upgraded api/software.js with email activation & reset request triggers
+- [x] Upgraded Software.tsx with masked email response and reset request form UI
+- [x] Added backend serverless APIs
+- [x] Upgraded Dashboard.tsx with trials, licenses, and reset requests tabs
+- [x] Rebuild compilation of Zamify and verify setup installer
+- [x] Consolidate Serverless APIs for Vercel Hobby plan limit:
+  - [x] Create consolidated `/api/admin.js`
+  - [x] Create consolidated `/api/auth-admin.js`
+  - [x] Update `vercel.json` with new dynamic rewrite rules
+  - [x] Delete legacy folders `api/admin` and `api/auth/admin`
+  - [x] Run local vercel build to verify compilation
+  - [x] Push to GitHub and deploy to Vercel production
+  - [x] Verify live website/dashboard functionality
