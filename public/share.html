@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zamify Live Location Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0f172a, #020617);
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-top: 0;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            color: #94a3b8;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .pulse-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+        }
+
+        .pulse-dot {
+            width: 40px;
+            height: 40px;
+            background: #10b981;
+            border-radius: 50%;
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .pulse-ring {
+            border: 3px solid #10b981;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+            top: 7px;
+            left: 7px;
+            animation: pulsate 1.8s ease-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes pulsate {
+            0% { transform: scale(0.4); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        .status-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .info-box {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #64748b;
+        }
+
+        .info-val {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #f59e0b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo">
+            <span>🏛️</span> Zamify
+        </div>
+        <h1>लाइव लोकेशन शेयरिंग</h1>
+        <p>यह मोबाइल स्क्रीन चालू रखें। आपकी लाइव लोकेशन आपके कंप्यूटर वाले नक्शे पर दिखाई दे रही है।</p>
+
+        <div class="pulse-container">
+            <div class="pulse-ring"></div>
+            <div id="dot" class="pulse-dot"></div>
+        </div>
+
+        <div id="statusBadge" class="status-badge">लोकेशन शेयर हो रही है...</div>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">कमरा नंबर (Room ID):</span>
+                <span id="roomIdVal" class="info-val">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">अक्षांश (Latitude):</span>
+                <span id="latVal" class="info-val">खोज रहे हैं...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">देशांतर (Longitude):</span>
+                <span id="lngVal" class="info-val">खोज रहे हैं...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">अंतिम अपडेट:</span>
+                <span id="timeVal" class="info-val">-</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get Room ID from URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+        
+        if (!roomId) {
+            document.getElementById('statusBadge').className = "status-badge error";
+            document.getElementById('statusBadge').innerText = "त्रुटि: रूम आईडी गायब है!";
+            document.getElementById('dot').style.backgroundColor = "#ef4468";
+        } else {
+            document.getElementById('roomIdVal').innerText = roomId;
+            startTracking();
+        }
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                updateStatus("जीपीएस नॉट सपोर्टेड", true);
+                return;
+            }
+
+            navigator.geolocation.watchPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                document.getElementById('latVal').innerText = lat.toFixed(6);
+                document.getElementById('lngVal').innerText = lng.toFixed(6);
+                document.getElementById('timeVal').innerText = new Date().toLocaleTimeString();
+
+                sendLocation(lat, lng);
+            }, function(error) {
+                console.error("GPS error:", error);
+                updateStatus("जीपीएस एक्सेस ब्लॉक है!", true);
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0
+            });
+        }
+
+        function sendLocation(lat, lng) {
+            fetch('/api/share-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    roomId: roomId,
+                    lat: lat,
+                    lng: lng
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatus("लोकेशन सक्रिय रूप से साझा हो रही है", false);
+                } else {
+                    updateStatus("सर्वर अपडेट त्रुटि", true);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                updateStatus("नेटवर्क त्रुटि", true);
+            });
+        }
+
+        function updateStatus(msg, isError) {
+            const badge = document.getElementById('statusBadge');
+            const dot = document.getElementById('dot');
+            badge.innerText = msg;
+            if (isError) {
+                badge.className = "status-badge error";
+                dot.style.backgroundColor = "#ef4444";
+                dot.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.6)";
+            } else {
+                badge.className = "status-badge";
+                dot.style.backgroundColor = "#10b981";
+                dot.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.6)";
+            }
+        }
+    </script>
+</body>
+</html>
