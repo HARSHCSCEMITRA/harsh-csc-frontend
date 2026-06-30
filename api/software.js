@@ -530,6 +530,68 @@ export default async function handler(req, res) {
         });
       }
 
+      // 7. Sync Khata and Village Codes (2-way real-time client-server sync)
+      case 'sync-codes': {
+        const { khata_codes = [], village_codes = [] } = req.body;
+        
+        // 1. Process Khata Codes Upsert
+        if (khata_codes && khata_codes.length > 0) {
+          const khataPayload = khata_codes.map(item => ({
+            khata: String(item.khata).trim(),
+            code: String(item.code).trim(),
+            updated_at: new Date().toISOString()
+          })).filter(item => item.khata && item.code);
+          
+          if (khataPayload.length > 0) {
+            await fetch(`${SB_URL}/rest/v1/khata_codes`, {
+              method: 'POST',
+              headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify(khataPayload)
+            });
+          }
+        }
+        
+        // 2. Process Village Codes Upsert
+        if (village_codes && village_codes.length > 0) {
+          const villagePayload = village_codes.map(item => ({
+            village_id: String(item.village_id || item.id).trim(),
+            village_code: String(item.village_code || item.code).trim(),
+            district_name: String(item.district_name || item.dist || '').trim(),
+            tehsil_name: String(item.tehsil_name || item.teh || '').trim(),
+            village_name: String(item.village_name || item.vil || '').trim(),
+            updated_at: new Date().toISOString()
+          })).filter(item => item.village_id && item.village_code);
+          
+          if (villagePayload.length > 0) {
+            await fetch(`${SB_URL}/rest/v1/village_codes`, {
+              method: 'POST',
+              headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify(villagePayload)
+            });
+          }
+        }
+        
+        // 3. Fetch all current codes from Server Database
+        const allKhatas = await sbSelect('khata_codes', 'select=khata,code');
+        const allVillages = await sbSelect('village_codes', 'select=village_id,village_code,district_name,tehsil_name,village_name');
+        
+        return res.status(200).json({
+          success: true,
+          khata_codes: allKhatas,
+          village_codes: allVillages
+        });
+      }
+
       default:
         return res.status(400).json({ error: `Unknown action: ${action}` });
     }
