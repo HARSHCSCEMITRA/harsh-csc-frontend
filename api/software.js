@@ -532,7 +532,7 @@ export default async function handler(req, res) {
 
       // 7. Sync Khata and Village Codes (2-way real-time client-server sync)
       case 'sync-codes': {
-        const { khata_codes = [], village_codes = [] } = req.body;
+        const { khata_codes = [], village_codes = [], replace_khata_all = false } = req.body;
         
         // 1. Process Khata Codes Upsert
         if (khata_codes && khata_codes.length > 0) {
@@ -543,6 +543,17 @@ export default async function handler(req, res) {
           })).filter(item => item.khata && item.code);
           
           if (khataPayload.length > 0) {
+            if (replace_khata_all) {
+              // Delete all existing khata codes on server to perform clean sync
+              await fetch(`${SB_URL}/rest/v1/khata_codes?khata=not.is.null`, {
+                method: 'DELETE',
+                headers: {
+                  'apikey': SB_KEY,
+                  'Authorization': `Bearer ${SB_KEY}`
+                }
+              });
+            }
+            
             await fetch(`${SB_URL}/rest/v1/khata_codes`, {
               method: 'POST',
               headers: {
