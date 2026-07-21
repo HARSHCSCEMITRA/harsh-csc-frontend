@@ -81,12 +81,15 @@ export default async function handler(req, res) {
     }
 
     // Extract Kashtkars (काश्तकार का नाम)
-    const owners = [];
+    const rawOwners = [];
     const ownerMatches = decodedHtml.matchAll(/<td[^>]*>\s*(\d+)\.\s*([^<]+)<\/td>/g);
 
     for (const m of ownerMatches) {
       const rawLine = m[2].trim();
       
+      // Check if line contains Hindi text (valid Kashtkar name)
+      if (!/[\u0900-\u097F]/.test(rawLine)) continue;
+
       // Extract share fraction e.g. हिस्सा- 1/30 or 7/180
       let fracNum = 1;
       let fracDen = 1;
@@ -105,7 +108,7 @@ export default async function handler(req, res) {
 
       const ownerArea = totalArea * (fracNum / fracDen);
 
-      owners.push({
+      rawOwners.push({
         idx: m[1],
         raw: rawLine,
         name: cleanName,
@@ -125,7 +128,7 @@ export default async function handler(req, res) {
       totalArea,
       totalBigha: totalArea * 3.95,
       khasras: khasraList,
-      owners,
+      owners: rawOwners,
       sourceUrl: targetUrl
     });
   } catch (err) {
