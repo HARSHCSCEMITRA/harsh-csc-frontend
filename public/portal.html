@@ -488,9 +488,9 @@
     /* CERTIFICATE DOCUMENT LAYOUT MATCHING USER IMAGE EXACTLY WITH SMART CONTINUOUS INLINE FLOW */
     .cert-document {
       font-family: 'Times New Roman', serif, 'Mangal', 'Noto Sans Devanagari';
-      color: #000;
+      color: #000 !important;
+      background: #fff !important;
       padding: 28px 24px;
-      background: #fff;
       font-size: 19.5px;
       line-height: 2.3;
       text-align: justify;
@@ -501,13 +501,14 @@
       font-weight: bold;
       margin-bottom: 28px;
       text-decoration: underline;
+      color: #000 !important;
     }
 
     /* Filled Text Span with Clean Underline */
     .cert-fill {
       font-weight: bold;
       font-size: 20px;
-      color: #000;
+      color: #000 !important;
       padding: 0 4px;
       text-decoration: underline;
       text-underline-offset: 4px;
@@ -516,7 +517,7 @@
 
     /* Fixed Standard Length Blank Dotted Lines */
     .cert-blank-fixed {
-      border-bottom: 1.5px dotted #000;
+      border-bottom: 1.5px dotted #000 !important;
       display: inline-block;
       height: 1.1em;
       vertical-align: baseline;
@@ -531,6 +532,7 @@
       font-size: 18.5px;
       font-weight: bold;
       line-height: 1.6;
+      color: #000 !important;
     }
   </style>
 </head>
@@ -662,7 +664,7 @@
       <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px;">
         <div style="font-size:16px; font-weight:800; color:#000;">📄 कृषक श्रेणी प्रमाण-पत्र</div>
         <div style="display:flex; gap:8px;">
-          <button onclick="downloadCertPdf()" style="background:#10b981; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <button id="btnPdfDownload" onclick="downloadCertPdf()" style="background:#10b981; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
             📥 PDF डाउनलोड करें
           </button>
           <button onclick="closeCertModal()" style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">✕ बंद करें</button>
@@ -673,7 +675,7 @@
       <div class="cert-document" id="certDocContent">
         <div class="cert-title">कृषक श्रेणी प्रमाण–पत्र</div>
 
-        <p style="margin: 0; padding: 0;">
+        <p style="margin: 0; padding: 0; color: #000;">
           प्रमाणित किया जाता है कि कृषक श्री/श्रीमती/सुश्री <span class="cert-fill" id="cName">......................</span> पुत्र/पत्नी/पुत्री <span class="cert-fill" id="cGuardian">......................</span> जाति <span class="cert-fill" id="cCaste">......................</span> निवासी <span class="cert-blank-fixed" style="min-width: 170px;"></span> के स्वयं की भु–स्वामित्व कुल <span class="cert-fill" id="cArea">0.0000</span> हैक्टेयर <span class="cert-blank-fixed" style="min-width: 140px;"></span> जमीन है। सिंचाई का स्त्रोत कुंआ / ट्यूबवेल खसरा न <span class="cert-blank-fixed" style="min-width: 180px;"></span> में स्थित है एवं इसका स्वामित्व भी है । कृषक <span class="cert-fill" id="cShreni">......................</span> श्रेणी में आता है। उक्त कृषक भाई बंटवारे में वर्तमान में खसरा नंबर <span class="cert-blank-fixed" style="min-width: 220px;"></span> में काबिज है ।
         </p>
 
@@ -954,20 +956,49 @@
       document.getElementById('certModal').style.display = 'none';
     }
 
-    // Direct PDF Download using html2pdf.js
-    function downloadCertPdf() {
-      const element = document.getElementById('certDocContent');
+    // Direct 100% Reliable PDF Download using Cloned Container Outside Modal Overlay
+    async function downloadCertPdf() {
+      const btn = document.getElementById('btnPdfDownload');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ जनरेट हो रहा है...";
+      btn.disabled = true;
+
+      const sourceEl = document.getElementById('certDocContent');
+      
+      // Create clone outside modal overlay to guarantee zero blank PDF rendering
+      const clone = sourceEl.cloneNode(true);
+      clone.id = 'cert-pdf-render-clone';
+      clone.style.position = 'fixed';
+      clone.style.top = '-9999px';
+      clone.style.left = '-9999px';
+      clone.style.width = '700px';
+      clone.style.background = '#ffffff';
+      clone.style.color = '#000000';
+      clone.style.padding = '30px';
+      clone.style.boxSizing = 'border-box';
+      document.body.appendChild(clone);
+
       const filename = `Krishi_Shreni_Praman_Patra_${activeKashtkarNameForPdf.replace(/\s+/g, '_')}.pdf`;
 
       const opt = {
-        margin:       [12, 12, 12, 12],
+        margin:       [10, 10, 10, 10],
         filename:     filename,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { scale: 2, logging: false, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(element).save();
+      try {
+        await html2pdf().set(opt).from(clone).save();
+      } catch (err) {
+        alert("PDF डाउनलोड करने में त्रुटि: " + err.message);
+      } finally {
+        if (document.body.contains(clone)) {
+          document.body.removeChild(clone);
+        }
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     }
 
     function updateUI() {
@@ -998,7 +1029,7 @@
                 <div class="khata-meta">
                   <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
                 </div>
-                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता बताएं">🗑️ हटाए</button>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता पाएं">🗑️ हटाए</button>
                 <div class="drawer-arrow">▼</div>
               </div>
             </div>
@@ -1107,7 +1138,7 @@
         const item = masterMapGlobal[key];
         const shreni = getFarmerCategory(item.totalArea);
         let khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
-        msg += `${idx + 1}. *${item.displayName}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हेक्टेयर\n   ➔ *श्रेणी*: ${shreni.full}\n   ➔ विवरण: ${khatasStr}\n\n`;
+        msg += `${idx + 1}. *${item.displayName}*\n   ➔ कुल जमीन: ${item.totalArea.toFixed(4)} हेक्टेयर\n   ➔ *श्रेणी*: ${shreni.full}\n   ➔ विवरण: ${khatasStr}\n\n`;
       });
 
       msg += `— *Zamify Web App for License Holders*`;
