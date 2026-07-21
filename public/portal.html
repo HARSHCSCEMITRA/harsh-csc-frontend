@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zamify Mobile Web Portal — Harsh CSC eMitra</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #0a0f1e; color: #fff; min-height: 100vh; padding: 16px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .glass-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; backdrop-filter: blur(12px); }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; }
+    .brand-logo { width: 36px; height: 36px; border-radius: 8px; }
+    .nav-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 4px; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .tab-btn.active { background: rgba(37, 99, 235, 0.4); color: #fff; font-weight: 700; border: 1px solid rgba(96, 165, 250, 0.4); }
+    .input-field { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: #fff; font-size: 13px; font-family: inherit; outline: none; }
+    .input-field:focus { border-color: #60a5fa; }
+    .btn-primary { background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; width: 100%; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+    .btn-whatsapp { background: #25D366; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .summary-box { background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px; padding: 16px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Top Header Bar -->
+    <div class="header-bar">
+      <a href="/" class="brand">
+        <img src="/logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'"/>
+        <div>
+          <h1 style="font-size: 15px; font-weight: 800; line-height: 1.2;">Zamify Mobile Portal</h1>
+          <span style="font-size: 10px; color: #60a5fa;">Harsh CSC eMitra Services</span>
+        </div>
+      </a>
+      <a href="/" class="btn-ghost">← मुख्य वेबसाइट</a>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('qr')">📷 QR स्कैन</button>
+      <button class="tab-btn" onclick="switchTab('naksha')">🗺️ नक्शा लिंक</button>
+      <button class="tab-btn" onclick="switchTab('calc')">📊 हिस्सा/बीघा</button>
+      <button class="tab-btn" onclick="switchTab('receipt')">🧾 ग्राहक बिल</button>
+    </div>
+
+    <!-- TAB 1: QR & MULTI-NAKAL SCANNER -->
+    <div id="tab-qr" class="tab-content active glass-card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <span style="font-size:1.8rem;">📷</span>
+        <div>
+          <h3 style="font-size:15px; font-weight:700;">QR व ई-साइन नकल बैच स्कैनर</h3>
+          <p style={{ fontSize:'11px', color:'#94a3b8' }}>मल्टीपल जमाबंदियों से अद्वितीय खातेदार व कुल बीघा रकबा निकालें</p>
+        </div>
+      </div>
+
+      <form onsubmit="addNakal(event)" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <input type="text" id="nkKhata" class="input-field" placeholder="खाता संख्या (उदा. 45)" required/>
+          <input type="number" step="0.0001" id="nkArea" class="input-field" placeholder="रकबा (Hectare)" required/>
+        </div>
+        <input type="text" id="nkOwner" class="input-field" placeholder="खातेदार का नाम (उदा. अभयसिंह पुत्र गुलाबसिंह)" required/>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <input type="text" id="nkKhasras" class="input-field" placeholder="खसरे (उदा. 207/2, 208)"/>
+          <select id="nkCategory" class="input-field">
+            <option value="बारानी प्रथम (कृषि)">बारानी प्रथम</option>
+            <option value="चाही (सिंचित)">चाही (सिंचित)</option>
+            <option value="गैर मुमकिन">गैर मुमकिन</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">➕ जमाबंदी नकल जोड़ें</button>
+      </form>
+
+      <div id="qrResults" style="display:none; margin-top:20px;">
+        <div class="summary-box">
+          <h4 style="color:#60a5fa; font-size:13px; margin-bottom:8px;">📊 समेकित खातेदार व बीघा रिपोर्ट:</h4>
+          <p id="totalSummaryText" style="font-size:12px; color:#cbd5e1; margin-bottom:12px;"></p>
+          <div id="ownersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <button class="btn-whatsapp" onclick="shareQrWhatsApp()" style="margin-top:12px;">💬 पूरी रिपोर्ट व्हाट्सएप पर शेयर करें</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: NAKSHA LINK GENERATOR -->
+    <div id="tab-naksha" class="tab-content glass-card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <span style="font-size:1.8rem;">🗺️</span>
+        <div>
+          <h3 style="font-size:15px; font-weight:700;">BHUNAKSHA PRO — 1-Tap Link Generator</h3>
+          <p style="font-size:11px; color:#94a3b8;">डायरेक्ट भू-नक्शा लिंक जेनरेट करें व व्हाट्सएप पर भेजें</p>
+        </div>
+      </div>
+
+      <form onsubmit="generateNakshaLink(event)" style="display:flex; flex-direction:column; gap:10px;">
+        <input type="text" id="nkVilCode" class="input-field" placeholder="गांव कोड (उदा. 33099)"/>
+        <input type="text" id="nkKhasraNo" class="input-field" placeholder="खसरा नंबर (उदा. 207/2)" required/>
+        <button type="submit" class="btn-primary">⚡ 1-Tap Link Generate करें</button>
+      </form>
+
+      <div id="nakshaResult" style="display:none; margin-top:16px;" class="summary-box">
+        <p style="font-size:12px; color:#34d399; font-weight:700; margin-bottom:8px;">✅ भू-नक्शा लिंक तैयार है:</p>
+        <p id="nakshaUrlDisplay" style="font-size:11px; color:#94a3b8; word-break:break-all; margin-bottom:12px;"></p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button class="btn-ghost" onclick="copyNakshaUrl()">📋 कॉपी लिंक</button>
+          <a id="nakshaWaBtn" href="#" target="_blank" class="btn-whatsapp">💬 व्हाट्सएप शेयर</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: HISSA & BIGHA CALCULATOR -->
+    <div id="tab-calc" class="tab-content glass-card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <span style="font-size:1.8rem;">📊</span>
+        <div>
+          <h3 style="font-size:15px; font-weight:700;">PRO REPORT — हिस्सा व बीघा कैलकुलेटर</h3>
+          <p style="font-size:11px; color:#94a3b8;">जमीन का हिस्सा प्रतिशत, रकबा व बीघा-बिस्वा कंवर्टर</p>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <input type="number" step="0.0001" id="calcRakba" class="input-field" placeholder="कुल रकबा (Hectare)" oninput="calculateHissa()"/>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <input type="number" id="calcNum" class="input-field" placeholder="हिस्सा (अंश)" value="1" oninput="calculateHissa()"/>
+          <input type="number" id="calcDen" class="input-field" placeholder="कुल हिस्सा (हर)" value="1" oninput="calculateHissa()"/>
+        </div>
+
+        <div id="calcResult" style="display:none;" class="summary-box">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span style="font-size:12px; color:#94a3b8;">हिस्सा प्रतिशत:</span>
+            <strong id="calcPercent" style="color:#fff;"></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span style="font-size:12px; color:#94a3b8;">हिस्सा रकबा:</span>
+            <strong id="calcHissaArea" style="color:#34d399;"></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="font-size:12px; color:#94a3b8;">अनुमानित बीघा:</span>
+            <strong id="calcBigha" style="color:#fbbf24;"></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: CLIENT RECEIPT GENERATOR -->
+    <div id="tab-receipt" class="tab-content glass-card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <span style="font-size:1.8rem;">🧾</span>
+        <div>
+          <h3 style="font-size:15px; font-weight:700;">ग्राहक रसीद जेनरेटर</h3>
+          <p style="font-size:11px; color:#94a3b8;">ई-मित्र दुकानदारों के लिए व्हाट्सएप बिल व रसीद</p>
+        </div>
+      </div>
+
+      <form onsubmit="generateReceipt(event)" style="display:flex; flex-direction:column; gap:10px;">
+        <input type="text" id="rcClient" class="input-field" placeholder="ग्राहक का नाम" required/>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <select id="rcService" class="input-field">
+            <option value="जमाबंदी नकल">जमाबंदी नकल</option>
+            <option value="नक्शा ट्रेस">नक्शा ट्रेस</option>
+            <option value="नकल व नक्शा">नकल व नक्शा</option>
+            <option value="बंटवारा परामर्श">बंटवारा परामर्श</option>
+          </select>
+          <input type="number" id="rcAmount" class="input-field" value="50" placeholder="शुल्क (₹)"/>
+        </div>
+        <button type="submit" class="btn-primary">🧾 रसीद तैयार करें</button>
+      </form>
+
+      <div id="receiptResult" style="display:none; margin-top:16px;" class="summary-box">
+        <p style="font-size:12px; color:#34d399; font-weight:700; margin-bottom:8px;">✅ रसीद तैयार है:</p>
+        <div id="receiptPreview" style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;"></div>
+        <a id="receiptWaBtn" href="#" target="_blank" class="btn-whatsapp">💬 व्हाट्सएप पर रसीद भेजें</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // QR Accumulator State
+    let scannedNakals = [];
+
+    function addNakal(e) {
+      e.preventDefault();
+      const khata = document.getElementById('nkKhata').value.trim();
+      const area = parseFloat(document.getElementById('nkArea').value) || 0;
+      const owner = document.getElementById('nkOwner').value.trim();
+      const khasra = document.getElementById('nkKhasras').value.trim();
+      const category = document.getElementById('nkCategory').value;
+
+      scannedNakals.push({ khata, area, owner, khasra, category });
+
+      document.getElementById('nkKhata').value = '';
+      document.getElementById('nkArea').value = '';
+      document.getElementById('nkOwner').value = '';
+      document.getElementById('nkKhasras').value = '';
+
+      renderQrSummary();
+    }
+
+    function renderQrSummary() {
+      if (scannedNakals.length === 0) return;
+      document.getElementById('qrResults').style.display = 'block';
+
+      const totalArea = scannedNakals.reduce((a, b) => a + b.area, 0);
+      document.getElementById('totalSummaryText').innerHTML = 
+        `स्कैन नकलें: <strong>${scannedNakals.length}</strong> | कुल समेकित रकबा: <strong>${totalArea.toFixed(4)} हे. (${(totalArea * 3.95).toFixed(2)} बीघा)</strong>`;
+
+      let ownersMap = {};
+      scannedNakals.forEach(n => {
+        if (!ownersMap[n.owner]) ownersMap[n.owner] = { area: 0, khatas: [], khasras: [], categories: [] };
+        ownersMap[n.owner].area += n.area;
+        ownersMap[n.owner].khatas.push(n.khata);
+        if (n.khasra) ownersMap[n.owner].khasras.push(n.khasra);
+        ownersMap[n.owner].categories.push(n.category);
+      });
+
+      let html = '';
+      Object.keys(ownersMap).forEach((owner, i) => {
+        const d = ownersMap[owner];
+        html += `
+          <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; color:#fff; font-weight:700;">
+              <span>👤 ${owner}</span>
+              <span style="color:#fbbf24;">${d.area.toFixed(4)} हे. (${(d.area * 3.95).toFixed(2)} बीघा)</span>
+            </div>
+            <div style="font-size:10px; color:#cbd5e1; margin-top:4px;"> खाते: ${d.khatas.join(', ')} | खसरे: ${d.khasras.join(', ') || 'N/A'} </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('ownersList').innerHTML = html;
+    }
+
+    function shareQrWhatsApp() {
+      const totalArea = scannedNakals.reduce((a, b) => a + b.area, 0);
+      let text = `📜 *समेकित जमाबंदी व कृषि श्रेणी रिपोर्ट*\n\n📑 *स्कैन नकलें*: ${scannedNakals.length}\n📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हे. (${(totalArea * 3.95).toFixed(2)} बीघा)\n\n— *Harsh CSC eMitra Services*`;
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    // Naksha Link
+    let currentNakshaUrl = '';
+    function generateNakshaLink(e) {
+      e.preventDefault();
+      const code = document.getElementById('nkVilCode').value.trim() || '33099';
+      const khasra = document.getElementById('nkKhasraNo').value.trim();
+
+      currentNakshaUrl = `https://bhunaksha.rajasthan.gov.in/gis/viewer.aspx?villcode=${code}&khasra=${encodeURIComponent(khasra)}`;
+      document.getElementById('nakshaResult').style.display = 'block';
+      document.getElementById('nakshaUrlDisplay').innerText = currentNakshaUrl;
+
+      const msg = `🗺️ *नक्शा ट्रेस लिंक — खसरा नं. ${khasra}*\n\nयहाँ क्लिक करके नक्शा देखें:\n${currentNakshaUrl}\n\n— *Harsh CSC eMitra Services*`;
+      document.getElementById('nakshaWaBtn').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    }
+
+    function copyNakshaUrl() {
+      navigator.clipboard.writeText(currentNakshaUrl);
+      alert('नक्शा लिंक कॉपी हो गया!');
+    }
+
+    // Calculator
+    function calculateHissa() {
+      const rakba = parseFloat(document.getElementById('calcRakba').value) || 0;
+      const num = parseFloat(document.getElementById('calcNum').value) || 1;
+      const den = parseFloat(document.getElementById('calcDen').value) || 1;
+
+      if (rakba > 0) {
+        document.getElementById('calcResult').style.display = 'block';
+        const frac = num / den;
+        const hissaArea = rakba * frac;
+        document.getElementById('calcPercent').innerText = (frac * 100).toFixed(2) + '%';
+        document.getElementById('calcHissaArea').innerText = hissaArea.toFixed(4) + ' हे.';
+        document.getElementById('calcBigha').innerText = (hissaArea * 3.95).toFixed(2) + ' बीघा';
+      }
+    }
+
+    // Receipt
+    function generateReceipt(e) {
+      e.preventDefault();
+      const client = document.getElementById('rcClient').value.trim();
+      const service = document.getElementById('rcService').value;
+      const amount = document.getElementById('rcAmount').value;
+
+      document.getElementById('receiptResult').style.display = 'block';
+      document.getElementById('receiptPreview').innerHTML = `
+        👤 <strong>ग्राहक:</strong> ${client}<br/>
+        📋 <strong>सेवा:</strong> ${service}<br/>
+        💰 <strong>शुल्क:</strong> ₹${amount} (Paid)
+      `;
+
+      const text = `🧾 *ग्राहक रसीद / Invoice*\n\n*Harsh CSC eMitra Services*\n👤 *ग्राहक*: ${client}\n📋 *सेवा*: ${service}\n💰 *शुल्क*: ₹${amount} (Paid)\n📅 *दिनांक*: ${new Date().toLocaleDateString('hi-IN')}\n\nधन्यवाद! 🙏`;
+      document.getElementById('receiptWaBtn').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    }
+  </script>
+</body>
+</html>
