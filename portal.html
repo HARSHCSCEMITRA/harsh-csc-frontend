@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Zamify Web App — eSign Jamabandi QR & Kashtkar Land Extractor</title>
+  <title>Zamify Web App — eSign Jamabandi QR & Kashtkar Hectare Extractor</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -359,7 +359,7 @@
         <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
         <div>
           <div class="brand-title">Zamify Web App</div>
-          <div class="brand-subtitle">eSign Jamabandi Live QR Extractor</div>
+          <div class="brand-subtitle">eSign Jamabandi Live QR Hectare Extractor</div>
         </div>
       </div>
       <div class="status-badge">
@@ -370,10 +370,10 @@
     <!-- Main Card -->
     <div class="card">
       <div class="card-title">
-        <span>📜</span> eSign जमाबंदी QR कोड एक्सट्रैक्टर
+        <span>📜</span> eSign जमाबंदी QR कोड एक्सट्रैक्टर (हेक्टेयर)
       </div>
       <div class="card-desc">
-        अपनी ई-साइन जमाबंदी नकल का QR स्कैन करें या QR लिंक (उदा. <code>apnakhata.rajasthan.gov.in/qr.aspx?usn=...</code>) पेस्ट करें। सर्वर लाइव पेज से <b>खाता संख्या, समस्त काश्तकारों के हिस्से (1/30, 7/180 आदि)</b> व <b>सटीक बीघा रकबा</b> ऑटो-एक्सट्रैक्ट करेगा।
+        जमाबंदी का QR कोड स्कैन करें या eSign URL (उदा. <code>apnakhata.rajasthan.gov.in/qr.aspx?usn=...</code>) डालें। सर्वर खाता संख्या, समस्त काश्तकारों के हिस्से (1/30, 7/180 आदि) व <b>सटीक हेक्टेयर (Hectare) रकबा</b> निकालेगा।
       </div>
 
       <!-- Action Buttons -->
@@ -425,7 +425,7 @@
       <!-- Loading State -->
       <div id="loadingBox" class="loading-box">
         <div class="spinner"></div>
-        <div style="font-size:13px; font-weight:700; color:#fff;">⚡ Apna Khata eSign सर्वर से डेटा फेच हो रहा है...</div>
+        <div style="font-size:13px; font-weight:700; color:#fff;">⚡ Apna Khata eSign सर्वर से लाइव डेटा फेच हो रहा है...</div>
         <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">कृपया प्रतीक्षा करें...</div>
       </div>
 
@@ -437,12 +437,12 @@
             <div class="stat-lbl">कुल खाते (नकले)</div>
           </div>
           <div class="stat-card">
-            <div id="statArea" class="stat-val">0.00</div>
-            <div class="stat-lbl">कुल हेक्टेयर</div>
+            <div id="statArea" class="stat-val" style="color:#34d399;">0.0000</div>
+            <div class="stat-lbl">कुल हेक्टेयर (Hectare)</div>
           </div>
           <div class="stat-card">
-            <div id="statBigha" class="stat-val" style="color:#34d399;">0.00</div>
-            <div class="stat-lbl">कुल बीघा</div>
+            <div id="statOwnersCount" class="stat-val" style="color:var(--gold);">0</div>
+            <div class="stat-lbl">कुल काश्तकार</div>
           </div>
         </div>
 
@@ -456,14 +456,14 @@
         <!-- Master Consolidated Unique Kashtkar Table -->
         <div class="consolidated-box">
           <div class="consolidated-title">
-            <span>👑 समस्त अद्वितीय काश्तकारों की समेकित जमीन</span>
+            <span>👑 समस्त अद्वितीय काश्तकारों की समेकित भूमि (हेक्टेयर)</span>
             <span id="uniqueOwnerCount" style="font-size:12px; color:var(--gold);">0 काश्तकार</span>
           </div>
 
           <div id="masterKashtkarList"></div>
 
           <button class="btn-whatsapp" onclick="shareWhatsAppReport()">
-            💬 व्हाट्सएप पर पूरी काश्तकार व बीघा रिपोर्ट भेजें
+            💬 व्हाट्सएप पर काश्तकार हेक्टेयर (Hectare) रिपोर्ट भेजें
           </button>
         </div>
       </div>
@@ -582,7 +582,6 @@
           alert(`✅ खाता संख्या ${data.khata} (${data.village}) के ${data.owners.length} काश्तकारों का डाटा लाइव एक्सट्रैक्ट हुआ!`);
           updateUI();
         } else {
-          // Fallback parsing if URL fetch returned 0 owners or fallback text
           fallbackLocalParse(qrInput);
         }
       } catch (err) {
@@ -653,11 +652,9 @@
       container.style.display = 'block';
 
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
-      const totalBigha = totalArea * 3.95;
 
       document.getElementById('statCount').innerText = scannedKhatas.length;
-      document.getElementById('statArea').innerText = totalArea.toFixed(4);
-      document.getElementById('statBigha').innerText = totalBigha.toFixed(2);
+      document.getElementById('statArea').innerText = totalArea.toFixed(4) + " हे.";
 
       // Render Individual Khatas Log
       let khataHtml = '';
@@ -669,20 +666,19 @@
                 <span class="khata-badge">खाता नं. ${item.khata}</span>
                 <span style="font-size:11px; color:var(--accent-glow); margin-left:8px;">${item.village || ''}</span>
               </div>
-              <span style="font-size:12px; color:var(--text-muted);">कुल रकबा: <b style="color:#fff;">${item.totalArea.toFixed(4)} हे. (${(item.totalArea*3.95).toFixed(2)} बीघा)</b></span>
+              <span style="font-size:12px; color:var(--text-muted);">कुल रकबा: <b style="color:#34d399;">${item.totalArea.toFixed(4)} हेक्टेयर</b></span>
             </div>
             <div>
         `;
 
         item.owners.forEach(o => {
-          const bigha = (o.area * 3.95).toFixed(2);
           khataHtml += `
             <div class="owner-row">
               <div>
                 <span class="owner-name">👤 ${o.name}</span>
                 <span class="owner-share">(हिस्सा: ${o.fracStr})</span>
               </div>
-              <div class="owner-land-val">${o.area.toFixed(4)} हे.<br/><span style="font-size:10px; font-weight:600; color:var(--text-muted);">${bigha} बीघा</span></div>
+              <div class="owner-land-val">${o.area.toFixed(4)} हेक्टेयर</div>
             </div>
           `;
         });
@@ -714,18 +710,18 @@
 
       const uniqueNames = Object.keys(masterMap);
       document.getElementById('uniqueOwnerCount').innerText = `${uniqueNames.length} काश्तकार`;
+      document.getElementById('statOwnersCount').innerText = uniqueNames.length;
 
       let masterHtml = '';
       uniqueNames.forEach(key => {
         const item = masterMap[key];
-        const bigha = (item.totalArea * 3.95).toFixed(2);
         let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join(' | ');
 
         masterHtml += `
           <div class="master-owner-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <span style="font-size:14px; font-weight:800; color:#fff;">👤 ${item.displayName}</span>
-              <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हे. (${bigha} बीघा)</span>
+              <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हेक्टेयर</span>
             </div>
             <div style="font-size:11px; color:var(--text-muted);">
               📌 हिस्सा ब्रेकडाउन: ${breakdownStr}
@@ -747,11 +743,10 @@
     function shareWhatsAppReport() {
       if (scannedKhatas.length === 0) return;
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
-      const totalBigha = (totalArea * 3.95).toFixed(2);
 
-      let msg = `📜 *Zamify eSign काश्तकार हिस्सा व भूमि समेकन रिपोर्ट*\n\n`;
+      let msg = `📜 *Zamify eSign काश्तकार हिस्सा व भूमि समेकन रिपोर्ट (हेक्टेयर)*\n\n`;
       msg += `📑 *स्कैन जमाबंदी खाते*: ${scannedKhatas.length}\n`;
-      msg += `📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हे. (${totalBigha} बीघा)\n\n`;
+      msg += `📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (Hectares)\n\n`;
 
       let masterMap = {};
       scannedKhatas.forEach(k => {
@@ -763,11 +758,10 @@
         });
       });
 
-      msg += `👑 *अद्वितीय काश्तकारों की कुल जमीन लिस्ट:*\n`;
+      msg += `👑 *अद्वितीय काश्तकारों की कुल हेक्टेयर जमीन लिस्ट:*\n`;
       Object.keys(masterMap).forEach((key, idx) => {
         const item = masterMap[key];
-        const bigha = (item.area * 3.95).toFixed(2);
-        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हे. (${bigha} बीघा)\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
+        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हेक्टेयर\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
       });
 
       msg += `— *Zamify Web App for License Holders*`;
