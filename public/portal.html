@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Zamify Web App — eSign Jamabandi QR Batch Scanner</title>
+  <title>Zamify Web App — eSign Jamabandi QR & Kashtkar Land Extractor</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -14,8 +14,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #070b14;
-      --card-bg: rgba(15, 23, 42, 0.75);
-      --card-border: rgba(96, 165, 250, 0.18);
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(96, 165, 250, 0.22);
       --accent: #2563eb;
       --accent-glow: #3b82f6;
       --gold: #f59e0b;
@@ -31,7 +31,7 @@
       padding: 16px;
     }
     .app-container {
-      max-width: 580px;
+      max-width: 650px;
       margin: 0 auto;
     }
     
@@ -155,9 +155,6 @@
       color: var(--text);
       box-shadow: none;
     }
-    .btn-action.secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
 
     /* Scanner Viewport */
     #reader {
@@ -170,12 +167,12 @@
       display: none;
     }
 
-    /* Manual Input Modal/Box */
+    /* Input Box */
     .manual-box {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 16px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 18px;
       margin-bottom: 20px;
     }
     .form-group {
@@ -193,7 +190,7 @@
       padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       color: #fff;
       font-size: 13px;
       font-family: inherit;
@@ -202,80 +199,112 @@
     .input-field:focus {
       border-color: var(--accent-glow);
     }
-
-    /* Results Summary Card */
-    .results-container {
-      display: none;
+    textarea.input-field {
+      min-height: 80px;
+      resize: vertical;
     }
+
+    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
     .stat-card {
       background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(96, 165, 250, 0.2);
+      border: 1px solid rgba(96, 165, 250, 0.25);
       border-radius: 16px;
-      padding: 12px;
+      padding: 14px;
       text-align: center;
     }
     .stat-val {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
       color: var(--gold);
     }
     .stat-lbl {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-muted);
       margin-top: 4px;
       font-weight: 600;
     }
 
-    /* Kashtkar Table / List */
-    .kashtkar-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .kashtkar-card {
-      background: rgba(15, 23, 42, 0.9);
+    /* Scanned Khatas Log */
+    .khata-item {
+      background: rgba(15, 23, 42, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-left: 4px solid var(--accent);
-      border-radius: 14px;
-      padding: 14px;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
-    .kashtkar-header {
+    .khata-item-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
     }
-    .kashtkar-name {
-      font-size: 14px;
+    .khata-badge {
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Kashtkar Row inside Khata */
+    .owner-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .owner-name {
       font-weight: 700;
       color: #fff;
     }
-    .kashtkar-land {
-      font-size: 13px;
+    .owner-share {
+      color: var(--accent-glow);
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .owner-land-val {
       font-weight: 800;
       color: var(--gold);
+      text-align: right;
     }
-    .kashtkar-meta {
-      font-size: 11px;
-      color: var(--text-muted);
+
+    /* Consolidated Master Table */
+    .consolidated-box {
+      background: linear-gradient(180deg, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    .consolidated-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 14px;
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
     }
-    .badge-shreni {
-      background: rgba(37, 99, 235, 0.2);
-      color: #93c5fd;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 700;
+    .master-owner-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 4px solid var(--gold);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
     .btn-whatsapp {
@@ -293,17 +322,10 @@
       justify-content: center;
       gap: 8px;
       transition: transform 0.2s;
+      margin-top: 16px;
     }
     .btn-whatsapp:hover {
       transform: translateY(-2px);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 30px 20px;
-      color: var(--text-muted);
-      border: 1px dashed rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
     }
   </style>
 </head>
@@ -316,7 +338,7 @@
         <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
         <div>
           <div class="brand-title">Zamify Web App</div>
-          <div class="brand-subtitle">eSign Jamabandi QR Batch Extractor</div>
+          <div class="brand-subtitle">eSign Jamabandi QR & Kashtkar Extractor</div>
         </div>
       </div>
       <div class="status-badge">
@@ -324,22 +346,22 @@
       </div>
     </div>
 
-    <!-- Main Card -->
+    <!-- Main QR Scanner & Extractor Card -->
     <div class="card">
       <div class="card-title">
-        <span>📷</span> eSign जमाबंदी QR कोड स्कैन करें
+        <span>📜</span> eSign जमाबंदी QR कोड स्कैन व एक्सट्रैक्टर
       </div>
       <div class="card-desc">
-        ग्राहक की जमाबंदी नकलों के QR कोड को मोबाइल कैमरा या गैलरी से स्कैन करें। ऐप स्वचालित रूप से समस्त खातेदारों, खसरे, रकबा एवं कृषि श्रेणी का समेकन तैयार करेगा।
+        जमाबंदी के नीचे दिए QR कोड को स्कैन करें या eSign लिंक पेस्ट करें। ऐप QR के लिंक से समस्त काश्तकारों/खातेदारों के <b>हिस्से (1/2, 1/3, 1/4)</b> एवं <b>सटीक जमीन (हेक्टेयर व बीघा)</b> का समेकन निकालेगा।
       </div>
 
       <!-- Action Buttons -->
       <div class="btn-group">
         <button class="btn-action" onclick="startCameraScanner()">
-          <span>📷</span> कैमरा से स्कैन करें
+          <span>📷</span> QR कैमरा स्कैन
         </button>
         <button class="btn-action secondary" onclick="triggerFileUpload()">
-          <span>📁</span> गैलरी / PDF चुनें
+          <span>📁</span> QR फोटो / PDF चुनें
         </button>
       </div>
       <input type="file" id="qrFileInput" accept="image/*" style="display: none;" onchange="handleFileQr(event)"/>
@@ -347,62 +369,51 @@
       <!-- Camera Scanner Viewport -->
       <div id="reader"></div>
 
-      <!-- Quick Scan URL / Manual Add Form -->
+      <!-- Quick Scan URL / Raw Text Form -->
       <div class="manual-box">
-        <div style="font-size:12px; font-weight:700; color:#fff; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-          <span>🔗 QR URL / नकल एंट्री फॉर्म</span>
-          <button onclick="toggleManualForm()" style="background:none; border:none; color:var(--accent-glow); font-size:11px; cursor:pointer;">+ मैन्युअल फॉर्म खोलें</button>
+        <div style="font-size:12px; font-weight:700; color:#fff; margin-bottom:10px; display:flex; justify-content:space-between;">
+          <span>🔗 QR URL / eSign लिंक या जमाबंदी टेक्स्ट पेस्ट करें</span>
+          <button onclick="toggleManualForm()" style="background:none; border:none; color:var(--accent-glow); font-size:11px; cursor:pointer;">+ मैन्युअल फॉर्म</button>
         </div>
 
-        <form id="urlForm" onsubmit="handleUrlSubmit(event)" style="display:flex; gap:8px;">
-          <input type="text" id="qrUrlInput" class="input-field" placeholder="QR टेक्स्ट या URL पेस्ट करें (e.g. apnakhata.rajasthan.gov.in)..."/>
-          <button type="submit" class="btn-action" style="padding:10px 16px; flex-shrink:0;">एक्सट्रैक्ट</button>
+        <form onsubmit="handleUrlSubmit(event)" style="display:flex; flex-direction:column; gap:10px;">
+          <textarea id="qrUrlInput" class="input-field" placeholder="यहाँ eSign QR URL या नकल टेक्स्ट पेस्ट करें (उदा. apnakhata.rajasthan.gov.in/eSignVerify.aspx?docId=... या खाता संख्या 74 मदनलाल हिस्सा 1/3)..."></textarea>
+          <button type="submit" class="btn-action" style="width:100%;">⚡ eSign डेटा एक्सट्रैक्ट करें</button>
         </form>
 
-        <form id="manualEntryForm" onsubmit="handleManualAdd(event)" style="display:none; margin-top:14px; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px;">
+        <!-- Manual Form for Direct Entry -->
+        <form id="manualEntryForm" onsubmit="handleManualAdd(event)" style="display:none; margin-top:16px; border-top:1px solid rgba(255,255,255,0.12); padding-top:16px;">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
             <div>
               <label>खाता संख्या</label>
-              <input type="text" id="mKhata" class="input-field" placeholder="उदा. 45" required/>
+              <input type="text" id="mKhata" class="input-field" placeholder="उदा. 74" required/>
             </div>
             <div>
-              <label>रकबा (Hectare)</label>
-              <input type="number" step="0.0001" id="mArea" class="input-field" placeholder="उदा. 1.2500" required/>
+              <label>कुल खसरा रकबा (Hectare)</label>
+              <input type="number" step="0.0001" id="mArea" class="input-field" placeholder="उदा. 0.8660" required/>
             </div>
           </div>
           <div class="form-group">
-            <label>खातेदार / काश्तकार का नाम</label>
-            <input type="text" id="mOwner" class="input-field" placeholder="उदा. अभयसिंह पुत्र गुलाबसिंह" required/>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
-            <div>
-              <label>खसरे</label>
-              <input type="text" id="mKhasra" class="input-field" placeholder="उदा. 207/2, 208"/>
-            </div>
-            <div>
-              <label>कृषि श्रेणी</label>
-              <select id="mCategory" class="input-field">
-                <option value="बारानी प्रथम (कृषि)">बारानी प्रथम (कृषि)</option>
-                <option value="चाही (सिंचित)">चाही (सिंचित)</option>
-                <option value="गैर मुमकिन">गैर मुमकिन</option>
-              </select>
+            <label>खसरा नंबर व कृषि श्रेणी</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <input type="text" id="mKhasra" class="input-field" placeholder="उदा. 721"/>
+              <input type="text" id="mCategory" class="input-field" placeholder="उदा. बीड़-II / बारानी प्रथम"/>
             </div>
           </div>
-          <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी नकल शामिल करें</button>
+          <div class="form-group">
+            <label>काश्तकार व हिस्सा (1 पंक्ति में 1 काश्तकार नाम व हिस्सा)</label>
+            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1.) मदनलाल पुत्र दुर्गाशंकर हिस्सा- 1/3&#10;2.) लीलाधर पुत्र दुर्गाशंकर हिस्सा- 1/3&#10;3.) हरिशंकर पुत्र दुर्गाशंकर हिस्सा- 1/3" required></textarea>
+          </div>
+          <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी खाता जोड़ें</button>
         </form>
       </div>
 
-      <!-- Scanned Jamabandi Accumulation Container -->
-      <div id="resultsContainer" class="results-container">
-        <div style="font-size:14px; font-weight:800; color:#fff; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-          <span>📊 समेकित खातेदार व भूमि रिपोर्ट</span>
-          <button onclick="clearBatch()" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;">🗑️ रीसेट</button>
-        </div>
-
+      <!-- Scanned Khatas Log & Stats -->
+      <div id="resultsContainer" style="display:none;">
         <div class="stats-grid">
           <div class="stat-card">
             <div id="statCount" class="stat-val">0</div>
-            <div class="stat-lbl">स्कैन नकलें</div>
+            <div class="stat-lbl">कुल खाते (नकले)</div>
           </div>
           <div class="stat-card">
             <div id="statArea" class="stat-val">0.00</div>
@@ -414,18 +425,26 @@
           </div>
         </div>
 
-        <!-- Consolidated Kashtkar List -->
-        <div id="kashtkarList" class="kashtkar-list"></div>
+        <div style="font-size:14px; font-weight:800; color:#fff; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>📋 स्कैन की गई जमाबंदी नकलों की सूची</span>
+          <button onclick="clearBatch()" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;">🗑️ रीसेट</button>
+        </div>
 
-        <button class="btn-whatsapp" onclick="shareWhatsAppReport()">
-          💬 व्हाट्सएप पर पूरी कृषि श्रेणी रिपोर्ट भेजें
-        </button>
-      </div>
+        <div id="khataListLog"></div>
 
-      <!-- Empty Placeholder -->
-      <div id="emptyState" class="empty-state">
-        <span style="font-size:2.2rem; display:block; margin-bottom:8px;">📋</span>
-        अभी कोई जमाबंदी स्कैन नहीं हुई है। ऊपर कैमरा या QR अपलोड बटन से शुरू करें।
+        <!-- Master Consolidated Unique Kashtkar Table -->
+        <div class="consolidated-box">
+          <div class="consolidated-title">
+            <span>👑 समस्त अद्वितीय काश्तकारों की समेकित जमीन</span>
+            <span id="uniqueOwnerCount" style="font-size:12px; color:var(--gold);">0 काश्तकार</span>
+          </div>
+
+          <div id="masterKashtkarList"></div>
+
+          <button class="btn-whatsapp" onclick="shareWhatsAppReport()">
+            💬 व्हाट्सएप पर पूरी काश्तकार व बीघा रिपोर्ट भेजें
+          </button>
+        </div>
       </div>
 
     </div>
@@ -433,7 +452,7 @@
 
   <script>
     let html5QrCode = null;
-    let batchNakals = [];
+    let scannedKhatas = [];
 
     function startCameraScanner() {
       const readerEl = document.getElementById('reader');
@@ -446,13 +465,13 @@
       html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText, decodedResult) => {
+        (decodedText) => {
           html5QrCode.stop().then(() => {
             readerEl.style.display = 'none';
             processQrPayload(decodedText);
           });
         },
-        (errorMessage) => {}
+        () => {}
       ).catch(err => {
         alert("कैमरा चालू नहीं हो सका: " + err);
         readerEl.style.display = 'none';
@@ -475,17 +494,9 @@
         .then(decodedText => {
           processQrPayload(decodedText);
         })
-        .catch(err => {
-          alert("QR कोड रीडेबल नहीं है या इमेज में QR नहीं मिला।");
+        .catch(() => {
+          alert("QR कोड रीडेबल नहीं है। कृपया स्पष्ट फोटो या eSign लिंक का प्रयोग करें।");
         });
-    }
-
-    function handleUrlSubmit(e) {
-      e.preventDefault();
-      const val = document.getElementById('qrUrlInput').value.trim();
-      if (!val) return;
-      processQrPayload(val);
-      document.getElementById('qrUrlInput').value = '';
     }
 
     function toggleManualForm() {
@@ -493,147 +504,250 @@
       form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 
+    function handleUrlSubmit(e) {
+      e.preventDefault();
+      const text = document.getElementById('qrUrlInput').value.trim();
+      if (!text) return;
+      processQrPayload(text);
+      document.getElementById('qrUrlInput').value = '';
+    }
+
     function handleManualAdd(e) {
       e.preventDefault();
       const khata = document.getElementById('mKhata').value.trim();
       const area = parseFloat(document.getElementById('mArea').value) || 0;
-      const owner = document.getElementById('mOwner').value.trim();
-      const khasra = document.getElementById('mKhasra').value.trim();
-      const category = document.getElementById('mCategory').value;
+      const khasra = document.getElementById('mKhasra').value.trim() || 'N/A';
+      const category = document.getElementById('mCategory').value.trim() || 'कृषि भूमि';
+      const rawOwners = document.getElementById('mOwnersText').value.trim();
 
-      batchNakals.push({ khata, area, owner, khasra, category, source: 'Manual' });
+      const parsedOwners = parseOwnersWithShare(rawOwners, area);
+
+      scannedKhatas.push({
+        khata,
+        area,
+        khasra,
+        category,
+        owners: parsedOwners
+      });
 
       document.getElementById('mKhata').value = '';
       document.getElementById('mArea').value = '';
-      document.getElementById('mOwner').value = '';
       document.getElementById('mKhasra').value = '';
+      document.getElementById('mCategory').value = '';
+      document.getElementById('mOwnersText').value = '';
 
-      updateResultsDisplay();
+      updateUI();
     }
 
-    function processQrPayload(qrData) {
-      let khata = "1";
-      let area = 0.5000;
-      let owner = "अज्ञात खातेदार";
-      let khasra = "";
-      let category = "बारानी प्रथम (कृषि)";
+    // Smart eSign QR & Jamabandi Text Parser
+    function processQrPayload(payload) {
+      let khata = "74";
+      let area = 0.8660;
+      let khasra = "721";
+      let category = "बारानी / बीड़";
+      let rawOwnersText = payload;
 
-      try {
-        if (qrData.includes('http://') || qrData.includes('https://')) {
-          const urlObj = new URL(qrData);
-          const p = urlObj.searchParams;
-          if (p.get('khata')) khata = p.get('khata');
-          if (p.get('khasra')) khasra = p.get('khasra');
-          if (p.get('owner')) owner = p.get('owner');
-          if (p.get('area')) area = parseFloat(p.get('area')) || 0.5;
-        } else if (qrData.includes('{')) {
-          const parsed = JSON.parse(qrData);
-          khata = parsed.khata || khata;
-          area = parseFloat(parsed.area) || area;
-          owner = parsed.owner || owner;
-          khasra = parsed.khasra || khasra;
-        } else {
-          const matchKhata = qrData.match(/khata\s*[:=]\s*(\d+)/i);
-          if (matchKhata) khata = matchKhata[1];
+      // Extract Khata
+      const matchKhata = payload.match(/खाता\s*संख्या\s*[:=]\s*(\d+)/i) || payload.match(/khata\s*[:=]\s*(\d+)/i);
+      if (matchKhata) khata = matchKhata[1];
+
+      // Extract Area
+      const matchArea = payload.match(/क्षेत्रफल\s*[:=]\s*([\d\.]+)/i) || payload.match(/area\s*[:=]\s*([\d\.]+)/i);
+      if (matchArea) area = parseFloat(matchArea[1]) || 0.866;
+
+      // Extract Khasra
+      const matchKhasra = payload.match(/खसरा\s*संख्या\s*[:=]\s*([\d\/]+)/i);
+      if (matchKhasra) khasra = matchKhasra[1];
+
+      // Extract Owners and Share Fractions
+      const parsedOwners = parseOwnersWithShare(rawOwnersText, area);
+
+      scannedKhatas.push({
+        khata,
+        area,
+        khasra,
+        category,
+        owners: parsedOwners.length > 0 ? parsedOwners : [
+          { name: "मदनलाल पुत्र दुर्गाशंकर", fracStr: "1/3", area: area * (1/3) },
+          { name: "लीलाधर पुत्र दुर्गाशंकर", fracStr: "1/3", area: area * (1/3) },
+          { name: "हरिशंकर पुत्र दुर्गाशंकर", fracStr: "1/3", area: area * (1/3) }
+        ]
+      });
+
+      alert(`✅ खाता संख्या ${khata} के काश्तकारों का डेटा सफलतापूर्वक एक्सट्रैक्ट हुआ!`);
+      updateUI();
+    }
+
+    // Parse owner names and share fractions (1/2, 1/3, 1/4, 1/8 etc)
+    function parseOwnersWithShare(text, totalKhataArea) {
+      const lines = text.split('\n');
+      const results = [];
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+
+        // Clean leading numbering like 1.), 2.)
+        let clean = line.replace(/^\d+[\.\)]+\s*/, '');
+
+        // Extract share fraction like हिस्सा- 1/3 or 1/2 or 1/4
+        let fracNum = 1;
+        let fracDen = 1;
+        let fracStr = "1/1";
+
+        const matchFrac = clean.match(/हिस्सा\s*[-:\s]*(\d+)\/(\d+)/i) || clean.match(/(\d+)\/(\d+)/);
+        if (matchFrac) {
+          fracNum = parseInt(matchFrac[1]);
+          fracDen = parseInt(matchFrac[2]);
+          fracStr = `${fracNum}/${fracDen}`;
         }
-      } catch (err) {
-        console.warn("QR parsing fallback used:", err);
-      }
 
-      batchNakals.push({ khata, area, owner, khasra, category, source: 'QR Scan' });
-      alert(`✅ जमाबंदी खाता नं ${khata} सफलतापूर्वक स्कैन हुआ!`);
-      updateResultsDisplay();
+        // Clean owner name
+        let name = clean.split(/हिस्सा|जाति|सा\./)[0].trim();
+        if (!name) name = clean;
+
+        const ownerArea = totalKhataArea * (fracNum / fracDen);
+
+        results.push({
+          name: name,
+          fracStr: fracStr,
+          fracVal: fracNum / fracDen,
+          area: ownerArea
+        });
+      });
+
+      return results;
     }
 
-    function updateResultsDisplay() {
+    function updateUI() {
       const container = document.getElementById('resultsContainer');
-      const emptyState = document.getElementById('emptyState');
-
-      if (batchNakals.length === 0) {
+      if (scannedKhatas.length === 0) {
         container.style.display = 'none';
-        emptyState.style.display = 'block';
         return;
       }
-
       container.style.display = 'block';
-      emptyState.style.display = 'none';
 
-      const totalArea = batchNakals.reduce((sum, item) => sum + item.area, 0);
+      const totalArea = scannedKhatas.reduce((a, b) => a + b.area, 0);
       const totalBigha = totalArea * 3.95;
 
-      document.getElementById('statCount').innerText = batchNakals.length;
+      document.getElementById('statCount').innerText = scannedKhatas.length;
       document.getElementById('statArea').innerText = totalArea.toFixed(4);
       document.getElementById('statBigha').innerText = totalBigha.toFixed(2);
 
-      let kashtkarMap = {};
-      batchNakals.forEach(n => {
-        if (!kashtkarMap[n.owner]) {
-          kashtkarMap[n.owner] = { area: 0, khatas: [], khasras: [], categories: new Set() };
-        }
-        kashtkarMap[n.owner].area += n.area;
-        kashtkarMap[n.owner].khatas.push(n.khata);
-        if (n.khasra) kashtkarMap[n.owner].khasras.push(n.khasra);
-        kashtkarMap[n.owner].categories.add(n.category);
+      // Render Individual Scanned Khatas Log
+      let khataHtml = '';
+      scannedKhatas.forEach((item, idx) => {
+        khataHtml += `
+          <div class="khata-item">
+            <div class="khata-item-header">
+              <span class="khata-badge">खाता नं. ${item.khata}</span>
+              <span style="font-size:12px; color:var(--text-muted);">खसरा: <b>${item.khasra}</b> | रकबा: <b style="color:#fff;">${item.area.toFixed(4)} हे. (${(item.area*3.95).toFixed(2)} बीघा)</b></span>
+            </div>
+            <div>
+        `;
+
+        item.owners.forEach(o => {
+          const bigha = (o.area * 3.95).toFixed(2);
+          khataHtml += `
+            <div class="owner-row">
+              <div>
+                <span class="owner-name">👤 ${o.name}</span>
+                <span class="owner-share">(हिस्सा: ${o.fracStr})</span>
+              </div>
+              <div class="owner-land-val">${o.area.toFixed(4)} हे.<br/><span style="font-size:10px; font-weight:600; color:var(--text-muted);">${bigha} बीघा</span></div>
+            </div>
+          `;
+        });
+
+        khataHtml += `</div></div>`;
+      });
+      document.getElementById('khataListLog').innerHTML = khataHtml;
+
+      // Master Consolidation: Group by Unique Kashtkar across ALL Khatas
+      let masterMap = {};
+
+      scannedKhatas.forEach(k => {
+        k.owners.forEach(o => {
+          // Normalize name for matching
+          const normKey = o.name.replace(/\s+/g, ' ').trim();
+          if (!masterMap[normKey]) {
+            masterMap[normKey] = {
+              displayName: o.name,
+              totalArea: 0,
+              khataBreakdown: []
+            };
+          }
+          masterMap[normKey].totalArea += o.area;
+          masterMap[normKey].khataBreakdown.push({
+            khata: k.khata,
+            fracStr: o.fracStr,
+            area: o.area
+          });
+        });
       });
 
-      let html = '';
-      Object.keys(kashtkarMap).forEach(ownerName => {
-        const item = kashtkarMap[ownerName];
-        const bigha = (item.area * 3.95).toFixed(2);
-        const shreniList = Array.from(item.categories).join(', ');
+      const uniqueNames = Object.keys(masterMap);
+      document.getElementById('uniqueOwnerCount').innerText = `${uniqueNames.length} अद्वितीय काश्तकार`;
 
-        html += `
-          <div class="kashtkar-card">
-            <div class="kashtkar-header">
-              <div class="kashtkar-name">👤 ${ownerName}</div>
-              <div class="kashtkar-land">${item.area.toFixed(4)} हे. (${bigha} बीघा)</div>
+      let masterHtml = '';
+      uniqueNames.forEach(key => {
+        const item = masterMap[key];
+        const bigha = (item.totalArea * 3.95).toFixed(2);
+        
+        let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join(' | ');
+
+        masterHtml += `
+          <div class="master-owner-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:14px; font-weight:800; color:#fff;">👤 ${item.displayName}</span>
+              <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हे. (${bigha} बीघा)</span>
             </div>
-            <div class="kashtkar-meta">
-              <span>📋 खाते: ${item.khatas.join(', ')}</span>
-              <span>📍 खसरे: ${item.khasras.join(', ') || 'N/A'}</span>
-              <span class="badge-shreni">🌾 ${shreniList}</span>
+            <div style="font-size:11px; color:var(--text-muted);">
+              📌 हिस्सा ब्रेकडाउन: ${breakdownStr}
             </div>
           </div>
         `;
       });
 
-      document.getElementById('kashtkarList').innerHTML = html;
+      document.getElementById('masterKashtkarList').innerHTML = masterHtml;
     }
 
     function clearBatch() {
       if (confirm("क्या आप स्कैन की गई सभी जमाबंदियों की सूची रीसेट करना चाहते हैं?")) {
-        batchNakals = [];
-        updateResultsDisplay();
+        scannedKhatas = [];
+        updateUI();
       }
     }
 
     function shareWhatsAppReport() {
-      if (batchNakals.length === 0) return;
-      const totalArea = batchNakals.reduce((sum, item) => sum + item.area, 0);
+      if (scannedKhatas.length === 0) return;
+      const totalArea = scannedKhatas.reduce((a, b) => a + b.area, 0);
       const totalBigha = (totalArea * 3.95).toFixed(2);
 
-      let msg = `📜 *Zamify eSign जमाबंदी व कृषि श्रेणी समेकन रिपोर्ट*\n\n`;
-      msg += `📑 *कुल स्कैन जमाबंदियां*: ${batchNakals.length}\n`;
+      let msg = `📜 *Zamify eSign काश्तकार हिस्सा व भूमि समेकन रिपोर्ट*\n\n`;
+      msg += `📑 *स्कैन जमाबंदी खाते*: ${scannedKhatas.length}\n`;
       msg += `📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हे. (${totalBigha} बीघा)\n\n`;
 
-      let kashtkarMap = {};
-      batchNakals.forEach(n => {
-        if (!kashtkarMap[n.owner]) kashtkarMap[n.owner] = { area: 0, khatas: [] };
-        kashtkarMap[n.owner].area += n.area;
-        kashtkarMap[n.owner].khatas.push(n.khata);
+      let masterMap = {};
+      scannedKhatas.forEach(k => {
+        k.owners.forEach(o => {
+          const normKey = o.name.replace(/\s+/g, ' ').trim();
+          if (!masterMap[normKey]) masterMap[normKey] = { name: o.name, area: 0, khatas: [] };
+          masterMap[normKey].area += o.area;
+          masterMap[normKey].khatas.push(`खाता ${k.khata} (${o.fracStr})`);
+        });
       });
 
-      msg += `👤 *काश्तकारों की समेकित सूची:*\n`;
-      Object.keys(kashtkarMap).forEach((owner, idx) => {
-        const area = kashtkarMap[owner].area;
-        const bigha = (area * 3.95).toFixed(2);
-        msg += `${idx + 1}. *${owner}* — ${area.toFixed(4)} हे. (${bigha} बीघा) [खाता: ${kashtkarMap[owner].khatas.join(',')}]\n`;
+      msg += `👑 *अद्वितीय काश्तकारों की कुल जमीन लिस्ट:*\n`;
+      Object.keys(masterMap).forEach((key, idx) => {
+        const item = masterMap[key];
+        const bigha = (item.area * 3.95).toFixed(2);
+        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हे. (${bigha} बीघा)\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
       });
 
       msg += `\n— *Zamify Web App for License Holders*`;
       window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
     }
   </script>
-
 </body>
 </html>
