@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Zamify Web App — eSign Jamabandi QR & Kashtkar Hectare Extractor</title>
+  <title>Zamify Web App — eSign Jamabandi QR & Krishi Shreni Extractor</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -337,6 +337,31 @@
       display: block;
     }
 
+    /* Farmer Category Badges */
+    .shreni-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .shreni-simant {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+    .shreni-laghu {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+    .shreni-samanya {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+    }
+
     /* Owner Row inside Khata Drawer */
     .owner-row {
       display: flex;
@@ -420,7 +445,7 @@
         <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
         <div>
           <div class="brand-title">Zamify Web App</div>
-          <div class="brand-subtitle">eSign Jamabandi Live QR Hectare Extractor</div>
+          <div class="brand-subtitle">eSign Jamabandi & Krishi Shreni Extractor</div>
         </div>
       </div>
       <div class="status-badge">
@@ -431,10 +456,10 @@
     <!-- Main Card -->
     <div class="card">
       <div class="card-title">
-        <span>📜</span> eSign जमाबंदी QR कोड एक्सट्रैक्टर (हेक्टेयर)
+        <span>🌾</span> eSign जमाबंदी QR & कृषि श्रेणी कैलकुलेटर
       </div>
       <div class="card-desc">
-        जमाबंदी का QR कोड स्कैन करें या eSign URL (उदा. <code>apnakhata.rajasthan.gov.in/qr.aspx?usn=...</code>) डालें। सर्वर खाता संख्या, समस्त काश्तकारों के हिस्से (1/30, 7/180 आदि) व <b>सटीक हेक्टेयर (Hectare) रकबा</b> निकालेगा।
+        अपनी ई-साइन जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, समस्त काश्तकारों की जमीन (हेक्टेयर)</b> व उनकी सटीक <b>कृषि श्रेणी (सीमांत &lt; 1 हे., लघु 1-2 हे., सामान्य &gt; 2 हे.)</b> ऑटो-कैलकुलेट करेगा।
       </div>
 
       <!-- Action Buttons -->
@@ -518,14 +543,14 @@
         <!-- Master Consolidated Unique Kashtkar Table -->
         <div class="consolidated-box">
           <div class="consolidated-title">
-            <span>👑 समस्त अद्वितीय काश्तकारों की समेकित भूमि (हेक्टेयर)</span>
+            <span>👑 समस्त अद्वितीय काश्तकारों की समेकित कृषि श्रेणी रिपोर्ट</span>
             <span id="uniqueOwnerCount" style="font-size:12px; color:var(--gold);">0 काश्तकार</span>
           </div>
 
           <div id="masterKashtkarList"></div>
 
           <button class="btn-whatsapp" onclick="shareWhatsAppReport()">
-            💬 व्हाट्सएप पर काश्तकार हेक्टेयर (Hectare) रिपोर्ट भेजें
+            💬 व्हाट्सएप पर काश्तकार & कृषि श्रेणी रिपोर्ट भेजें
           </button>
         </div>
       </div>
@@ -536,6 +561,17 @@
   <script>
     let html5QrCode = null;
     let scannedKhatas = [];
+
+    // Helper: Determine Farmer Category based on Total Hectares
+    function getFarmerCategory(hectares) {
+      if (hectares < 1.0) {
+        return { name: "सीमांत किसान", class: "shreni-simant", label: "🟢 सीमांत किसान (< 1 हे.)" };
+      } else if (hectares <= 2.0) {
+        return { name: "लघु किसान", class: "shreni-laghu", label: "🟠 लघु किसान (1 - 2 हे.)" };
+      } else {
+        return { name: "सामान्य किसान", class: "shreni-samanya", label: "🔵 सामान्य किसान (> 2 हे.)" };
+      }
+    }
 
     function startCameraScanner() {
       const readerEl = document.getElementById('reader');
@@ -737,7 +773,7 @@
     }
 
     function removeKhata(idx, event) {
-      if (event) event.stopPropagation(); // prevent expanding drawer when clicking delete
+      if (event) event.stopPropagation();
       const item = scannedKhatas[idx];
       if (confirm(`क्या आप खाता संख्या ${item.khata} को सूची से हटाना चाहते हैं?`)) {
         scannedKhatas.splice(idx, 1);
@@ -761,7 +797,7 @@
       // Render Individual Khatas as Collapsible Drawers
       let khataHtml = '';
       scannedKhatas.forEach((item, idx) => {
-        const isFirst = (idx === 0) ? 'open' : ''; // keep first scanned khata expanded by default
+        const isFirst = (idx === 0) ? 'open' : '';
         khataHtml += `
           <div class="khata-drawer ${isFirst}" id="khata-drawer-${idx}">
             <div class="khata-drawer-header" onclick="toggleDrawer(${idx})">
@@ -773,7 +809,7 @@
                 <div class="khata-meta">
                   <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
                 </div>
-                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता हटाएं">🗑️ हटाए</button>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता बताएं">🗑️ हटाए</button>
                 <div class="drawer-arrow">▼</div>
               </div>
             </div>
@@ -781,11 +817,13 @@
         `;
 
         item.owners.forEach(o => {
+          const shreni = getFarmerCategory(o.area);
           khataHtml += `
             <div class="owner-row">
               <div>
                 <span class="owner-name">👤 ${o.name}</span>
-                <span class="owner-share">(हिस्सा: ${o.fracStr})</span>
+                <span class="owner-share">(हिस्सा: ${o.fracStr})</span><br/>
+                <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
               </div>
               <div class="owner-land-val">${o.area.toFixed(4)} हेक्टेयर</div>
             </div>
@@ -824,15 +862,19 @@
       let masterHtml = '';
       uniqueNames.forEach(key => {
         const item = masterMap[key];
+        const shreni = getFarmerCategory(item.totalArea);
         let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join(' | ');
 
         masterHtml += `
           <div class="master-owner-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-size:14px; font-weight:800; color:#fff;">👤 ${item.displayName}</span>
+              <div>
+                <span style="font-size:14px; font-weight:800; color:#fff;">👤 ${item.displayName}</span><br/>
+                <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
+              </div>
               <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हेक्टेयर</span>
             </div>
-            <div style="font-size:11px; color:var(--text-muted);">
+            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">
               📌 हिस्सा ब्रेकडाउन: ${breakdownStr}
             </div>
           </div>
@@ -853,7 +895,7 @@
       if (scannedKhatas.length === 0) return;
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
 
-      let msg = `📜 *Zamify eSign काश्तकार हिस्सा व भूमि समेकन रिपोर्ट (हेक्टेयर)*\n\n`;
+      let msg = `📜 *Zamify eSign काश्तकार व कृषि श्रेणी रिपोर्ट (हेक्टेयर)*\n\n`;
       msg += `📑 *स्कैन जमाबंदी खाते*: ${scannedKhatas.length}\n`;
       msg += `📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (Hectares)\n\n`;
 
@@ -867,10 +909,11 @@
         });
       });
 
-      msg += `👑 *अद्वितीय काश्तकारों की कुल हेक्टेयर जमीन लिस्ट:*\n`;
+      msg += `👑 *अद्वितीय काश्तकारों की कुल जमीन व कृषि श्रेणी:* \n`;
       Object.keys(masterMap).forEach((key, idx) => {
         const item = masterMap[key];
-        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हेक्टेयर\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
+        const shreni = getFarmerCategory(item.area);
+        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हेक्टेयर\n   ➔ *श्रेणी*: ${shreni.name}\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
       });
 
       msg += `— *Zamify Web App for License Holders*`;
