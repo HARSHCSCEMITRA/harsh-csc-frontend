@@ -5,20 +5,36 @@
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// ─── Supabase Helpers ──────────────────────────────────────────
 async function sbSelect(table, params = '') {
-  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': `Bearer ${SB_KEY}`,
-      'Content-Type': 'application/json'
+  const separator = params ? '&' : '';
+  let allRows = [];
+  let offset = 0;
+  const limit = 1000;
+  
+  while (true) {
+    const url = `${SB_URL}/rest/v1/${table}?${params}${separator}limit=${limit}&offset=${offset}`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Supabase SELECT error: ${err}`);
     }
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Supabase SELECT error: ${err}`);
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      break;
+    }
+    allRows = allRows.concat(data);
+    if (data.length < limit) {
+      break;
+    }
+    offset += limit;
   }
-  return res.json();
+  return allRows;
 }
 
 async function sbInsert(table, data) {
@@ -542,31 +558,20 @@ export default async function handler(req, res) {
             updated_at: new Date().toISOString()
           })).filter(item => item.khata && item.code);
           
-          if (khataPayload.length > 0) {
-            if (replace_khata_all) {
-              // Delete all existing khata codes on server to perform clean sync
-              await fetch(`${SB_URL}/rest/v1/khata_codes?khata=not.is.null`, {
-                method: 'DELETE',
+            const khataChunks = chunkArray(khataPayload, 1000);
+            for (const chunk of khataChunks) {
+              await fetch(`${SB_URL}/rest/v1/khata_codes`, {
+                method: 'POST',
                 headers: {
                   'apikey': SB_KEY,
-                  'Authorization': `Bearer ${SB_KEY}`
-                }
+                  'Authorization': `Bearer ${SB_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify(chunk)
               });
             }
-            
-            await fetch(`${SB_URL}/rest/v1/khata_codes`, {
-              method: 'POST',
-              headers: {
-                'apikey': SB_KEY,
-                'Authorization': `Bearer ${SB_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates'
-              },
-              body: JSON.stringify(khataPayload)
-            });
-          }
         }
-        
         // 2. Process Village Codes Upsert
         if (village_codes && village_codes.length > 0) {
           const villagePayload = village_codes.map(item => ({
@@ -579,16 +584,19 @@ export default async function handler(req, res) {
           })).filter(item => item.village_id && item.village_code);
           
           if (villagePayload.length > 0) {
-            await fetch(`${SB_URL}/rest/v1/village_codes`, {
-              method: 'POST',
-              headers: {
-                'apikey': SB_KEY,
-                'Authorization': `Bearer ${SB_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates'
-              },
-              body: JSON.stringify(villagePayload)
-            });
+            const vilChunks = chunkArray(villagePayload, 1000);
+            for (const chunk of vilChunks) {
+              await fetch(`${SB_URL}/rest/v1/village_codes`, {
+                method: 'POST',
+                headers: {
+                  'apikey': SB_KEY,
+                  'Authorization': `Bearer ${SB_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify(chunk)
+              });
+            }
           }
         }
         
@@ -603,6 +611,83 @@ export default async function handler(req, res) {
         });
       }
 
+      // Delete Specific Khata Code
+      case 'delete-khata-code': {
+        const { khata } = req.method === 'GET' ? req.query : req.body;
+        if (!khata) {
+          return res.status(400).json({ error: 'khata parameter is required.' });
+        }
+        await fetch(`${SB_URL}/rest/v1/khata_codes?khata=eq.${encodeURIComponent(String(khata).trim())}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        return res.status(200).json({ success: true, message: `Khata code ${khata} deleted successfully from server.` });
+      }
+
+      // Delete Specific Village Code
+      case 'delete-village-code': {
+        const { village_id } = req.method === 'GET' ? req.query : req.body;
+        if (!village_id) {
+          return res.status(400).json({ error: 'village_id parameter is required.' });
+        }
+        await fetch(`${SB_URL}/rest/v1/village_codes?village_id=eq.${encodeURIComponent(String(village_id).trim())}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        return res.status(200).json({ success: true, message: `Village code ${village_id} deleted successfully from server.` });
+      }
+      
+      // Delete All Khata Codes
+      case 'delete-all-khata-codes': {
+        await fetch(`${SB_URL}/rest/v1/khata_codes?khata=not.is.null`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        return res.status(200).json({ success: true, message: "All khata codes deleted successfully from server." });
+      }
+
+      // Delete All Village Codes
+      case 'delete-all-village-codes': {
+        await fetch(`${SB_URL}/rest/v1/village_codes?village_id=not.is.null`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        return res.status(200).json({ success: true, message: "All village codes deleted successfully from server." });
+      }
+
+      // Delete All Codes from Server
+      case 'delete-all-codes': {
+        // Delete all khata codes
+        await fetch(`${SB_URL}/rest/v1/khata_codes?khata=not.is.null`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        // Delete all village codes
+        await fetch(`${SB_URL}/rest/v1/village_codes?village_id=not.is.null`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`
+          }
+        });
+        return res.status(200).json({ success: true, message: "All village and khata codes deleted successfully from server." });
+      }
+
       default:
         return res.status(400).json({ error: `Unknown action: ${action}` });
     }
@@ -610,6 +695,14 @@ export default async function handler(req, res) {
     console.error('[SOFTWARE API] Error:', err);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
+}
+
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
 }
 
 // Resend helpers

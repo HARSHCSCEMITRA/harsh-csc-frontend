@@ -10,6 +10,7 @@ const Checkout        = lazy(() => import('./pages/Checkout'));
 const OTPVerification = lazy(() => import('./pages/OTPVerification'));
 const OrderTracking   = lazy(() => import('./pages/OrderTracking'));
 const Software        = lazy(() => import('./pages/Software'));
+const ZamifyWebPortal = lazy(() => import('./pages/ZamifyWebPortal'));
 
 // ─── Admin Pages (alag lazy load) ────────────────────────────────────────────
 const AdminLogin      = lazy(() => import('./admin/Login'));
@@ -94,6 +95,8 @@ export default function App() {
                   <Route path="/track"       element={<OrderTracking />} />
                   <Route path="/track/:ref"  element={<OrderTracking />} />
                   <Route path="/software"    element={<Software />} />
+                  <Route path="/portal"      element={<ZamifyWebPortal />} />
+                  <Route path="/mobile"      element={<ZamifyWebPortal />} />
 
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
