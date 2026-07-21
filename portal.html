@@ -311,6 +311,22 @@
       background: var(--accent);
       color: #fff;
     }
+    .btn-delete-khata {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-delete-khata:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
     .khata-drawer-body {
       display: none;
       padding: 14px 18px;
@@ -579,11 +595,24 @@
       document.getElementById('qrUrlInput').value = '';
     }
 
+    function isKhataAlreadyAdded(khataNo, villageName, sourceUrl) {
+      return scannedKhatas.some(k => {
+        if (sourceUrl && k.sourceUrl && sourceUrl === k.sourceUrl) return true;
+        if (k.khata === khataNo && (k.village === villageName || !villageName || villageName === "मैन्युअल एंट्री")) return true;
+        return false;
+      });
+    }
+
     function handleManualAdd(e) {
       e.preventDefault();
       const khata = document.getElementById('mKhata').value.trim();
       const area = parseFloat(document.getElementById('mArea').value) || 0;
       const rawOwners = document.getElementById('mOwnersText').value.trim();
+
+      if (isKhataAlreadyAdded(khata, "मैन्युअल एंट्री")) {
+        alert(`⚠️ खाता संख्या ${khata} पहले से ही जोड़ा जा चुका है! (Already Added)`);
+        return;
+      }
 
       const parsedOwners = parseOwnersText(rawOwners, area);
 
@@ -616,6 +645,11 @@
         loadingBox.style.display = 'none';
 
         if (data.success && data.owners && data.owners.length > 0) {
+          if (isKhataAlreadyAdded(data.khata, data.village, data.sourceUrl)) {
+            alert(`⚠️ खाता संख्या ${data.khata} (${data.village}) पहले से ही जोड़ा जा चुका है! (Already Added)`);
+            return;
+          }
+
           scannedKhatas.push({
             village: data.village,
             tehsil: data.tehsil,
@@ -623,7 +657,8 @@
             khata: data.khata,
             totalArea: data.totalArea,
             khasras: data.khasras,
-            owners: data.owners
+            owners: data.owners,
+            sourceUrl: data.sourceUrl
           });
           alert(`✅ खाता संख्या ${data.khata} (${data.village}) के ${data.owners.length} काश्तकारों का डाटा लाइव एक्सट्रैक्ट हुआ!`);
           updateUI();
@@ -638,6 +673,11 @@
     }
 
     function fallbackLocalParse(qrInput) {
+      if (isKhataAlreadyAdded("115", "राजसमन्द")) {
+        alert("⚠️ यह खाता संख्या 115 पहले से ही जोड़ा जा चुका है! (Already Added)");
+        return;
+      }
+
       const parsedOwners = parseOwnersText(qrInput, 1.3681);
       scannedKhatas.push({
         village: "राजसमन्द",
@@ -696,6 +736,15 @@
       }
     }
 
+    function removeKhata(idx, event) {
+      if (event) event.stopPropagation(); // prevent expanding drawer when clicking delete
+      const item = scannedKhatas[idx];
+      if (confirm(`क्या आप खाता संख्या ${item.khata} को सूची से हटाना चाहते हैं?`)) {
+        scannedKhatas.splice(idx, 1);
+        updateUI();
+      }
+    }
+
     function updateUI() {
       const container = document.getElementById('resultsContainer');
       if (scannedKhatas.length === 0) {
@@ -720,10 +769,11 @@
                 <span class="khata-badge">खाता संख्या: ${item.khata}</span>
                 <span style="font-size:12px; font-weight:700; color:#fff;">${item.village ? item.village : ''}</span>
               </div>
-              <div style="display:flex; align-items:center; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
                 <div class="khata-meta">
-                  <b>${item.totalArea.toFixed(4)} हेक्टेयर</b> (${item.owners.length} काश्तकार)
+                  <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
                 </div>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता हटाएं">🗑️ हटाए</button>
                 <div class="drawer-arrow">▼</div>
               </div>
             </div>
