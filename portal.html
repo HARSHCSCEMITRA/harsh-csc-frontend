@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Zamify Web App — eSign Jamabandi QR & Krishi Shreni Extractor</title>
+  <title>Zamify Web App — eSign Jamabandi & Krishi Shreni Certificate Generator</title>
   <link rel="icon" type="image/png" href="/logo.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -362,6 +362,26 @@
       color: #60a5fa;
     }
 
+    .btn-cert {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+      margin-top: 6px;
+    }
+    .btn-cert:hover {
+      transform: scale(1.03);
+    }
+
     /* Owner Row inside Khata Drawer */
     .owner-row {
       display: flex;
@@ -376,6 +396,9 @@
     .owner-name {
       font-weight: 700;
       color: #fff;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: var(--gold);
     }
     .owner-share {
       color: var(--accent-glow);
@@ -434,6 +457,97 @@
     .btn-whatsapp:hover {
       transform: translateY(-2px);
     }
+
+    /* CERTIFICATE MODAL STYLES */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-container {
+      background: #fff;
+      color: #000;
+      width: 100%;
+      max-width: 750px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    /* CERTIFICATE PRINTABLE FORMAT MATCHING USER IMAGE EXACTLY */
+    .cert-document {
+      font-family: 'Times New Roman', serif, 'Mangal', 'Noto Sans Devanagari';
+      color: #000;
+      padding: 20px;
+      background: #fff;
+      line-height: 2.2;
+      font-size: 18px;
+    }
+    .cert-title {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-decoration: underline;
+    }
+    .cert-line {
+      margin-bottom: 16px;
+      word-spacing: 2px;
+    }
+    .cert-fill {
+      font-weight: bold;
+      font-size: 19px;
+      color: #000;
+      display: inline-block;
+      padding: 0 6px;
+      border-bottom: 1px solid #000;
+    }
+    .cert-dots {
+      border-bottom: 1px dotted #000;
+      display: inline-block;
+      min-width: 120px;
+    }
+    .cert-footer {
+      margin-top: 50px;
+      display: flex;
+      justify-content: flex-end;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .modal-overlay {
+        display: block !important;
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: #fff;
+      }
+      .modal-container {
+        max-width: 100%;
+        max-height: 100%;
+        box-shadow: none;
+        padding: 0;
+      }
+      .cert-document, .cert-document * {
+        visibility: visible;
+      }
+      .modal-actions {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -445,7 +559,7 @@
         <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
         <div>
           <div class="brand-title">Zamify Web App</div>
-          <div class="brand-subtitle">eSign Jamabandi & Krishi Shreni Extractor</div>
+          <div class="brand-subtitle">eSign Jamabandi & Krishi Shreni Certificate Generator</div>
         </div>
       </div>
       <div class="status-badge">
@@ -456,10 +570,10 @@
     <!-- Main Card -->
     <div class="card">
       <div class="card-title">
-        <span>🌾</span> eSign जमाबंदी QR & कृषि श्रेणी कैलकुलेटर
+        <span>🌾</span> eSign जमाबंदी QR & कृषक श्रेणी प्रमाण-पत्र
       </div>
       <div class="card-desc">
-        अपनी ई-साइन जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, समस्त काश्तकारों की जमीन (हेक्टेयर)</b> व उनकी सटीक <b>कृषि श्रेणी (सीमांत &lt; 1 हे., लघु 1-2 हे., सामान्य &gt; 2 हे.)</b> ऑटो-कैलकुलेट करेगा।
+        जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, काश्तकार नाम, पिता/पति का नाम, जाति, कुल हेक्टेयर जमीन</b> एक्सट्रैक्ट करेगा। काश्तकार के नाम पर टैप करके <b>आधिकारिक कृषक श्रेणी प्रमाण-पत्र</b> जनरेट व प्रिंट करें!
       </div>
 
       <!-- Action Buttons -->
@@ -502,7 +616,7 @@
           </div>
           <div class="form-group">
             <label>काश्तकार व हिस्सा (1 पंक्ति में 1 काश्तकार नाम व हिस्सा)</label>
-            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180&#10;3. नदूं पत्नि तोलाराम हिस्सा- 1/5" required></textarea>
+            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30 जाति- ब्राह्मण&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180 जाति- ब्राह्मण&#10;3. नदूं पत्नि तोलाराम हिस्सा- 1/5 जाति- ब्राह्मण" required></textarea>
           </div>
           <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी खाता जोड़ें</button>
         </form>
@@ -558,18 +672,68 @@
     </div>
   </div>
 
+  <!-- CERTIFICATE PRINT MODAL -->
+  <div id="certModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px;">
+        <div style="font-size:16px; font-weight:800; color:#000;">📄 कृषक श्रेणी प्रमाण-पत्र प्रिव्यू</div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">🖨️ प्रिंट / PDF</button>
+          <button onclick="closeCertModal()" style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">✕ बंद करें</button>
+        </div>
+      </div>
+
+      <!-- Exact Official Certificate Document Layout -->
+      <div class="cert-document" id="certDocContent">
+        <div class="cert-title">कृषक श्रेणी प्रमाण–पत्र</div>
+
+        <div class="cert-line">
+          प्रमाणित किया जाता है कि कृषक श्री/श्रीमती/सुश्री <span class="cert-fill" id="cName">...........................................................................</span>
+        </div>
+
+        <div class="cert-line">
+          पुत्र/पत्नी/पुत्री <span class="cert-fill" id="cGuardian">.............................................................................................................</span>
+        </div>
+
+        <div class="cert-line">
+          जाति <span class="cert-fill" id="cCaste">...........................</span> निवासी <span class="cert-dots" style="width:160px;"></span> के स्वयं की भु–स्वामित्व कुल <span class="cert-fill" id="cArea">.........................</span>
+        </div>
+
+        <div class="cert-line">
+          हैक्टेयर <span class="cert-fill" id="cArea2">...........................</span> जमीन है। सिंचाई का स्त्रोत कुंआ / ट्यूबवेल खसरा न <span class="cert-dots" style="width:180px;"></span>
+        </div>
+
+        <div class="cert-line">
+          में स्थित है एवं इसका स्वामित्व भी है । कृषक <span class="cert-fill" id="cShreni">................................................................</span> श्रेणी में आता है।
+        </div>
+
+        <div class="cert-line" style="margin-top:10px;">
+          उक्त कृषक भाई बंटवारे में वर्तमान में खसरा नंबर <span class="cert-dots" style="width:240px;"></span> में काबिज है ।
+        </div>
+
+        <div class="cert-footer">
+          <div>
+            हस्ताक्षर पटवारी<br/>
+            हल्का
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let html5QrCode = null;
     let scannedKhatas = [];
+    let masterMapGlobal = {};
 
     // Helper: Determine Farmer Category based on Total Hectares
     function getFarmerCategory(hectares) {
       if (hectares < 1.0) {
-        return { name: "सीमांत किसान", class: "shreni-simant", label: "🟢 सीमांत किसान (< 1 हे.)" };
+        return { name: "सीमांत", full: "सीमांत किसान", class: "shreni-simant", label: "🟢 सीमांत किसान (< 1 हे.)" };
       } else if (hectares <= 2.0) {
-        return { name: "लघु किसान", class: "shreni-laghu", label: "🟠 लघु किसान (1 - 2 हे.)" };
+        return { name: "लघु", full: "लघु किसान", class: "shreni-laghu", label: "🟠 लघु किसान (1 - 2 हे.)" };
       } else {
-        return { name: "सामान्य किसान", class: "shreni-samanya", label: "🔵 सामान्य किसान (> 2 हे.)" };
+        return { name: "सामान्य", full: "सामान्य किसान", class: "shreni-samanya", label: "🔵 सामान्य किसान (> 2 हे.)" };
       }
     }
 
@@ -720,10 +884,10 @@
         khata: "115",
         totalArea: 1.3681,
         owners: parsedOwners.length > 0 ? parsedOwners : [
-          { name: "अंबालाल पुत्र भूरीबाई", fracStr: "1/30", area: 1.3681 * (1/30) },
-          { name: "चुन्नीलाल पुत्र तुलसीराम", fracStr: "7/180", area: 1.3681 * (7/180) },
-          { name: "नदूं पत्नि तोलाराम", fracStr: "1/5", area: 1.3681 * (1/5) },
-          { name: "दीपचन्द पुत्र धूला", fracStr: "7/30", area: 1.3681 * (7/30) }
+          { name: "अंबालाल पुत्र भूरीबाई", primaryName: "अंबालाल", relation: "पुत्र", guardian: "भूरीबाई", caste: "ब्राह्मण", fracStr: "1/30", area: 1.3681 * (1/30) },
+          { name: "चुन्नीलाल पुत्र तुलसीराम", primaryName: "चुन्नीलाल", relation: "पुत्र", guardian: "तुलसीराम", caste: "ब्राह्मण", fracStr: "7/180", area: 1.3681 * (7/180) },
+          { name: "नदूं पत्नि तोलाराम", primaryName: "नदूं", relation: "पत्नी", guardian: "तोलाराम", caste: "ब्राह्मण", fracStr: "1/5", area: 1.3681 * (1/5) },
+          { name: "दीपचन्द पुत्र धूला", primaryName: "दीपचन्द", relation: "पुत्र", guardian: "धूला", caste: "ब्राह्मण", fracStr: "7/30", area: 1.3681 * (7/30) }
         ]
       });
       updateUI();
@@ -752,10 +916,29 @@
         let name = clean.split(/हिस्सा|जाति|सा\./)[0].trim();
         if (!name) name = clean;
 
+        let caste = "";
+        const casteMatch = line.match(/जाति\s*[-:\s]*([^\s]+)/);
+        if (casteMatch) caste = casteMatch[1].trim();
+
+        let relation = "पुत्र";
+        let guardian = "";
+        const relMatch = line.match(/(पुत्र|पत्नी|पुत्री)\s+([^\s]+)/);
+        if (relMatch) {
+          relation = relMatch[1];
+          guardian = relMatch[2];
+        }
+
+        let primaryName = name.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
+        if (!primaryName) primaryName = name;
+
         const ownerArea = totalKhataArea * (fracNum / fracDen);
 
         results.push({
           name: name,
+          primaryName: primaryName,
+          relation: relation,
+          guardian: guardian,
+          caste: caste,
           fracStr: fracStr,
           fracVal: fracNum / fracDen,
           area: ownerArea
@@ -779,6 +962,27 @@
         scannedKhatas.splice(idx, 1);
         updateUI();
       }
+    }
+
+    // Open Certificate Modal with filled data
+    function openCertificate(kashtkarKey) {
+      const item = masterMapGlobal[kashtkarKey];
+      if (!item) return;
+
+      const shreni = getFarmerCategory(item.totalArea);
+
+      document.getElementById('cName').innerText = item.primaryName || item.displayName.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
+      document.getElementById('cGuardian').innerText = item.guardian ? `${item.relation || 'पुत्र'} ${item.guardian}` : (item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1] ? item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1].trim() : "...................................");
+      document.getElementById('cCaste').innerText = item.caste || "...........................";
+      document.getElementById('cArea').innerText = item.totalArea.toFixed(4);
+      document.getElementById('cArea2').innerText = item.totalArea.toFixed(4);
+      document.getElementById('cShreni').innerText = shreni.name;
+
+      document.getElementById('certModal').style.display = 'flex';
+    }
+
+    function closeCertModal() {
+      document.getElementById('certModal').style.display = 'none';
     }
 
     function updateUI() {
@@ -809,7 +1013,7 @@
                 <div class="khata-meta">
                   <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
                 </div>
-                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता हटाएं">🗑️ हटाए</button>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता बताएं">🗑️ हटाए</button>
                 <div class="drawer-arrow">▼</div>
               </div>
             </div>
@@ -818,12 +1022,14 @@
 
         item.owners.forEach(o => {
           const shreni = getFarmerCategory(o.area);
+          const normKey = o.name.replace(/\s+/g, ' ').trim();
           khataHtml += `
             <div class="owner-row">
               <div>
-                <span class="owner-name">👤 ${o.name}</span>
+                <span class="owner-name" onclick="openCertificate('${normKey}')">👤 ${o.name}</span>
                 <span class="owner-share">(हिस्सा: ${o.fracStr})</span><br/>
                 <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
+                <button class="btn-cert" onclick="openCertificate('${normKey}')">📄 प्रमाण-पत्र</button>
               </div>
               <div class="owner-land-val">${o.area.toFixed(4)} हेक्टेयर</div>
             </div>
@@ -835,19 +1041,28 @@
       document.getElementById('khataListLog').innerHTML = khataHtml;
 
       // Master Consolidation across ALL Khatas
-      let masterMap = {};
+      masterMapGlobal = {};
       scannedKhatas.forEach(k => {
         k.owners.forEach(o => {
           const normKey = o.name.replace(/\s+/g, ' ').trim();
-          if (!masterMap[normKey]) {
-            masterMap[normKey] = {
+          if (!masterMapGlobal[normKey]) {
+            masterMapGlobal[normKey] = {
               displayName: o.name,
+              primaryName: o.primaryName,
+              relation: o.relation,
+              guardian: o.guardian,
+              caste: o.caste,
               totalArea: 0,
               khataBreakdown: []
             };
           }
-          masterMap[normKey].totalArea += o.area;
-          masterMap[normKey].khataBreakdown.push({
+          masterMapGlobal[normKey].totalArea += o.area;
+          if (o.caste && !masterMapGlobal[normKey].caste) masterMapGlobal[normKey].caste = o.caste;
+          if (o.guardian && !masterMapGlobal[normKey].guardian) {
+            masterMapGlobal[normKey].guardian = o.guardian;
+            masterMapGlobal[normKey].relation = o.relation;
+          }
+          masterMapGlobal[normKey].khataBreakdown.push({
             khata: k.khata,
             fracStr: o.fracStr,
             area: o.area
@@ -855,26 +1070,28 @@
         });
       });
 
-      const uniqueNames = Object.keys(masterMap);
+      const uniqueNames = Object.keys(masterMapGlobal);
       document.getElementById('uniqueOwnerCount').innerText = `${uniqueNames.length} काश्तकार`;
       document.getElementById('statOwnersCount').innerText = uniqueNames.length;
 
       let masterHtml = '';
       uniqueNames.forEach(key => {
-        const item = masterMap[key];
+        const item = masterMapGlobal[key];
         const shreni = getFarmerCategory(item.totalArea);
         let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join(' | ');
 
         masterHtml += `
           <div class="master-owner-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
-                <span style="font-size:14px; font-weight:800; color:#fff;">👤 ${item.displayName}</span><br/>
+                <span class="owner-name" onclick="openCertificate('${key}')" style="font-size:15px; font-weight:800;">👤 ${item.displayName}</span><br/>
                 <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
+                ${item.caste ? `<span style="font-size:11px; color:var(--accent-glow); margin-left:6px;">(जाति: ${item.caste})</span>` : ''}<br/>
+                <button class="btn-cert" onclick="openCertificate('${key}')">📄 कृषक श्रेणी प्रमाण-पत्र प्रिंट करें</button>
               </div>
               <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हेक्टेयर</span>
             </div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+            <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">
               📌 हिस्सा ब्रेकडाउन: ${breakdownStr}
             </div>
           </div>
@@ -887,6 +1104,7 @@
     function clearBatch() {
       if (confirm("क्या आप स्कैन की गई सभी जमाबंदियों की सूची रीसेट करना चाहते हैं?")) {
         scannedKhatas = [];
+        masterMapGlobal = {};
         updateUI();
       }
     }
@@ -899,21 +1117,12 @@
       msg += `📑 *स्कैन जमाबंदी खाते*: ${scannedKhatas.length}\n`;
       msg += `📐 *कुल समेकित रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (Hectares)\n\n`;
 
-      let masterMap = {};
-      scannedKhatas.forEach(k => {
-        k.owners.forEach(o => {
-          const normKey = o.name.replace(/\s+/g, ' ').trim();
-          if (!masterMap[normKey]) masterMap[normKey] = { name: o.name, area: 0, khatas: [] };
-          masterMap[normKey].area += o.area;
-          masterMap[normKey].khatas.push(`खाता ${k.khata} (${o.fracStr})`);
-        });
-      });
-
       msg += `👑 *अद्वितीय काश्तकारों की कुल जमीन व कृषि श्रेणी:* \n`;
-      Object.keys(masterMap).forEach((key, idx) => {
-        const item = masterMap[key];
-        const shreni = getFarmerCategory(item.area);
-        msg += `${idx + 1}. *${item.name}*\n   ➔ कुल जमीन: ${item.area.toFixed(4)} हेक्टेयर\n   ➔ *श्रेणी*: ${shreni.name}\n   ➔ विवरण: ${item.khatas.join(', ')}\n\n`;
+      Object.keys(masterMapGlobal).forEach((key, idx) => {
+        const item = masterMapGlobal[key];
+        const shreni = getFarmerCategory(item.totalArea);
+        let khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
+        msg += `${idx + 1}. *${item.displayName}*\n   ➔ कुल जमीन: ${item.totalArea.toFixed(4)} हेक्टेयर\n   ➔ *श्रेणी*: ${shreni.full}\n   ➔ विवरण: ${khatasStr}\n\n`;
       });
 
       msg += `— *Zamify Web App for License Holders*`;

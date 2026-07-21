@@ -102,9 +102,25 @@ export default async function handler(req, res) {
         fracStr = `${fracNum}/${fracDen}`;
       }
 
-      // Clean owner name (remove caste, village, etc)
+      // Clean owner name & extract caste, guardian, relation
       let cleanName = rawLine.split(/हिस्सा|जाति|सा\./)[0].trim();
       if (!cleanName) cleanName = rawLine;
+
+      let caste = "";
+      const casteMatch = rawLine.match(/जाति\s*[-:\s]*([^\s]+)/);
+      if (casteMatch) caste = casteMatch[1].trim();
+
+      let relation = "पुत्र";
+      let guardian = "";
+      const relMatch = rawLine.match(/(पुत्र|पत्नी|पुत्री)\s+([^\s]+)/);
+      if (relMatch) {
+        relation = relMatch[1];
+        guardian = relMatch[2];
+      }
+
+      // Extract primary Kashtkar name before relation
+      let primaryName = cleanName.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
+      if (!primaryName) primaryName = cleanName;
 
       const ownerArea = totalArea * (fracNum / fracDen);
 
@@ -112,6 +128,10 @@ export default async function handler(req, res) {
         idx: m[1],
         raw: rawLine,
         name: cleanName,
+        primaryName: primaryName,
+        relation: relation,
+        guardian: guardian,
+        caste: caste,
         fracStr: fracStr,
         fracVal: fracNum / fracDen,
         area: ownerArea,
