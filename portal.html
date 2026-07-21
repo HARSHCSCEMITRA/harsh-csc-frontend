@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
   <!-- HTML5 QR Code Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- HTML2PDF Library for Direct PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -363,19 +365,19 @@
     }
 
     .btn-cert {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: linear-gradient(135deg, #10b981, #059669);
       color: #fff;
       border: none;
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 10px;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
       margin-top: 6px;
     }
     .btn-cert:hover {
@@ -462,7 +464,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
       backdrop-filter: blur(8px);
       z-index: 9999;
       display: none;
@@ -475,7 +477,7 @@
       color: #000;
       width: 100%;
       max-width: 750px;
-      max-height: 90vh;
+      max-height: 92vh;
       overflow-y: auto;
       border-radius: 16px;
       padding: 24px;
@@ -483,70 +485,52 @@
       position: relative;
     }
 
-    /* CERTIFICATE PRINTABLE FORMAT MATCHING USER IMAGE EXACTLY */
+    /* CERTIFICATE DOCUMENT LAYOUT MATCHING USER IMAGE EXACTLY WITH SMART CONTINUOUS INLINE FLOW */
     .cert-document {
       font-family: 'Times New Roman', serif, 'Mangal', 'Noto Sans Devanagari';
       color: #000;
-      padding: 20px;
+      padding: 28px 24px;
       background: #fff;
-      line-height: 2.2;
-      font-size: 18px;
+      font-size: 19.5px;
+      line-height: 2.3;
+      text-align: justify;
     }
     .cert-title {
       text-align: center;
       font-size: 26px;
       font-weight: bold;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
       text-decoration: underline;
     }
-    .cert-line {
-      margin-bottom: 16px;
-      word-spacing: 2px;
-    }
+
+    /* Filled Text Span with Clean Underline */
     .cert-fill {
       font-weight: bold;
-      font-size: 19px;
+      font-size: 20px;
       color: #000;
-      display: inline-block;
-      padding: 0 6px;
-      border-bottom: 1px solid #000;
+      padding: 0 4px;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      word-break: break-word;
     }
-    .cert-dots {
-      border-bottom: 1px dotted #000;
+
+    /* Fixed Standard Length Blank Dotted Lines */
+    .cert-blank-fixed {
+      border-bottom: 1.5px dotted #000;
       display: inline-block;
-      min-width: 120px;
+      height: 1.1em;
+      vertical-align: baseline;
+      margin: 0 2px;
     }
+
     .cert-footer {
-      margin-top: 50px;
+      margin-top: 55px;
       display: flex;
       justify-content: flex-end;
       text-align: center;
-      font-size: 18px;
+      font-size: 18.5px;
       font-weight: bold;
-    }
-
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      .modal-overlay {
-        display: block !important;
-        position: absolute;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background: #fff;
-      }
-      .modal-container {
-        max-width: 100%;
-        max-height: 100%;
-        box-shadow: none;
-        padding: 0;
-      }
-      .cert-document, .cert-document * {
-        visibility: visible;
-      }
-      .modal-actions {
-        display: none !important;
-      }
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -559,7 +543,7 @@
         <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
         <div>
           <div class="brand-title">Zamify Web App</div>
-          <div class="brand-subtitle">eSign Jamabandi & Krishi Shreni Certificate Generator</div>
+          <div class="brand-subtitle">eSign Jamabandi & Krishi Shreni Extractor</div>
         </div>
       </div>
       <div class="status-badge">
@@ -573,7 +557,7 @@
         <span>🌾</span> eSign जमाबंदी QR & कृषक श्रेणी प्रमाण-पत्र
       </div>
       <div class="card-desc">
-        जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, काश्तकार नाम, पिता/पति का नाम, जाति, कुल हेक्टेयर जमीन</b> एक्सट्रैक्ट करेगा। काश्तकार के नाम पर टैप करके <b>आधिकारिक कृषक श्रेणी प्रमाण-पत्र</b> जनरेट व प्रिंट करें!
+        जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, काश्तकार नाम, पिता/पति का नाम, जाति, कुल हेक्टेयर जमीन</b> एक्सट्रैक्ट करेगा। काश्तकार के नाम पर टैप करके <b>कृषक श्रेणी प्रमाण-पत्र PDF</b> डाउनलोड करें!
       </div>
 
       <!-- Action Buttons -->
@@ -672,44 +656,26 @@
     </div>
   </div>
 
-  <!-- CERTIFICATE PRINT MODAL -->
+  <!-- CERTIFICATE PRINT / PDF MODAL -->
   <div id="certModal" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px;">
-        <div style="font-size:16px; font-weight:800; color:#000;">📄 कृषक श्रेणी प्रमाण-पत्र प्रिव्यू</div>
+        <div style="font-size:16px; font-weight:800; color:#000;">📄 कृषक श्रेणी प्रमाण-पत्र</div>
         <div style="display:flex; gap:8px;">
-          <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">🖨️ प्रिंट / PDF</button>
+          <button onclick="downloadCertPdf()" style="background:#10b981; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            📥 PDF डाउनलोड करें
+          </button>
           <button onclick="closeCertModal()" style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">✕ बंद करें</button>
         </div>
       </div>
 
-      <!-- Exact Official Certificate Document Layout -->
+      <!-- Exact Official Certificate Document Layout with Smart Inline Flow -->
       <div class="cert-document" id="certDocContent">
         <div class="cert-title">कृषक श्रेणी प्रमाण–पत्र</div>
 
-        <div class="cert-line">
-          प्रमाणित किया जाता है कि कृषक श्री/श्रीमती/सुश्री <span class="cert-fill" id="cName">...........................................................................</span>
-        </div>
-
-        <div class="cert-line">
-          पुत्र/पत्नी/पुत्री <span class="cert-fill" id="cGuardian">.............................................................................................................</span>
-        </div>
-
-        <div class="cert-line">
-          जाति <span class="cert-fill" id="cCaste">...........................</span> निवासी <span class="cert-dots" style="width:160px;"></span> के स्वयं की भु–स्वामित्व कुल <span class="cert-fill" id="cArea">.........................</span>
-        </div>
-
-        <div class="cert-line">
-          हैक्टेयर <span class="cert-fill" id="cArea2">...........................</span> जमीन है। सिंचाई का स्त्रोत कुंआ / ट्यूबवेल खसरा न <span class="cert-dots" style="width:180px;"></span>
-        </div>
-
-        <div class="cert-line">
-          में स्थित है एवं इसका स्वामित्व भी है । कृषक <span class="cert-fill" id="cShreni">................................................................</span> श्रेणी में आता है।
-        </div>
-
-        <div class="cert-line" style="margin-top:10px;">
-          उक्त कृषक भाई बंटवारे में वर्तमान में खसरा नंबर <span class="cert-dots" style="width:240px;"></span> में काबिज है ।
-        </div>
+        <p style="margin: 0; padding: 0;">
+          प्रमाणित किया जाता है कि कृषक श्री/श्रीमती/सुश्री <span class="cert-fill" id="cName">......................</span> पुत्र/पत्नी/पुत्री <span class="cert-fill" id="cGuardian">......................</span> जाति <span class="cert-fill" id="cCaste">......................</span> निवासी <span class="cert-blank-fixed" style="min-width: 170px;"></span> के स्वयं की भु–स्वामित्व कुल <span class="cert-fill" id="cArea">0.0000</span> हैक्टेयर <span class="cert-blank-fixed" style="min-width: 140px;"></span> जमीन है। सिंचाई का स्त्रोत कुंआ / ट्यूबवेल खसरा न <span class="cert-blank-fixed" style="min-width: 180px;"></span> में स्थित है एवं इसका स्वामित्व भी है । कृषक <span class="cert-fill" id="cShreni">......................</span> श्रेणी में आता है। उक्त कृषक भाई बंटवारे में वर्तमान में खसरा नंबर <span class="cert-blank-fixed" style="min-width: 220px;"></span> में काबिज है ।
+        </p>
 
         <div class="cert-footer">
           <div>
@@ -725,6 +691,7 @@
     let html5QrCode = null;
     let scannedKhatas = [];
     let masterMapGlobal = {};
+    let activeKashtkarNameForPdf = "Kashtkar";
 
     // Helper: Determine Farmer Category based on Total Hectares
     function getFarmerCategory(hectares) {
@@ -970,12 +937,14 @@
       if (!item) return;
 
       const shreni = getFarmerCategory(item.totalArea);
+      const primName = item.primaryName || item.displayName.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
 
-      document.getElementById('cName').innerText = item.primaryName || item.displayName.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
-      document.getElementById('cGuardian').innerText = item.guardian ? `${item.relation || 'पुत्र'} ${item.guardian}` : (item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1] ? item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1].trim() : "...................................");
-      document.getElementById('cCaste').innerText = item.caste || "...........................";
+      activeKashtkarNameForPdf = primName;
+
+      document.getElementById('cName').innerText = primName;
+      document.getElementById('cGuardian').innerText = item.guardian ? `${item.relation || 'पुत्र'} ${item.guardian}` : (item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1] ? item.displayName.split(/पुत्र|पत्नी|पुत्री/)[1].trim() : "......................");
+      document.getElementById('cCaste').innerText = item.caste || "......................";
       document.getElementById('cArea').innerText = item.totalArea.toFixed(4);
-      document.getElementById('cArea2').innerText = item.totalArea.toFixed(4);
       document.getElementById('cShreni').innerText = shreni.name;
 
       document.getElementById('certModal').style.display = 'flex';
@@ -983,6 +952,22 @@
 
     function closeCertModal() {
       document.getElementById('certModal').style.display = 'none';
+    }
+
+    // Direct PDF Download using html2pdf.js
+    function downloadCertPdf() {
+      const element = document.getElementById('certDocContent');
+      const filename = `Krishi_Shreni_Praman_Patra_${activeKashtkarNameForPdf.replace(/\s+/g, '_')}.pdf`;
+
+      const opt = {
+        margin:       [12, 12, 12, 12],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
     }
 
     function updateUI() {
@@ -1013,7 +998,7 @@
                 <div class="khata-meta">
                   <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
                 </div>
-                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता बताएं">🗑️ हटाए</button>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)" title="खाता हटाएं">🗑️ हटाए</button>
                 <div class="drawer-arrow">▼</div>
               </div>
             </div>
@@ -1029,7 +1014,7 @@
                 <span class="owner-name" onclick="openCertificate('${normKey}')">👤 ${o.name}</span>
                 <span class="owner-share">(हिस्सा: ${o.fracStr})</span><br/>
                 <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
-                <button class="btn-cert" onclick="openCertificate('${normKey}')">📄 प्रमाण-पत्र</button>
+                <button class="btn-cert" onclick="openCertificate('${normKey}')">📄 PDF प्रमाण-पत्र</button>
               </div>
               <div class="owner-land-val">${o.area.toFixed(4)} हेक्टेयर</div>
             </div>
@@ -1087,7 +1072,7 @@
                 <span class="owner-name" onclick="openCertificate('${key}')" style="font-size:15px; font-weight:800;">👤 ${item.displayName}</span><br/>
                 <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
                 ${item.caste ? `<span style="font-size:11px; color:var(--accent-glow); margin-left:6px;">(जाति: ${item.caste})</span>` : ''}<br/>
-                <button class="btn-cert" onclick="openCertificate('${key}')">📄 कृषक श्रेणी प्रमाण-पत्र प्रिंट करें</button>
+                <button class="btn-cert" onclick="openCertificate('${key}')">📥 कृषक श्रेणी प्रमाण-पत्र PDF डाउनलोड करें</button>
               </div>
               <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हेक्टेयर</span>
             </div>
