@@ -114,6 +114,21 @@ export const Header: React.FC = () => {
             {t('nav.software')}
           </Link>
 
+          {/* Mobile Portal link */}
+          <Link to="/portal" style={{
+            color:          '#60a5fa',
+            fontSize:       '13px',
+            textDecoration: 'none',
+            fontWeight:     700,
+            padding:        '5px 8px',
+            borderRadius:   '6px',
+            background:     'rgba(96,165,250,0.1)',
+            border:         '1px solid rgba(96,165,250,0.3)',
+            transition:     'all 0.2s',
+          }}>
+            📱 Mobile Portal
+          </Link>
+
           {/* Track Order link */}
           <Link to="/track" style={{
             color:          '#cbd5e1',
