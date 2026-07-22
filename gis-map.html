@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        window.pendingLogs = [];
+        (function() {
+            var oldLog = console.log;
+            var oldError = console.error;
+            var oldWarn = console.warn;
+            console.log = function() {
+                var msg = Array.prototype.slice.call(arguments).join(' ');
+                window.pendingLogs.push('[LOG] ' + msg);
+                oldLog.apply(console, arguments);
+            };
+            console.error = function() {
+                var msg = Array.prototype.slice.call(arguments).join(' ');
+                window.pendingLogs.push('[ERROR] ' + msg);
+                oldError.apply(console, arguments);
+            };
+            console.warn = function() {
+                var msg = Array.prototype.slice.call(arguments).join(' ');
+                window.pendingLogs.push('[WARN] ' + msg);
+                oldWarn.apply(console, arguments);
+            };
+            window.onerror = function(message, source, lineno, colno, error) {
+                window.pendingLogs.push('[UNCAUGHT ERROR] ' + message + ' at ' + source + ':' + lineno + ':' + colno);
+                return false;
+            };
+        })();
+    </script>
+    <title>Zamify Live Mines & Khasra Overlay</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Esri Leaflet -->
+    <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body, html, #map {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: #030712;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            color: #f8fafc;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Floating Search Panel */
+        .search-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 360px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f8fafc;
+            font-size: 15px;
+            padding: 8px 12px;
+            font-family: inherit;
+        }
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            background: #1e3a8a;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            color: #f59e0b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        .btn-icon:hover {
+            background: #f59e0b;
+            color: #0f172a;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Floating Tool Control Bar */
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            padding: 6px;
+        }
+        .btn-action {
+            padding: 8px 16px;
+            background: #1e3a8a;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            color: #f59e0b;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-action:hover {
+            background: #f59e0b;
+            color: #0f172a;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+        }
+        .btn-action.active {
+            background: #0284c7;
+            color: #fff;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
+        }
+
+        /* Floating Info Card (Area Measurement / Khasra Details) */
+        .info-panel {
+            position: absolute;
+            width: 360px;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .info-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .info-label {
+            color: #94a3b8;
+        }
+        .info-value {
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .details-actions {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .btn-download {
+            width: 100%;
+            padding: 10px;
+            background: #1e3a8a;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            color: #f59e0b;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-download:hover {
+            background: #f59e0b;
+            color: #0f172a;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        /* Zoom controls override styling */
+        .custom-zoom-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: #1e3a8a;
+            color: #f59e0b;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .zoom-btn:hover {
+            background: #f59e0b;
+            color: #0f172a;
+        }
+
+        /* Drawing Instructions Banner */
+        .instruction-banner {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            font-size: 14px;
+            background: rgba(2, 132, 199, 0.9);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        select.search-input {
+            background: #111827;
+            color: #f8fafc;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        select.search-input option {
+            background: #111827;
+            color: #f8fafc;
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #f8fafc;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+            text-align: left;
+        }
+        .suggestion-item:hover {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+        /* Glowing blue dot for current location */
+        .current-location-marker {
+            background: #38bdf8;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.4), 0 0 0 10px rgba(56, 189, 248, 0.2);
+            width: 14px;
+            height: 14px;
+        }
+        .owner-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .owner-item:hover {
+            background: rgba(245, 158, 11, 0.15);
+        }
+        .owner-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #f1f5f9;
+            text-align: left;
+            flex: 1;
+            padding-right: 8px;
+        }
+        .owner-item-details {
+            font-size: 11.5px;
+            color: #94a3b8;
+            text-align: right;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <!-- Instructions Banner -->
+    <div id="instructionBanner" class="instruction-banner">
+        📍 नक्शे पर क्लिक करके कोनों को चुनें। पूरा होने पर डबल-क्लिक करें।
+    </div>
+
+    <!-- Search Panel -->
+    <div class="search-panel glass-panel" style="flex-direction: column; align-items: stretch; gap: 0;">
+        <div style="display: flex; align-items: center; width: 100%; gap: 6px;">
+            <input type="text" id="searchInput" class="search-input" placeholder="गाँव, पट्टाधारक या पट्टा संख्या..." onkeydown="if(event.key==='Enter') triggerSearch()" oninput="onSearchInput(this.value)" autocomplete="off" />
+            <button class="btn-icon" onclick="getCurrentLocation()" title="वर्तमान स्थान (Current Location)">🎯</button>
+            <button class="btn-icon" onclick="triggerSearch()" title="खोजें">🔍</button>
+        </div>
+        <div id="suggestionsList" style="display: none; width: 100%; max-height: 200px; overflow-y: auto; margin-top: 5px; border-top: 1px solid rgba(245,158,11,0.2);"></div>
+    </div>
+
+    <!-- Khasra Details Panel -->
+    <div id="detailsPanel" class="info-panel glass-panel" style="top: 80px; left: 20px; display: none;">
+        <div class="info-title">
+            <span>ℹ️ खसरा विवरण (Khasra Details)</span>
+            <button class="close-btn" onclick="closeDetails()">✕</button>
+        </div>
+        <div class="info-row">
+            <span class="info-label">खसरा नंबर (Khasra No):</span>
+            <span id="detailPlotNo" class="info-value" style="color: #22d3ee; font-weight: bold;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">क्षेत्रफल (Area):</span>
+            <span id="detailArea" class="info-value" style="color: #a78bfa; font-weight: bold;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">खाता संख्या (Khata No):</span>
+            <span id="detailKhataNo" class="info-value" style="color: #34d399; font-weight: bold;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">खातेदार (Owner):</span>
+            <span id="detailOwnerName" class="info-value" style="color: #f59e0b; font-weight: bold;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">गाँव (Village):</span>
+            <span id="detailVillage" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">RI:</span>
+            <span id="detailRI" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Halkas:</span>
+            <span id="detailHalkas" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">तहसील (Tehsil):</span>
+            <span id="detailTehsil" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">जिला (District):</span>
+            <span id="detailDistrict" class="info-value">-</span>
+        </div>
+        <div class="details-actions">
+            <button class="btn-download" onclick="downloadAction('NAKAL')">📄 नकल (Jamabandi) डाउनलोड करें</button>
+            <button class="btn-download" onclick="downloadAction('NAKSHA')">🗺️ नक्शा (Naksha Trace) डाउनलोड करें</button>
+            <div id="downloadStatus" style="font-size: 13px; font-weight: bold; margin-top: 8px; text-align: center; display: none;"></div>
+        </div>
+    </div>
+
+
+
+    <!-- Mining Lease Details Panel -->
+    <div id="leasePanel" class="info-panel glass-panel" style="top: 380px; left: 20px; display: none; border-color: #0ea5e9;">
+        <div class="info-title" style="color: #0ea5e9; border-bottom-color: rgba(14,165,233,0.3);">
+            <span>⛏️ माइनिंग पट्टा (Mining Lease)</span>
+            <button class="close-btn" onclick="closeLeaseDetails()">✕</button>
+        </div>
+        <div class="info-row">
+            <span class="info-label">पट्टाधारक (Lessee):</span>
+            <span id="leaseLessee" class="info-value" style="color: #38bdf8;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">पट्टा संख्या (Lease No):</span>
+            <span id="leaseNo" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">खनिज (Mineral):</span>
+            <span id="leaseMineral" class="info-value" style="color: #f59e0b;">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">स्थिति (Status):</span>
+            <span id="leaseStatus" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">क्षेत्रफल (Area):</span>
+            <span id="leaseArea" class="info-value">-</span>
+        </div>
+        <div class="details-actions">
+            <a id="leaseLink" href="#" target="_blank" class="btn-download" style="background: #0369a1; border-color: rgba(14,165,233,0.4); text-decoration: none; color: #e0f2fe;">🌐 और विवरण देखें (dmgoms)</a>
+        </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="control-panel glass-panel">
+        <button id="changeBasemapBtn" class="btn-action" style="background: #15803d; border-color: rgba(34, 197, 94, 0.4);" onclick="toggleBasemap()">
+            🗺️ गूगल मैप बदलें
+        </button>
+        <button id="toggleOverlayBtn" class="btn-action active" onclick="toggleOverlay()">
+            📶 ओवरले छिपाएं
+        </button>
+        <button id="toggleLeaseBtn" class="btn-action active" style="background: #0369a1; border-color: rgba(14,165,233,0.4);" onclick="toggleLeaseOverlay()">
+            ⛏️ पट्टे (Leases) छिपाएं
+        </button>
+        <button id="toggleSelectorBtn" class="btn-action" onclick="toggleSelector()">
+            🔍 गाँव/खसरा खोजें
+        </button>
+        <button id="shareLocationBtn" class="btn-action" style="background: #a21caf; border-color: rgba(232, 121, 249, 0.4);" onclick="toggleLocationSharing()">
+            📱 मोबाइल ट्रैक
+        </button>
+        <button id="measureBtn" class="btn-action" onclick="toggleMeasurement()">
+            📐 क्षेत्रफल मापें
+        </button>
+        <button id="resetMeasureBtn" class="btn-action" style="display: none; background: #374151; border-color: #4b5563;" onclick="resetMeasurement()">
+            🔄 रीसेट
+        </button>
+    </div>
+
+    <!-- Location Sharing Panel -->
+    <div id="locationSharingPanel" class="info-panel glass-panel" style="top: 80px; right: 20px; display: none; width: 340px; border-color: #e879f9;">
+        <div class="info-title" style="color: #e879f9; border-bottom-color: rgba(232,121,249,0.3);">
+            <span>📱 मोबाइल ट्रैकिंग (Live Tracking)</span>
+            <button class="close-btn" onclick="toggleLocationSharing()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <p style="font-size: 13px; color: #94a3b8; margin: 0 0 4px 0;">आप एक साथ कई मोबाइल ट्रैक कर सकते हैं। ऑटो-फॉलो और दूरी मापन भी उपलब्ध है।</p>
+            
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                <button class="btn-download" style="padding: 6px 12px; font-size: 12px; flex: 1; background: #86198f; border-color: #a21caf;" onclick="createNewTrackingRoom()">➕ नया ट्रैक लिंक</button>
+                <button class="btn-download" style="padding: 6px 12px; font-size: 12px; flex: 1; background: #0284c7; border-color: #0369a1;" onclick="enableManualPointAdd()">➕ कंप्यूटर पॉइंट</button>
+                <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #cbd5e1; user-select: none;">
+                    <input type="checkbox" id="autoFollowCheck" checked style="cursor: pointer;" />
+                    <label for="autoFollowCheck" style="cursor: pointer;">ऑटो-फॉलो</label>
+                </div>
+            </div>
+
+            <!-- List of Active Tracking Devices -->
+            <div id="trackingDevicesList" style="max-height: 180px; overflow-y: auto; background: #0b0f19; border: 1px solid rgba(232,121,249,0.25); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 6px;">
+                <div style="text-align: center; color: #64748b; font-size: 12px; padding: 10px;">कोई सक्रिय ट्रैकर नहीं है। ऊपर क्लिक करके जोड़ें।</div>
+            </div>
+
+            <!-- Distance Between Trackers -->
+            <div id="devicesDistancePanel" style="display: none; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; padding: 8px; font-size: 12px; color: #22d3ee;">
+                <strong>📏 ट्रैकर्स के बीच की दूरी:</strong>
+                <div id="devicesDistanceVal" style="margin-top: 4px; font-weight: bold; line-height: 1.4;">-</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div id="qrcode" style="background: white; padding: 10px; display: none; border-radius: 8px; margin: 5px auto; width: 120px; height: 120px;"></div>
+            </div>
+
+            <button class="btn-download" style="background: #ef4444; border-color: #f87171; color: white;" onclick="stopTrackingRoom()">⏹ सभी ट्रैकिंग बंद करें</button>
+        </div>
+    </div>
+
+    <!-- Manual Selector Panel -->
+    <div id="manualSelectorPanel" class="info-panel glass-panel" style="top: 80px; right: 20px; display: none; width: 320px; max-height: 80vh; overflow-y: auto;">
+        <div class="info-title">
+            <span>📍 गाँव/खसरा खोजें (Locate Khasra)</span>
+            <button class="close-btn" onclick="toggleSelector()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">जिला (District):</span>
+                <select id="manualDistrict" class="search-input" style="width: 100%;" onchange="onDistrictChange()" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">तहसील (Tehsil):</span>
+                <select id="manualTehsil" class="search-input" style="width: 100%;" onchange="onTehsilChange()" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">रा.नि. (RI):</span>
+                <select id="manualRI" class="search-input" style="width: 100%;" onchange="onRIChange()" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">पटवार हल्का (Halka):</span>
+                <select id="manualHalka" class="search-input" style="width: 100%;" onchange="onHalkaChange()" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">ग्राम (Village):</span>
+                <select id="manualVillage" class="search-input" style="width: 100%;" onchange="onVillageChange()" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">शीट (Sheet):</span>
+                <select id="manualSheet" class="search-input" style="width: 100%;" autocomplete="off"></select>
+            </div>
+            <div>
+                <span class="info-label" style="display: block; margin-bottom: 2px;">खसरा नंबर (Khasra No):</span>
+                <input type="text" id="manualKhasra" class="search-input" style="width: 100%; box-sizing: border-box;" placeholder="खसरा (उदा. 120)" autocomplete="off" />
+            </div>
+            <button class="btn-download" style="margin-top: 10px;" onclick="searchKhasraManual()">🔍 ज़ूम और हाइलाइट करें</button>
+        </div>
+    </div>
+
+    <!-- Info Output Panel -->
+    <div id="infoPanel" class="info-panel glass-panel" style="bottom: 20px; left: 20px; display: none;">
+        <div class="info-title">
+            <span>📊 मापा गया क्षेत्रफल</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">कुल वर्ग मीटर:</span>
+            <span id="valSqM" class="info-value">0.00</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">हेक्टेयर (Hectare):</span>
+            <span id="valHectare" class="info-value">0.0000</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">बीघा (Bigha - Standard):</span>
+            <span id="valBigha" class="info-value">0.00</span>
+        </div>
+    </div>
+
+    <!-- Custom Zoom Controls -->
+    <div class="custom-zoom-control">
+        <button class="zoom-btn" onclick="map.zoomIn()">+</button>
+        <button class="zoom-btn" onclick="map.zoomOut()">-</button>
+    </div>
+
+    <!-- Overlay Status Indicator -->
+    <div id="overlayStatus" style="display:none; position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:#fbbf24; padding:6px 16px; border-radius:8px; font-size:12px; z-index:9999; font-family:'Segoe UI',sans-serif; pointer-events:none;"></div>
+
+    <script>
+        var isMeasuring = false;
+        
+        var map = L.map('map', {
+            zoomControl: false,
+            maxZoom: 23
+        }).setView([26.90, 76.33], 12);
+
+        // Force Esri Leaflet to use standard CORS since proxy supports it
+        L.esri.Support.cors = true;
+
+        // Proxy base path for Rajasthan GIS services
+        var PROXY_BASE = 'https://gis.rajasthan.gov.in/proxy/proxy.ashx?';
+        var SETTLEMENT_BASE = 'https://gis.rajasthan.gov.in/rajasthan/rest/services/Settlement/Settlement/MapServer';
+        var MINING_BASE = 'https://gis.rajasthan.gov.in/rajasthan/rest/services/Mining/Mining_Application/FeatureServer/2';
+
+        // Esri World Imagery (for perfect khasra alignment used by Rajasthan Govt)
+        var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 23,
+            maxNativeZoom: 18,
+            attribution: 'Esri World Imagery'
+        }).addTo(map);
+
+        // Google Satellite Basemap
+        var googleSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 23,
+            maxNativeZoom: 20,
+            attribution: 'Google Maps'
+        });
+
+        // Keep compatibility with python token replacement logic
+        var tokenVal = '{dynamicquery_token}';
+
+        // Custom ArcGIS Export TileLayer - bypasses Esri-Leaflet's broken proxy URL construction
+        // Renders khasra boundaries by manually building MapServer/export URLs through the proxy using POST and dynamicLayers
+        L.TileLayer.ArcGISExport = L.TileLayer.extend({
+            options: {
+                proxyBase: '',
+                serviceUrl: '',
+                layers: 'show:0',
+                transparent: true,
+                format: 'png32',
+                tileSize: 256,
+                dynamicLayers: ''
+            },
+            createTile: function(coords, done) {
+                var tile = document.createElement('img');
+                var tileSize = this.getTileSize();
+                
+                // Mathematical calculation of EPSG:3857 Bounding Box to prevent alignment issues
+                var worldMercatorMax = 20037508.342789244;
+                var worldMercatorSize = worldMercatorMax * 2;
+                var numTiles = Math.pow(2, coords.z);
+                var tileSizeMercator = worldMercatorSize / numTiles;
+                
+                var minX = -worldMercatorMax + coords.x * tileSizeMercator;
+                var maxX = -worldMercatorMax + (coords.x + 1) * tileSizeMercator;
+                var maxY = worldMercatorMax - coords.y * tileSizeMercator;
+                var minY = worldMercatorMax - (coords.y + 1) * tileSizeMercator;
+                var bbox = [minX, minY, maxX, maxY].join(',');
+                
+                var params = {
+                    'bbox': bbox,
+                    'bboxSR': '3857',
+                    'imageSR': '3857',
+                    'size': tileSize.x + ',' + tileSize.y,
+                    'format': this.options.format,
+                    'transparent': this.options.transparent,
+                    'layers': this.options.layers,
+                    'f': 'image'
+                };
+                
+                if (this.options.dynamicLayers) {
+                    params.dynamicLayers = this.options.dynamicLayers;
+                }
+                
+                if (typeof tokenVal !== 'undefined' && tokenVal) {
+                    params.token = tokenVal;
+                }
+                
+                var postData = Object.keys(params).map(function(k) {
+                    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+                }).join('&');
+                
+                var url = this.options.proxyBase + this.options.serviceUrl + '/export';
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: postData
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP error ' + res.status);
+                    return res.blob();
+                })
+                .then(function(blob) {
+                    var objectURL = URL.createObjectURL(blob);
+                    tile.src = objectURL;
+                    tile._objectURL = objectURL;
+                    done(null, tile);
+                })
+                .catch(function(err) {
+                    done(err);
+                });
+                
+                return tile;
+            },
+            _tileOnUnload: function(done, tile) {
+                if (tile._objectURL) {
+                    URL.revokeObjectURL(tile._objectURL);
+                    tile._objectURL = null;
+                }
+                done();
+            }
+        });
+        L.tileLayer.arcGISExport = function(options) {
+            return new L.TileLayer.ArcGISExport(null, options);
+        };
+
+        var khasraStyle = getKhasraStyleForVillage(null);
+        // Single Image Overlay implementation to solve double/triple khasra numbers duplication
+        var khasraVisible = true;
+        var khasraOverlayObj = null;
+
+        function _showOverlayStatus(msg, color) {
+            var el = document.getElementById('overlayStatus');
+            if (!el) return;
+            el.innerText = msg;
+            el.style.color = color || '#fbbf24';
+            el.style.display = 'block';
+        }
+        function _hideOverlayStatus() {
+            var el = document.getElementById('overlayStatus');
+            if (el) el.style.display = 'none';
+        }
+
+        function updateKhasraOverlay() {
+            if (!khasraVisible) return;
+            if (map.getZoom() < 15) {
+                if (khasraOverlayObj) {
+                    map.removeLayer(khasraOverlayObj);
+                    URL.revokeObjectURL(khasraOverlayObj._url);
+                    khasraOverlayObj = null;
+                }
+                _showOverlayStatus('🔍 खसरा बाउंड्री देखने के लिए ज़ूम इन करें (15+)', '#94a3b8');
+                return;
+            }
+            
+            _showOverlayStatus('⏳ ओवरले लोड हो रहा है...', '#fbbf24');
+            var bounds = map.getBounds();
+            var size = map.getSize();
+            
+            // Project to Web Mercator EPSG:3857
+            var southWest = map.options.crs.project(bounds.getSouthWest());
+            var northEast = map.options.crs.project(bounds.getNorthEast());
+            var bbox = [southWest.x, southWest.y, northEast.x, northEast.y].join(',');
+
+            var params = {
+                'bbox': bbox,
+                'bboxSR': '3857',
+                'imageSR': '3857',
+                'size': size.x + ',' + size.y,
+                'format': 'png32',
+                'transparent': 'true',
+                'layers': 'show:0',
+                'dynamicLayers': JSON.stringify(khasraStyle),
+                'f': 'image'
+            };
+
+            if (typeof tokenVal !== 'undefined' && tokenVal) {
+                params.token = tokenVal;
+            }
+
+            var postData = Object.keys(params).map(function(k) {
+                return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+            }).join('&');
+
+            var url = PROXY_BASE + SETTLEMENT_BASE + '/export';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: postData
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('HTTP error ' + res.status);
+                return res.blob();
+            })
+            .then(function(blob) {
+                if (blob.size < 200) {
+                    throw new Error('Response too small (' + blob.size + ' bytes)');
+                }
+                var objectURL = URL.createObjectURL(blob);
+                
+                if (khasraOverlayObj) {
+                    var oldOverlay = khasraOverlayObj;
+                    khasraOverlayObj = L.imageOverlay(objectURL, bounds, { opacity: 1.0 }).addTo(map);
+                    setTimeout(function() {
+                        map.removeLayer(oldOverlay);
+                        URL.revokeObjectURL(oldOverlay._url);
+                    }, 150);
+                } else {
+                    khasraOverlayObj = L.imageOverlay(objectURL, bounds, { opacity: 1.0 }).addTo(map);
+                }
+                khasraOverlayObj._url = objectURL;
+                _hideOverlayStatus();
+            })
+            .catch(function(err) {
+                console.error("Khasra overlay error:", err);
+                _showOverlayStatus('❌ ओवरले लोड नहीं हुआ — ज़ूम/पैन करें', '#ef4444');
+                setTimeout(_hideOverlayStatus, 4000);
+            });
+        }
+
+        var khasraLayer = {
+            addTo: function(mapInstance) {
+                khasraVisible = true;
+                updateKhasraOverlay();
+                mapInstance.on('moveend', updateKhasraOverlay);
+                return this;
+            },
+            removeFrom: function(mapInstance) {
+                khasraVisible = false;
+                if (khasraOverlayObj) {
+                    map.removeLayer(khasraOverlayObj);
+                    URL.revokeObjectURL(khasraOverlayObj._url);
+                    khasraOverlayObj = null;
+                }
+                mapInstance.off('moveend', updateKhasraOverlay);
+                return this;
+            },
+            onAdd: function(mapInstance) {
+                this.addTo(mapInstance);
+            },
+            onRemove: function(mapInstance) {
+                this.removeFrom(mapInstance);
+            }
+        };
+
+        // Initialize khasra overlay
+        khasraLayer.addTo(map);
+
+        // Mining Lease Layer - rendered as GeoJSON via fetch queries
+        var leaseGeoJsonLayer = L.geoJSON(null, {
+            style: function(feature) {
+                return {
+                    color: '#0ea5e9',
+                    weight: 2,
+                    fillColor: '#38bdf8',
+                    fillOpacity: 0.15
+                };
+            }
+        }).addTo(map);
+        var leaseLayer = leaseGeoJsonLayer; // Reference for toggle
+
+        // Fetch mining lease features for current view
+        function loadMiningLeases() {
+            var bounds = map.getBounds();
+            var envelope = bounds.getWest() + ',' + bounds.getSouth() + ',' + bounds.getEast() + ',' + bounds.getNorth();
+            var queryParams = {
+                geometry: envelope,
+                geometryType: 'esriGeometryEnvelope',
+                inSR: '4326',
+                spatialRel: 'esriSpatialRelIntersects',
+                outFields: 'LEASE_NO,LESSEE,MINERAL,STATUS,OFFICE,DISTRICT,TEHSIL,VILLAGE',
+                returnGeometry: 'true',
+                outSR: '4326',
+                f: 'json'
+            };
+            var url = proxyQueryUrl(MINING_BASE, '/query', queryParams);
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        leaseGeoJsonLayer.clearLayers();
+                        data.features.forEach(function(arcFeat) {
+                            var geojsonGeom = arcgisToGeoJSONGeom(arcFeat.geometry);
+                            if (geojsonGeom) {
+                                leaseGeoJsonLayer.addData({
+                                    type: 'Feature',
+                                    geometry: geojsonGeom,
+                                    properties: arcFeat.attributes || {}
+                                });
+                            }
+                        });
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Mining lease load error:', err);
+                });
+        }
+
+        // Load leases on view change (debounced)
+        var leaseLoadTimer = null;
+        map.on('moveend', function() {
+            if (!leaseVisible) return;
+            clearTimeout(leaseLoadTimer);
+            leaseLoadTimer = setTimeout(loadMiningLeases, 500);
+        });
+        // Initial load
+        setTimeout(loadMiningLeases, 2000);
+
+        var khasraVisible = true;
+        var leaseVisible = true;
+
+        var currentBasemap = 'esri';
+        function toggleBasemap() {
+            var btn = document.getElementById("changeBasemapBtn");
+            if (currentBasemap === 'esri') {
+                map.removeLayer(esriSat);
+                googleSat.addTo(map);
+                currentBasemap = 'google';
+                btn.innerHTML = "🗺️ एसरी मैप बदलें";
+                btn.style.background = "#1e3a8a";
+                btn.style.borderColor = "rgba(245, 158, 11, 0.4)";
+            } else {
+                map.removeLayer(googleSat);
+                esriSat.addTo(map);
+                currentBasemap = 'esri';
+                btn.innerHTML = "🗺️ गूगल मैप बदलें";
+                btn.style.background = "#15803d";
+                btn.style.borderColor = "rgba(34, 197, 94, 0.4)";
+            }
+        }
+
+        function toggleOverlay() {
+            if (!khasraLayer) return;
+            var btn = document.getElementById("toggleOverlayBtn");
+            if (khasraVisible) {
+                map.removeLayer(khasraLayer);
+                khasraVisible = false;
+                btn.innerHTML = "📶 ओवरले दिखाएं";
+                btn.classList.remove("active");
+            } else {
+                khasraLayer.addTo(map);
+                khasraVisible = true;
+                btn.innerHTML = "📶 ओवरले छिपाएं";
+                btn.classList.add("active");
+            }
+        }
+
+        function toggleLeaseOverlay() {
+            if (!leaseLayer) return;
+            var btn = document.getElementById("toggleLeaseBtn");
+            if (leaseVisible) {
+                map.removeLayer(leaseLayer);
+                leaseVisible = false;
+                btn.innerHTML = "⛏️ पट्टे (Leases) दिखाएं";
+                btn.classList.remove("active");
+            } else {
+                leaseLayer.addTo(map);
+                leaseVisible = true;
+                btn.innerHTML = "⛏️ पट्टे (Leases) छिपाएं";
+                btn.classList.add("active");
+            }
+        }
+
+        // Current location marker tracker
+        var currentLocationMarker = null;
+        var activeRooms = {};
+        var roomColors = ['#e879f9', '#22d3ee', '#34d399', '#f472b6', '#fbbf24'];
+        var activeDistanceLine = null;
+        var activeDistancePolygon = null;
+        var addingManualPoint = false;
+
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert("आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता है।");
+                return;
+            }
+            
+            // Show a temporary user feedback
+            var btn = document.querySelector("button[title*='वर्तमान स्थान']");
+            var originalText = btn.innerText;
+            btn.innerText = "⏳";
+            
+            navigator.geolocation.getCurrentPosition(function(position) {
+                btn.innerText = originalText;
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                
+                map.setView([lat, lon], 17);
+                
+                if (currentLocationMarker) {
+                    map.removeLayer(currentLocationMarker);
+                }
+                
+                var locationIcon = L.divIcon({
+                    className: 'current-location-marker',
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
+                });
+                
+                currentLocationMarker = L.marker([lat, lon], {icon: locationIcon}).addTo(map);
+                currentLocationMarker.bindPopup("<b>आप यहाँ हैं (You are here)</b>").openPopup();
+            }, function(error) {
+                btn.innerText = originalText;
+                console.error("Geolocation error:", error);
+                alert("लोकेशन प्राप्त करने में विफल! कृपया अपने डिवाइस पर GPS ऑन करें और ब्राउज़र को लोकेशन की अनुमति दें।");
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }
+
+        // Search and zoom to location using direct geocoder & autocomplete
+        var debounceTimer = null;
+        function onSearchInput(val) {
+            clearTimeout(debounceTimer);
+            var listDiv = document.getElementById("suggestionsList");
+            if (!val || val.trim().length < 2) {
+                listDiv.style.display = "none";
+                listDiv.innerHTML = "";
+                return;
+            }
+            debounceTimer = setTimeout(function() {
+                var queryStr = val.trim();
+                var query = encodeURIComponent(queryStr);
+                
+                // Promises to query Nominatim AND Mining Lease Layer
+                var osmPromise = fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=in&q=" + query)
+                    .then(function(res) { return res.json(); })
+                    .catch(function() { return []; });
+                
+                var sqlQuery = queryStr.toUpperCase().replace(/'/g, "''");
+                var whereClause = "UPPER(LESSEE) LIKE '%" + sqlQuery + "%' OR UPPER(LEASE_NO) LIKE '%" + sqlQuery + "%'";
+                var leaseParams = {
+                    where: whereClause,
+                    outFields: 'LEASE_NO,LESSEE,MINERAL,STATUS,OFFICE,DISTRICT,TEHSIL,VILLAGE,AREA',
+                    returnGeometry: 'true',
+                    outSR: '4326',
+                    resultRecordCount: '5',
+                    f: 'json'
+                };
+                var leaseUrl = proxyQueryUrl(MINING_BASE, '/query', leaseParams);
+                var leasePromise = fetch(leaseUrl)
+                    .then(function(res) { return res.json(); })
+                    .catch(function() { return { features: [] }; });
+                
+                Promise.all([osmPromise, leasePromise]).then(function(results) {
+                    var osmData = results[0] || [];
+                    var leaseData = results[1] || { features: [] };
+                    
+                    listDiv.innerHTML = "";
+                    var count = 0;
+                    
+                    // Render Mining Leases suggestions first
+                    if (leaseData.features && leaseData.features.length > 0) {
+                        leaseData.features.forEach(function(feat) {
+                            var attrs = feat.attributes || {};
+                            var lessee = attrs.LESSEE || "N/A";
+                            var leaseNo = attrs.LEASE_NO || "N/A";
+                            var mineral = attrs.MINERAL || "";
+                            var village = attrs.VILLAGE || "";
+                            
+                            var div = document.createElement("div");
+                            div.className = "suggestion-item";
+                            div.style.borderLeft = "3px solid #0ea5e9";
+                            div.style.padding = "6px 12px";
+                            div.innerHTML = "⛏️ <strong>" + lessee + "</strong><br/><span style='font-size:11px;color:#94a3b8;'>पट्टा: " + leaseNo + " (" + mineral + ") - " + village + "</span>";
+                            div.onclick = function() {
+                                selectLeaseSuggestion(feat);
+                            };
+                            listDiv.appendChild(div);
+                            count++;
+                        });
+                    }
+                    
+                    // Render Geocoding suggestions
+                    if (osmData && osmData.length > 0) {
+                        osmData.forEach(function(item) {
+                            var div = document.createElement("div");
+                            div.className = "suggestion-item";
+                            div.innerHTML = "📍 " + item.display_name;
+                            div.onclick = function() {
+                                selectSuggestion(item.lat, item.lon, item.display_name);
+                            };
+                            listDiv.appendChild(div);
+                            count++;
+                        });
+                    }
+                    
+                    if (count > 0) {
+                        listDiv.style.display = "block";
+                    } else {
+                        listDiv.style.display = "none";
+                    }
+                });
+            }, 300);
+        }
+
+        function selectSuggestion(lat, lon, displayName) {
+            document.getElementById("searchInput").value = displayName;
+            document.getElementById("suggestionsList").style.display = "none";
+            document.getElementById("suggestionsList").innerHTML = "";
+            map.setView([parseFloat(lat), parseFloat(lon)], 16);
+        }
+
+        function selectLeaseSuggestion(feat) {
+            var lessee = feat.attributes.LESSEE || "";
+            var leaseNo = feat.attributes.LEASE_NO || "";
+            document.getElementById("searchInput").value = lessee + " (" + leaseNo + ")";
+            document.getElementById("suggestionsList").style.display = "none";
+            document.getElementById("suggestionsList").innerHTML = "";
+            
+            var geojsonGeom = arcgisToGeoJSONGeom(feat.geometry);
+            if (geojsonGeom) {
+                var geoFeature = {
+                    type: 'Feature',
+                    geometry: geojsonGeom,
+                    properties: feat.attributes || {}
+                };
+                highlightLeaseFeature(geoFeature);
+                
+                var geojsonLayer = L.geoJSON(geoFeature);
+                map.fitBounds(geojsonLayer.getBounds(), { maxZoom: 18 });
+                showLeaseDetails(feat.attributes);
+            } else {
+                alert("पट्टे की लोकेशन प्राप्त करने में विफल!");
+            }
+        }
+
+        function triggerSearch() {
+            var input = document.getElementById("searchInput");
+            var query = input.value ? input.value.trim() : "";
+            if (!query) return;
+            document.getElementById("suggestionsList").style.display = "none";
+            
+            // Check if search matches a lease number or lessee
+            var sqlQuery = query.toUpperCase().replace(/'/g, "''");
+            var whereClause = "UPPER(LESSEE) LIKE '%" + sqlQuery + "%' OR UPPER(LEASE_NO) LIKE '%" + sqlQuery + "%'";
+            var leaseParams = {
+                where: whereClause,
+                outFields: '*',
+                returnGeometry: 'true',
+                outSR: '4326',
+                resultRecordCount: '1',
+                f: 'json'
+            };
+            var leaseUrl = proxyQueryUrl(MINING_BASE, '/query', leaseParams);
+            
+            fetch(leaseUrl)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        selectLeaseSuggestion(data.features[0]);
+                    } else {
+                        // Fallback to nominatim geocoder
+                        fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query + ", Rajasthan, India"))
+                            .then(function(res) { return res.json(); })
+                            .then(function(data2) {
+                                if (data2 && data2.length > 0) {
+                                    map.setView([parseFloat(data2[0].lat), parseFloat(data2[0].lon)], 16);
+                                } else {
+                                    fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query))
+                                        .then(function(res3) { return res3.json(); })
+                                        .then(function(data3) {
+                                            if (data3 && data3.length > 0) {
+                                                map.setView([parseFloat(data3[0].lat), parseFloat(data3[0].lon)], 16);
+                                            } else {
+                                                document.title = "SEARCH:" + query;
+                                            }
+                                        });
+                                }
+                            });
+                    }
+                })
+                .catch(function(err) {
+                    console.error("Search error:", err);
+                    document.title = "SEARCH:" + query;
+                });
+        }
+
+        // Map Click - Identify Feature & Highlight
+        var highlightLayer = null;
+        var highlightLeaseLayer = null;
+        var selectedPlot = null;
+        var selectedGisCode = "";
+        var selectedVillage = "";
+        var selectedTehsil = "";
+        var selectedDistrict = "";
+
+        // Helper: build proxy URL for direct fetch queries
+        function proxyQueryUrl(baseUrl, path, params) {
+            if (typeof tokenVal !== 'undefined' && tokenVal) {
+                params.token = tokenVal;
+            }
+            var fullUrl = baseUrl + path + '?' + Object.keys(params).map(function(k) {
+                return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+            }).join('&');
+            return PROXY_BASE + fullUrl;
+        }
+
+        // Helper: convert ArcGIS geometry to GeoJSON geometry safely
+        function arcgisToGeoJSONGeom(arcGeom) {
+            if (!arcGeom) return null;
+            try {
+                // Use Esri Leaflet's built-in converter
+                if (L.esri && L.esri.Util && L.esri.Util.arcgisToGeoJSON) {
+                    var result = L.esri.Util.arcgisToGeoJSON(arcGeom);
+                    // If result is a Feature, extract geometry
+                    if (result && result.type === 'Feature') return result.geometry;
+                    return result;
+                }
+                // Manual fallback for polygon rings
+                if (arcGeom.rings) {
+                    return {
+                        type: arcGeom.rings.length > 1 ? 'MultiPolygon' : 'Polygon',
+                        coordinates: arcGeom.rings.length > 1 ? arcGeom.rings.map(function(r) { return [r]; }) : [arcGeom.rings[0]]
+                    };
+                }
+                if (arcGeom.paths) {
+                    return {
+                        type: 'MultiLineString',
+                        coordinates: arcGeom.paths
+                    };
+                }
+                if (arcGeom.x !== undefined && arcGeom.y !== undefined) {
+                    return { type: 'Point', coordinates: [arcGeom.x, arcGeom.y] };
+                }
+            } catch (e) {
+                console.error('arcgisToGeoJSON error:', e);
+            }
+            return null;
+        }
+
+        map.on('click', function(e) {
+            if (addingManualPoint) {
+                var latlng = [e.latlng.lat, e.latlng.lng];
+                var roomId = "manual_" + Math.floor(1000 + Math.random() * 9000).toString();
+                var roomIndex = Object.keys(activeRooms).length;
+                var color = roomColors[roomIndex % roomColors.length];
+                
+                activeRooms[roomId] = {
+                    roomId: roomId,
+                    name: "कंप्यूटर पॉइंट " + (roomIndex + 1),
+                    color: color,
+                    shareLink: "",
+                    latlng: latlng,
+                    marker: null,
+                    isFirst: false,
+                    isManual: true
+                };
+                
+                var svgHtml = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="' + color + '" stroke="#fff" stroke-width="1.5"/></svg>';
+                var customIcon = L.divIcon({
+                    html: svgHtml,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    className: 'custom-tracker-icon'
+                });
+                
+                var marker = L.marker(latlng, {
+                    icon: customIcon,
+                    draggable: true
+                }).addTo(map);
+                
+                marker.bindPopup("<b>📍 " + activeRooms[roomId].name + " (खींचकर बदलें)</b>").openPopup();
+                
+                marker.on('dragend', function(event) {
+                    var m = event.target;
+                    var position = m.getLatLng();
+                    activeRooms[roomId].latlng = [position.lat, position.lng];
+                    calculateTrackingDistances();
+                    renderTrackingDevices();
+                });
+                
+                activeRooms[roomId].marker = marker;
+                addingManualPoint = false;
+                map.getContainer().style.cursor = '';
+                
+                renderTrackingDevices();
+                calculateTrackingDistances();
+                return;
+            }
+
+            if (isMeasuring) return;
+
+            // 1. Identify Khasras (Layer 0) - via direct fetch to avoid proxy URL issues
+            if (khasraVisible && khasraLayer) {
+                var identifyParams = {
+                    geometry: e.latlng.lng + ',' + e.latlng.lat,
+                    geometryType: 'esriGeometryPoint',
+                    sr: '4326',
+                    tolerance: '5',
+                    mapExtent: map.getBounds().getWest() + ',' + map.getBounds().getSouth() + ',' + map.getBounds().getEast() + ',' + map.getBounds().getNorth(),
+                    imageDisplay: map.getSize().x + ',' + map.getSize().y + ',96',
+                    layers: 'visible:0',
+                    returnGeometry: 'true',
+                    outSR: '4326',
+                    f: 'json'
+                };
+                var identifyUrl = proxyQueryUrl(SETTLEMENT_BASE, '/identify', identifyParams);
+                fetch(identifyUrl)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data.results && data.results.length > 0) {
+                            var result = data.results[0];
+                            var feature = {
+                                type: 'Feature',
+                                geometry: result.geometry ? arcgisToGeoJSONGeom(result.geometry) : null,
+                                properties: result.attributes || {}
+                            };
+                            if (feature.geometry) {
+                                highlightFeature(feature);
+                            }
+                            showDetails(feature.properties);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('Identify error:', err);
+                    });
+            }
+
+            // 2. Identify Leases - via nearby query with proxy
+            if (leaseVisible && leaseLayer) {
+                var queryParams = {
+                    geometry: e.latlng.lng + ',' + e.latlng.lat,
+                    geometryType: 'esriGeometryPoint',
+                    inSR: '4326',
+                    spatialRel: 'esriSpatialRelIntersects',
+                    distance: '50',
+                    units: 'esriSRUnit_Meter',
+                    outFields: '*',
+                    returnGeometry: 'true',
+                    outSR: '4326',
+                    f: 'json'
+                };
+                var leaseQueryUrl = proxyQueryUrl(MINING_BASE, '/query', queryParams);
+                fetch(leaseQueryUrl)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data.features && data.features.length > 0) {
+                            var arcFeature = data.features[0];
+                            var geoFeature = {
+                                type: 'Feature',
+                                geometry: arcFeature.geometry ? arcgisToGeoJSONGeom(arcFeature.geometry) : null,
+                                properties: arcFeature.attributes || {}
+                            };
+                            if (geoFeature.geometry) {
+                                highlightLeaseFeature(geoFeature);
+                            }
+                            showLeaseDetails(geoFeature.properties);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('Lease query error:', err);
+                    });
+            }
+        });
+
+        function getPropValue(properties, possibleKeys) {
+            for (var i = 0; i < possibleKeys.length; i++) {
+                var key = possibleKeys[i];
+                for (var prop in properties) {
+                    if (prop.toLowerCase() === key.toLowerCase()) {
+                        return properties[prop];
+                    }
+                }
+            }
+            return "";
+        }
+
+        function highlightFeature(feature) {
+            if (highlightLayer) {
+                map.removeLayer(highlightLayer);
+            }
+            highlightLayer = L.geoJSON(feature, {
+                style: {
+                    color: '#ef4444', // Red border for selected khasra
+                    weight: 4,
+                    fillColor: 'transparent',
+                    fillOpacity: 0.0
+                }
+            }).addTo(map);
+        }
+
+        function highlightLeaseFeature(feature) {
+            if (highlightLeaseLayer) {
+                map.removeLayer(highlightLeaseLayer);
+            }
+            highlightLeaseLayer = L.geoJSON(feature, {
+                style: {
+                    color: '#00f0ff',
+                    weight: 3,
+                    fillColor: '#00f0ff',
+                    fillOpacity: 0.4
+                }
+            }).addTo(map);
+        }
+
+        function findPlotNo(properties) {
+            var exactKeys = ['KID', 'PLOT_NO', 'plot_no', 'PLOTNO', 'PLOT_NUM', 'KHASRA', 'KHASRA_NO', 'KHASRANO', 'KH_NO', 'PLOT_ID'];
+            for (var i = 0; i < exactKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                }
+            }
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if (lkey.includes('plot') || lkey.includes('khasra')) return properties[key];
+            }
+            return "";
+        }
+
+        function findDistrictName(properties) {
+            var exactKeys = ['DIST_NAME', 'dist_name', 'district_name', 'district', 'DISTNAME', 'DIST_CODE', 'DISTCODE', 'district_code'];
+            for (var i = 0; i < exactKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                }
+            }
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if (lkey.includes('dist')) return properties[key];
+            }
+            return "";
+        }
+
+        function findTehsilName(properties) {
+            var exactKeys = ['TEH_NAME', 'teh_name', 'tehsil_name', 'tehsil', 'TEHNAME', 'TEH_CODE', 'TEHCODE', 'tehsil_code'];
+            for (var i = 0; i < exactKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                }
+            }
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if (lkey.includes('teh')) return properties[key];
+            }
+            return "";
+        }
+
+        function findVillageName(properties) {
+            // First try name-specific keys (not code keys)
+            var nameKeys = ['VILL_NAME', 'vill_name', 'village_name', 'VILLNAME', 'VILLAGE_NAME_HI', 'GRAM', 'GRAM_NAME', 'VIL_NAME'];
+            for (var i = 0; i < nameKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === nameKeys[i].toLowerCase()) {
+                        var val = properties[key];
+                        if (val && String(val).trim() && !/^\d+$/.test(String(val).trim())) {
+                            return val;
+                        }
+                    }
+                }
+            }
+            // Try fuzzy key matching for name fields
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if ((lkey.includes('vill') && lkey.includes('name')) || lkey.includes('gram')) {
+                    var val = properties[key];
+                    if (val && String(val).trim() && !/^\d+$/.test(String(val).trim())) {
+                        return val;
+                    }
+                }
+            }
+            // Fall back to code keys and try to resolve the name from manualVillage dropdown
+            var codeKeys = ['VNAME_E', 'VNAME', 'VILL_CODE', 'VILLCODE', 'VILL_CODE_NIC', 'VILL_NIC_CODE', 'VILLAGE_CODE', 'village', 'BHUCODE', 'BHU_CODE', 'GISCODE', 'giscode'];
+            var villCode = '';
+            for (var i = 0; i < codeKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === codeKeys[i].toLowerCase() && properties[key]) {
+                        villCode = String(properties[key]).trim();
+                        break;
+                    }
+                }
+                if (villCode) break;
+            }
+            if (!villCode) {
+                // Last resort: any key with 'vill'
+                for (var key in properties) {
+                    if (key.toLowerCase().includes('vill') && properties[key]) {
+                        villCode = String(properties[key]).trim();
+                        break;
+                    }
+                }
+            }
+            if (!villCode) return '';
+            
+            // Extract 5-digit village code from full GIS/BHUCODE
+            // Village code is always the 5 digits before the last 3 (sheet/khasra) digits
+            // Works for all prefix lengths (RI can be 3 or 4 digits, Halka 4 or 5 digits)
+            if (villCode && villCode.length >= 15) {
+                if (villCode.length === 15) {
+                    villCode = villCode.substring(7, 12);
+                } else {
+                    villCode = villCode.substring(villCode.length - 8, villCode.length - 3);
+                }
+            }
+            
+            // Try to resolve village code to name from the manualVillage dropdown
+            var resolvedName = _resolveVillageNameFromDropdown(villCode);
+            if (resolvedName) {
+                return resolvedName + ' (' + villCode + ')';
+            }
+            return villCode;
+        }
+
+        function _resolveVillageNameFromDropdown(code) {
+            try {
+                var sel = document.getElementById('manualVillage');
+                if (!sel) return null;
+                var codeStr = String(code).trim();
+                var codeInt = parseInt(codeStr);
+                for (var i = 0; i < sel.options.length; i++) {
+                    var opt = sel.options[i];
+                    var optVal = (opt.value || '').trim();
+                    if (optVal === codeStr || parseInt(optVal) === codeInt) {
+                        var text = (opt.innerText || opt.textContent || '').trim();
+                        var parts = text.split(/\s+/);
+                        if (parts.length > 1) {
+                            return parts.slice(1).join(' ');
+                        }
+                        return text;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        function findVillageCodeFieldAndValue(properties) {
+            var fields = ['VILL_CODE_NIC', 'VILL_NIC_CODE', 'VILLAGE_CODE', 'VILL_CODE'];
+            for (var i = 0; i < fields.length; i++) {
+                var f = fields[i];
+                if (properties[f]) {
+                    return { field: f, value: String(properties[f]).trim() };
+                }
+            }
+            // Fallback to VNAME_E if it's a numeric code
+            if (properties.VNAME_E && /^\d+$/.test(String(properties.VNAME_E).trim())) {
+                return { field: 'VNAME_E', value: String(properties.VNAME_E).trim() };
+            }
+            // Fallback to BHUCODE (extract village part)
+            if (properties.BHUCODE && String(properties.BHUCODE).trim().length >= 12) {
+                var bhu = String(properties.BHUCODE).trim();
+                var villPart = bhu.length === 15 ? bhu.substring(7, 12) : bhu.substring(bhu.length - 8, bhu.length - 3);
+                return { field: 'VNAME_E', value: villPart };
+            }
+            if (properties.BHU_CODE && String(properties.BHU_CODE).trim().length >= 12) {
+                var bhu = String(properties.BHU_CODE).trim();
+                var villPart = bhu.length === 15 ? bhu.substring(7, 12) : bhu.substring(bhu.length - 8, bhu.length - 3);
+                return { field: 'VNAME_E', value: villPart };
+            }
+            return null;
+        }
+
+        function getKhasraStyleForVillage(villageCode, fieldName) {
+            return [
+                {
+                    "id": 0,
+                    "source": { "type": "mapLayer", "mapLayerId": 0 },
+                    "drawingInfo": {
+                        "renderer": {
+                            "type": "simple",
+                            "symbol": {
+                                "type": "esriSFS", "style": "esriSFSSolid", "color": [0, 0, 0, 0],
+                                "outline": { "type": "esriSLS", "style": "esriSLSSolid", "color": [255, 120, 0, 255], "width": 0.8 } // Orange
+                            }
+                        },
+                        "labelingInfo": [
+                            {
+                                "labelPlacement": "esriServerPolygonPlacementAlwaysHorizontal",
+                                "labelExpression": "[KID]",
+                                "removeDuplicates": "all",
+                                "symbol": {
+                                    "type": "esriTS", "color": [255, 255, 255, 255],
+                                    "haloColor": [0, 0, 0, 255], "haloSize": 1.5,
+                                    "font": { "family": "Arial", "size": 10, "weight": "bold" }
+                                },
+                                "minScale": 5000, "maxScale": 0
+                            }
+                        ],
+                        "showLabels": true
+                    }
+                }
+            ];
+        }
+
+        function findRIName(properties) {
+            var exactKeys = ['ILRNAME', 'ilrname', 'RI_NAME', 'ri_name', 'ri', 'RI'];
+            for (var i = 0; i < exactKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                }
+            }
+            return "";
+        }
+
+        function findHalkasName(properties) {
+            var exactKeys = ['PATWARNAME', 'patwarname', 'HALKA_NAME', 'halka_name', 'halka', 'HALKAS'];
+            for (var i = 0; i < exactKeys.length; i++) {
+                for (var key in properties) {
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                }
+            }
+            return "";
+        }
+
+        function showDetails(properties) {
+            selectedPlot = findPlotNo(properties);
+            selectedGisCode = getPropValue(properties, ['BHUCODE', 'BHU_CODE', 'GISCODE', 'giscode', 'VILL_CODE']);
+            selectedVillage = findVillageName(properties);
+            selectedRI = findRIName(properties);
+            selectedHalkas = findHalkasName(properties);
+            selectedTehsil = findTehsilName(properties);
+            selectedDistrict = findDistrictName(properties);
+
+            document.getElementById("detailPlotNo").innerText = selectedPlot || "-";
+            document.getElementById("detailVillage").innerText = selectedVillage || "-";
+            document.getElementById("detailRI").innerText = selectedRI || "-";
+            document.getElementById("detailHalkas").innerText = selectedHalkas || "-";
+            document.getElementById("detailTehsil").innerText = selectedTehsil || "-";
+            document.getElementById("detailDistrict").innerText = selectedDistrict || "-";
+
+            // Area extraction from feature properties
+            var areaVal = getPropValue(properties, ['AREA', 'Shape.STArea()', 'GIS.BHU_AABADI.AREA', 'Shape_Area', 'SHAPE.AREA', 'SHAPE_AREA', 'shape_area', 'shape.area']);
+            if (areaVal) {
+                var cleanedArea = String(areaVal).replace(/[^0-9\.]/g, '');
+                var areaSqM = parseFloat(cleanedArea);
+                if (!isNaN(areaSqM) && areaSqM > 0) {
+                    var hectare = areaSqM / 10000;
+                    var bigha = areaSqM / 2529.285;
+                    document.getElementById("detailArea").innerText = bigha.toFixed(2) + " बीघा (" + hectare.toFixed(4) + " हेक्टेयर)";
+                } else {
+                    document.getElementById("detailArea").innerText = areaVal;
+                }
+            } else {
+                document.getElementById("detailArea").innerText = "-";
+            }
+
+            document.getElementById("detailKhataNo").innerText = "⏳ खोज रहे हैं...";
+            document.getElementById("detailOwnerName").innerText = "⏳ खोज रहे हैं...";
+
+            document.getElementById("detailsPanel").style.display = "block";
+            
+            // Highlight selected village boundaries in Yellow and others in Dark Orange
+            var resolved = findVillageCodeFieldAndValue(properties);
+            if (resolved) {
+                khasraStyle = getKhasraStyleForVillage(resolved.value, resolved.field);
+                updateKhasraOverlay();
+            }
+
+            // Trigger background details fetch using queued title commands
+            // This prevents the race condition where PROPERTIES overwrites FETCH_DETAILS
+            // before the Python backend can read it
+            if (selectedPlot && selectedGisCode) {
+                document.title = "FETCH_DETAILS:" + selectedPlot + "," + selectedGisCode + "," + (selectedVillage || "") + "," + (selectedTehsil || "") + "," + (selectedDistrict || "") + "," + (selectedRI || "") + "," + (selectedHalkas || "");
+                // Wait for Python to consume FETCH_DETAILS before sending PROPERTIES
+                var _props2 = {
+                    KID: selectedPlot || "",
+                    DISTRICT: selectedDistrict || "",
+                    TEHSIL: selectedTehsil || "",
+                    VNAME_E: selectedVillage || "",
+                    BHUCODE: selectedGisCode || ""
+                };
+                var _retries2 = 0;
+                var _propTimer2 = setInterval(function() {
+                    _retries2++;
+                    try {
+                        // Check if Python has consumed the FETCH_DETAILS command (title changed)
+                        if (!document.title.startsWith("FETCH_DETAILS:") || _retries2 > 20) {
+                            clearInterval(_propTimer2);
+                            try {
+                                document.title = "PROPERTIES:" + JSON.stringify(_props2);
+                            } catch(e) {
+                                document.title = "PROPERTIES:error";
+                            }
+                        }
+                    } catch(e) {
+                        clearInterval(_propTimer2);
+                    }
+                }, 200);
+            } else {
+                // No fetch needed, send properties directly
+                setTimeout(function() {
+                    try {
+                        document.title = "PROPERTIES:" + JSON.stringify({
+                            KID: selectedPlot || "",
+                            DISTRICT: selectedDistrict || "",
+                            TEHSIL: selectedTehsil || "",
+                            VNAME_E: selectedVillage || "",
+                            BHUCODE: selectedGisCode || ""
+                        });
+                    } catch(e) {
+                        document.title = "PROPERTIES:error";
+                    }
+                }, 300);
+            }
+        }
+
+        var sameKhataLayerGroup = L.layerGroup().addTo(map);
+        var allVillageOwners = [];
+
+        window.updateOwnerDetails = function(owner, khata, resolved_vil, resolved_ri, resolved_halka, same_khata_khasras) {
+            document.getElementById("detailOwnerName").innerText = owner || "-";
+            document.getElementById("detailKhataNo").innerText = khata || "-";
+            selectedKhata = khata || "";
+            if (resolved_vil) {
+                document.getElementById("detailVillage").innerText = resolved_vil;
+                selectedVillage = resolved_vil;
+            }
+            if (resolved_ri) {
+                document.getElementById("detailRI").innerText = resolved_ri;
+                selectedRI = resolved_ri;
+            }
+            if (resolved_halka) {
+                document.getElementById("detailHalkas").innerText = resolved_halka;
+                selectedHalkas = resolved_halka;
+            }
+            
+            // Highlight all khasras in the same khata
+            if (same_khata_khasras) {
+                try {
+                    var khasrasList = same_khata_khasras;
+                    if (typeof khasrasList === 'string') {
+                        khasrasList = JSON.parse(khasrasList);
+                    }
+                    highlightSameKhataFeatures(khasrasList);
+                } catch(e) {
+                    console.error("Error parsing same khata khasras:", e);
+                }
+            }
+        };
+
+        window.updateVillageOwners = function(ownersJson) {};
+        function closeVillageOwners() {}
+
+        function displayVillageOwners(list) {
+            var container = document.getElementById("villageOwnersList");
+            container.innerHTML = "";
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">कोई मिलान नहीं मिला।</div>';
+                return;
+            }
+            
+            list.forEach(function(item) {
+                var div = document.createElement("div");
+                div.className = "owner-item";
+                
+                // Highlight the current Khasra we selected
+                if (selectedPlot && item.khasra === selectedPlot) {
+                    div.style.background = "rgba(34, 197, 94, 0.25)";
+                    div.style.borderColor = "rgba(34, 197, 94, 0.5)";
+                }
+                
+                div.onclick = function() {
+                    // Click on owner -> locate that khasra!
+                    if (item.khasra) {
+                        locateKhasra(selectedGisCode, item.khasra);
+                    }
+                };
+                
+                var nameDiv = document.createElement("div");
+                nameDiv.className = "owner-item-name";
+                nameDiv.innerText = item.owner || "-";
+                
+                var detailsDiv = document.createElement("div");
+                detailsDiv.className = "owner-item-details";
+                detailsDiv.innerHTML = "खसरा: <span style='color:#22d3ee; font-weight:bold;'>" + item.khasra + "</span><br/>खाता: <span style='color:#34d399;'>" + item.khata + "</span>";
+                
+                div.appendChild(nameDiv);
+                div.appendChild(detailsDiv);
+                container.appendChild(div);
+            });
+        }
+
+        function filterVillageOwners(query) {
+            if (!query) {
+                displayVillageOwners(allVillageOwners);
+                return;
+            }
+            query = query.toLowerCase().trim();
+            var filtered = allVillageOwners.filter(function(item) {
+                var ownerMatch = (item.owner || "").toLowerCase().indexOf(query) !== -1;
+                var khasraMatch = (item.khasra || "").toLowerCase().indexOf(query) !== -1;
+                var khataMatch = (item.khata || "").toLowerCase().indexOf(query) !== -1;
+                return ownerMatch || khasraMatch || khataMatch;
+            });
+            displayVillageOwners(filtered);
+        }
+
+        function clearOwnerSearch() {
+            document.getElementById("ownerSearchInput").value = "";
+            displayVillageOwners(allVillageOwners);
+        }
+
+        function closeVillageOwners() {
+            document.getElementById("villageOwnersPanel").style.display = "none";
+        }
+
+        function highlightSameKhataFeatures(khasrasList) {
+            if (sameKhataLayerGroup) {
+                sameKhataLayerGroup.clearLayers();
+            }
+            if (!khasrasList || khasrasList.length === 0) return;
+            
+            // Find village code from currently displayed details (or search inputs)
+            var v_sel = document.getElementById("manualVillage");
+            var villageCode = v_sel ? v_sel.value : "";
+            
+            // If not found in selector, try parsing from active selection/properties
+            if (!villageCode && selectedGisCode) {
+                villageCode = selectedGisCode; // fallback
+            }
+            
+            if (!villageCode) return;
+            
+            var khasraListString = khasrasList.map(function(k) { return "'" + k + "'"; }).join(",");
+            var whereClause = "(VILL_CODE_NIC = " + parseInt(villageCode) + " OR VILL_CODE_AS_PER_REVENUE = " + parseInt(villageCode) + " OR VILLAGE_CODE = " + parseInt(villageCode) + ") AND KID IN (" + khasraListString + ")";
+            
+            var queryParams = {
+                where: whereClause,
+                outFields: '*',
+                returnGeometry: 'true',
+                outSR: '4326',
+                f: 'json'
+            };
+            
+            var url = proxyQueryUrl(SETTLEMENT_BASE + '/0', '/query', queryParams);
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        data.features.forEach(function(arcFeat) {
+                            // Don't draw outline over the currently highlighted selected plot (handled by highlightLayer)
+                            if (arcFeat.attributes && (arcFeat.attributes.KID === selectedPlot || arcFeat.attributes.PLOT_NO === selectedPlot)) {
+                                return;
+                            }
+                            
+                            var feature = {
+                                type: 'Feature',
+                                geometry: arcFeat.geometry ? arcgisToGeoJSONGeom(arcFeat.geometry) : null,
+                                properties: arcFeat.attributes || {}
+                            };
+                            
+                            if (feature.geometry) {
+                                L.geoJSON(feature, {
+                                    style: {
+                                        color: '#3b82f6', // Premium blue highlight outline
+                                        weight: 3,
+                                        fillColor: '#3b82f6',
+                                        fillOpacity: 0.12
+                                    }
+                                }).addTo(sameKhataLayerGroup);
+                            }
+                        });
+                    }
+                })
+                .catch(function(err) {
+                    console.error("Error fetching same khata geometries:", err);
+                });
+        }
+
+        function showLeaseDetails(properties) {
+            var lessee = getPropValue(properties, ['LESSEE', 'lessee', 'LESSEE_NAME']);
+            var leaseNoVal = getPropValue(properties, ['LEASE_NO', 'lease_no', 'LEASEPAID']);
+            var mineral = getPropValue(properties, ['MINERAL', 'mineral']);
+            var status = getPropValue(properties, ['STATUS', 'status']);
+            var area = getPropValue(properties, ['GIS.Mines_Lease.AREA', 'AREA', 'area']);
+            var url = getPropValue(properties, ['URL', 'url']);
+
+            document.getElementById("leaseLessee").innerText = lessee || "-";
+            document.getElementById("leaseNo").innerText = leaseNoVal || "-";
+            document.getElementById("leaseMineral").innerText = mineral || "-";
+            document.getElementById("leaseStatus").innerText = status || "-";
+            document.getElementById("leaseArea").innerText = (area ? parseFloat(area).toFixed(2) + " Hectare" : "-");
+            
+            var linkEl = document.getElementById("leaseLink");
+            if (url) {
+                linkEl.href = url;
+                linkEl.style.display = "flex";
+            } else {
+                linkEl.style.display = "none";
+            }
+
+            document.getElementById("leasePanel").style.display = "block";
+        }
+
+        function closeDetails() {
+            document.getElementById("detailsPanel").style.display = "none";
+            document.getElementById("downloadStatus").style.display = "none";
+            document.getElementById("downloadStatus").innerText = "";
+            if (highlightLayer) {
+                map.removeLayer(highlightLayer);
+                highlightLayer = null;
+            }
+            if (sameKhataLayerGroup) {
+                sameKhataLayerGroup.clearLayers();
+            }
+            closeVillageOwners();
+            selectedPlot = null;
+        }
+
+        function closeLeaseDetails() {
+            document.getElementById("leasePanel").style.display = "none";
+            if (highlightLeaseLayer) {
+                map.removeLayer(highlightLeaseLayer);
+                highlightLeaseLayer = null;
+            }
+        }
+
+        function setDownloadInProgress(actionType) {
+            var buttons = document.querySelectorAll(".btn-download");
+            buttons.forEach(function(btn) { btn.disabled = true; });
+            
+            var statusDiv = document.getElementById("downloadStatus");
+            statusDiv.style.display = "block";
+            statusDiv.style.color = "#f59e0b";
+            
+            if (actionType === 'NAKAL') {
+                statusDiv.innerText = "⏳ अपना खाता पर जमाबंदी खोजने की कोशिश की जा रही है...";
+            } else {
+                statusDiv.innerText = "⏳ भू-नक्शा सर्वर से नक्शा डाउनलोड किया जा रहा है...";
+            }
+        }
+        
+        window.updateDownloadStatus = function(actionType, status, message) {
+            var buttons = document.querySelectorAll(".btn-download");
+            buttons.forEach(function(btn) { btn.disabled = false; });
+            
+            var statusDiv = document.getElementById("downloadStatus");
+            statusDiv.style.display = "block";
+            
+            if (status === 'success') {
+                statusDiv.style.color = "#10b981";
+                statusDiv.innerText = "✅ " + message;
+            } else {
+                statusDiv.style.color = "#ef4444";
+                statusDiv.innerText = "❌ " + message;
+            }
+        };
+
+        function downloadAction(actionType) {
+            var plot = selectedPlot;
+            var gis = selectedGisCode;
+            var vil = selectedVillage;
+            var teh = selectedTehsil;
+            var dist = selectedDistrict;
+            
+            if (!plot) {
+                plot = document.getElementById("manualKhasra").value.trim();
+                var d_sel = document.getElementById("manualDistrict");
+                var t_sel = document.getElementById("manualTehsil");
+                var v_sel = document.getElementById("manualVillage");
+                
+                dist = d_sel.options[d_sel.selectedIndex] ? d_sel.options[d_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
+                teh = t_sel.options[t_sel.selectedIndex] ? t_sel.options[t_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
+                vil = v_sel.options[v_sel.selectedIndex] ? v_sel.options[v_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
+                
+                var d = d_sel.value;
+                var t = t_sel.value;
+                var ri = document.getElementById("manualRI").value;
+                var h = document.getElementById("manualHalka").value;
+                var v = v_sel.value;
+                var s = document.getElementById("manualSheet").value;
+                gis = d + t + (ri || "01") + (h || "01") + v + (s || "01");
+            }
+            
+            if (!plot) {
+                alert("कृपया पहले नक्शे पर किसी खसरे पर क्लिक करें या खसरा नंबर दर्ज करें!");
+                return;
+            }
+            setDownloadInProgress(actionType);
+            var args = [plot, gis, vil, teh, dist].join(",");
+            document.title = "DOWNLOAD_" + actionType + ":" + args;
+        }
+
+        // Manual Selector JS
+        var selectorVisible = false;
+        function toggleSelector() {
+            var panel = document.getElementById("manualSelectorPanel");
+            var btn = document.getElementById("toggleSelectorBtn");
+            if (selectorVisible) {
+                panel.style.display = "none";
+                btn.classList.remove("active");
+                selectorVisible = false;
+            } else {
+                panel.style.display = "block";
+                btn.classList.add("active");
+                selectorVisible = true;
+                
+                var distSelect = document.getElementById("manualDistrict");
+                var hasRealOptions = false;
+                for (var i = 0; i < distSelect.options.length; i++) {
+                    if (distSelect.options[i].value !== "") {
+                        hasRealOptions = true;
+                        break;
+                    }
+                }
+                if (!hasRealOptions) {
+                    requestOptions(1, "");
+                }
+            }
+        }
+
+        function requestOptions(level, selections) {
+            document.title = "GET_OPTIONS:" + level + ":" + (selections || "");
+        }
+
+        function setOptions(level, opts) {
+            var selectId = "";
+            var placeholderText = "";
+            if (level === 1) { selectId = "manualDistrict"; placeholderText = "-- जिला चुनें --"; }
+            else if (level === 2) { selectId = "manualTehsil"; placeholderText = "-- तहसील चुनें --"; }
+            else if (level === 3) { selectId = "manualRI"; placeholderText = "-- RI चुनें --"; }
+            else if (level === 4) { selectId = "manualHalka"; placeholderText = "-- हल्का चुनें --"; }
+            else if (level === 5) { selectId = "manualVillage"; placeholderText = "-- ग्राम चुनें --"; }
+            else if (level === 6) { selectId = "manualSheet"; placeholderText = "-- शीट चुनें --"; }
+            
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            
+            select.innerHTML = "";
+            
+            var placeholderOpt = document.createElement("option");
+            placeholderOpt.value = "";
+            placeholderOpt.innerText = placeholderText;
+            select.appendChild(placeholderOpt);
+            
+            var hasOptions = false;
+            for (var code in opts) {
+                var opt = document.createElement("option");
+                opt.value = code;
+                opt.innerText = code + " " + opts[code];
+                select.appendChild(opt);
+                hasOptions = true;
+            }
+            select.value = "";
+            select.selectedIndex = 0;
+        }
+
+        function triggerLevelChange(level) {
+            var d = document.getElementById("manualDistrict").value;
+            var t = document.getElementById("manualTehsil").value;
+            var ri = document.getElementById("manualRI").value;
+            var h = document.getElementById("manualHalka").value;
+            var v = document.getElementById("manualVillage").value;
+            
+            if (level === 1) {
+                if (d) requestOptions(2, d);
+            } else if (level === 2) {
+                if (d && t) requestOptions(3, d + "," + t);
+            } else if (level === 3) {
+                if (d && t && ri) requestOptions(4, d + "," + t + "," + ri);
+            } else if (level === 4) {
+                if (d && t && ri && h) requestOptions(5, d + "," + t + "," + ri + "," + h);
+            } else if (level === 5) {
+                if (d && t && ri && h && v) requestOptions(6, d + "," + t + "," + ri + "," + h + "," + v);
+            }
+        }
+
+        function onDistrictChange() {
+            document.getElementById("manualTehsil").innerHTML = "";
+            document.getElementById("manualRI").innerHTML = "";
+            document.getElementById("manualHalka").innerHTML = "";
+            document.getElementById("manualVillage").innerHTML = "";
+            document.getElementById("manualSheet").innerHTML = "";
+            triggerLevelChange(1);
+        }
+        function onTehsilChange() {
+            document.getElementById("manualRI").innerHTML = "";
+            document.getElementById("manualHalka").innerHTML = "";
+            document.getElementById("manualVillage").innerHTML = "";
+            document.getElementById("manualSheet").innerHTML = "";
+            triggerLevelChange(2);
+        }
+        function onRIChange() {
+            document.getElementById("manualHalka").innerHTML = "";
+            document.getElementById("manualVillage").innerHTML = "";
+            document.getElementById("manualSheet").innerHTML = "";
+            triggerLevelChange(3);
+        }
+        function onHalkaChange() {
+            document.getElementById("manualVillage").innerHTML = "";
+            document.getElementById("manualSheet").innerHTML = "";
+            triggerLevelChange(4);
+        }
+        function onVillageChange() {
+            document.getElementById("manualSheet").innerHTML = "";
+            triggerLevelChange(5);
+        }
+
+        function zoomToVillage(gisCode) {
+            var v_sel = document.getElementById("manualVillage");
+            var villageCode = v_sel ? v_sel.value : "";
+            var whereClause = "1=1";
+            if (villageCode) {
+                // Layer 1 Village Boundary fields: VILL_CODE_NIC, VILL_CODE_AS_PER_REVENUE, VILLAGE_CODE
+                whereClause += " AND (VILL_CODE_NIC = " + parseInt(villageCode) + " OR VILL_CODE_AS_PER_REVENUE = " + parseInt(villageCode) + " OR VILLAGE_CODE = " + parseInt(villageCode) + ")";
+            }
+            document.title = "LOG:zoomToVillage whereClause: " + whereClause;
+            // Use fetch with proxy to avoid Esri-Leaflet URL construction issues
+            var queryParams = {
+                where: whereClause,
+                outFields: '*',
+                returnGeometry: 'true',
+                outSR: '4326',
+                resultRecordCount: '1',
+                f: 'json'
+            };
+            var villageUrl = proxyQueryUrl(SETTLEMENT_BASE, '/1/query', queryParams);
+            fetch(villageUrl)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        var arcFeature = data.features[0];
+                        var geoFeature = {
+                            type: 'Feature',
+                            geometry: arcFeature.geometry ? arcgisToGeoJSONGeom(arcFeature.geometry) : null,
+                            properties: arcFeature.attributes || {}
+                        };
+                        if (geoFeature.geometry) {
+                            var geojsonLayer = L.geoJSON(geoFeature);
+                            map.fitBounds(geojsonLayer.getBounds(), { maxZoom: 15 });
+                        }
+                    } else {
+                        document.title = "LOG:zoomToVillage empty result for: " + whereClause;
+                    }
+                })
+                .catch(function(err) {
+                    document.title = "LOG:zoomToVillage fetch error: " + err;
+                });
+        }
+
+        function locateKhasra(gisCode, plotNo) {
+            var v_sel = document.getElementById("manualVillage");
+            var villageCode = v_sel ? v_sel.value : "";
+            if (!villageCode) {
+                alert("कृपया पहले गाँव चुनें!");
+                return;
+            }
+            
+            // Query Settlement/Settlement/MapServer Layer 0 (Khasra) - via fetch with proxy
+            var whereClause = "KID = '" + plotNo + "' AND VILL_CODE_NIC = " + parseInt(villageCode);
+            document.title = "LOG:locateKhasra whereClause: " + whereClause;
+            
+            function processKhasraResult(data) {
+                if (data.features && data.features.length > 0) {
+                    var arcFeature = data.features[0];
+                    var geoFeature = {
+                        type: 'Feature',
+                        geometry: arcFeature.geometry ? arcgisToGeoJSONGeom(arcFeature.geometry) : null,
+                        properties: arcFeature.attributes || {}
+                    };
+                    if (geoFeature.geometry) {
+                        highlightFeature(geoFeature);
+                        var geojsonLayer = L.geoJSON(geoFeature);
+                        map.fitBounds(geojsonLayer.getBounds(), { maxZoom: 18 });
+                    }
+                    showDetails(geoFeature.properties);
+                    return true;
+                }
+                return false;
+            }
+            
+            var queryParams = {
+                where: whereClause,
+                outFields: '*',
+                returnGeometry: 'true',
+                outSR: '4326',
+                f: 'json'
+            };
+            var khasraUrl = proxyQueryUrl(SETTLEMENT_BASE, '/0/query', queryParams);
+            fetch(khasraUrl)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        document.title = "LOG:Query error 1: " + JSON.stringify(data.error);
+                        alert("खसरा खोजने में त्रुटि हुई!");
+                        return;
+                    }
+                    if (!processKhasraResult(data)) {
+                        // Fallback to prefix KID match
+                        var fallbackWhere = "KID LIKE '" + plotNo + "/%' AND VILL_CODE_NIC = " + parseInt(villageCode);
+                        document.title = "LOG:locateKhasra fallbackWhere: " + fallbackWhere;
+                        var fallbackParams = {
+                            where: fallbackWhere,
+                            outFields: '*',
+                            returnGeometry: 'true',
+                            outSR: '4326',
+                            f: 'json'
+                        };
+                        var fallbackUrl = proxyQueryUrl(SETTLEMENT_BASE, '/0/query', fallbackParams);
+                        return fetch(fallbackUrl)
+                            .then(function(res2) { return res2.json(); })
+                            .then(function(data2) {
+                                if (data2.error) {
+                                    document.title = "LOG:Query error 2: " + JSON.stringify(data2.error);
+                                    alert("खसरा खोजने में त्रुटि हुई!");
+                                    return;
+                                }
+                                if (!processKhasraResult(data2)) {
+                                    alert("खसरा " + plotNo + " नहीं मिला!");
+                                }
+                            });
+                    }
+                })
+                .catch(function(err) {
+                    console.error('locateKhasra error:', err);
+                    document.title = "LOG:locateKhasra fetch error: " + err;
+                    alert("खसरा खोजने में त्रुटि हुई!");
+                });
+        }
+
+        function searchKhasraManual() {
+            var d = document.getElementById("manualDistrict").value;
+            var t = document.getElementById("manualTehsil").value;
+            var ri = document.getElementById("manualRI").value;
+            var h = document.getElementById("manualHalka").value;
+            var v = document.getElementById("manualVillage").value;
+            var s = document.getElementById("manualSheet").value;
+            var plotNo = document.getElementById("manualKhasra").value.trim();
+            
+            if (!d || !t || !v) {
+                alert("कृपया जिला, तहसील और गाँव चुनें!");
+                return;
+            }
+            
+            var gisCode = d + t + (ri || "01") + (h || "01") + v + (s || "01");
+            
+            if (plotNo) {
+                locateKhasra(gisCode, plotNo);
+            } else {
+                zoomToVillage(gisCode);
+            }
+        }
+
+        // Area Measurement Logic
+        var clickedPoints = [];
+        var measurePolygon = null;
+        var measureMarkers = [];
+        var activeLine = null;
+
+        function toggleMeasurement() {
+            var btn = document.getElementById("measureBtn");
+            var banner = document.getElementById("instructionBanner");
+            var resetBtn = document.getElementById("resetMeasureBtn");
+            
+            if (isMeasuring) {
+                isMeasuring = false;
+                btn.innerHTML = "📐 क्षेत्रफल मापें";
+                btn.classList.remove("active");
+                banner.style.display = "none";
+                map.off('click', onMapClick);
+                map.off('mousemove', onMapMouseMove);
+                resetBtn.style.display = "none";
+                document.getElementById("infoPanel").style.display = "none";
+                clearMeasurementDrawing();
+            } else {
+                closeDetails();
+                closeLeaseDetails();
+                isMeasuring = true;
+                btn.innerHTML = "⏹ मापन बंद करें";
+                btn.classList.add("active");
+                banner.style.display = "block";
+                resetBtn.style.display = "block";
+                map.on('click', onMapClick);
+                map.on('mousemove', onMapMouseMove);
+                map.on('dblclick', finishMeasurement);
+            }
+        }
+
+        function onMapClick(e) {
+            var latlng = e.latlng;
+            clickedPoints.push(latlng);
+
+            var marker = L.circleMarker(latlng, {
+                color: '#e11d48',
+                fillColor: '#fff',
+                fillOpacity: 1,
+                radius: 5
+            }).addTo(map);
+            measureMarkers.push(marker);
+
+            updatePolygon();
+        }
+
+        function onMapMouseMove(e) {
+            if (clickedPoints.length === 0) return;
+            var latlng = e.latlng;
+
+            if (activeLine) {
+                map.removeLayer(activeLine);
+            }
+
+            var lastPoint = clickedPoints[clickedPoints.length - 1];
+            activeLine = L.polyline([lastPoint, latlng], {
+                color: '#f59e0b',
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(map);
+        }
+
+        function updatePolygon() {
+            if (clickedPoints.length < 2) return;
+
+            if (measurePolygon) {
+                map.removeLayer(measurePolygon);
+            }
+
+            measurePolygon = L.polygon(clickedPoints, {
+                color: '#e11d48',
+                fillColor: '#e11d48',
+                fillOpacity: 0.25,
+                weight: 3
+            }).addTo(map);
+
+            calculateAndDisplayArea();
+        }
+
+        function finishMeasurement() {
+            if (clickedPoints.length > 2) {
+                updatePolygon();
+                if (activeLine) {
+                    map.removeLayer(activeLine);
+                    activeLine = null;
+                }
+                map.off('mousemove', onMapMouseMove);
+                document.getElementById("instructionBanner").style.display = "none";
+            }
+        }
+
+        function resetMeasurement() {
+            clearMeasurementDrawing();
+            document.getElementById("infoPanel").style.display = "none";
+            document.getElementById("instructionBanner").style.display = "block";
+            map.on('mousemove', onMapMouseMove);
+        }
+
+        function clearMeasurementDrawing() {
+            clickedPoints = [];
+            if (measurePolygon) {
+                map.removeLayer(measurePolygon);
+                measurePolygon = null;
+            }
+            if (activeLine) {
+                map.removeLayer(activeLine);
+                activeLine = null;
+            }
+            measureMarkers.forEach(function(m) {
+                map.removeLayer(m);
+            });
+            measureMarkers = [];
+        }
+
+        function calculateAndDisplayArea() {
+            if (clickedPoints.length < 3) return;
+
+            var area = calculateGeodesicArea(clickedPoints);
+            
+            document.getElementById("infoPanel").style.display = "block";
+            document.getElementById("valSqM").innerText = area.toFixed(2);
+            
+            var hectares = area / 10000;
+            document.getElementById("valHectare").innerText = hectares.toFixed(4);
+
+            var bigha = area / 2529.285;
+            document.getElementById("valBigha").innerText = bigha.toFixed(2);
+        }
+
+        function calculateGeodesicArea(latlngs) {
+            var radius = 6378137;
+            var area = 0;
+            if (latlngs.length > 2) {
+                for (var i = 0; i < latlngs.length; i++) {
+                    var p1 = latlngs[i];
+                    var p2 = latlngs[(i + 1) % latlngs.length];
+                    area += (p2.lng - p1.lng) * Math.PI / 180 * (2 + Math.sin(p1.lat * Math.PI / 180) + Math.sin(p2.lat * Math.PI / 180));
+                }
+                area = Math.abs(area * radius * radius / 2);
+            }
+            return area;
+        }
+
+        // Live location tracking logic using multiple rooms
+        function toggleLocationSharing() {
+            var panel = document.getElementById("locationSharingPanel");
+            var btn = document.getElementById("shareLocationBtn");
+            if (panel.style.display === "none" || !panel.style.display) {
+                panel.style.display = "block";
+                if (btn) btn.classList.add("active");
+                if (Object.keys(activeRooms).length === 0) {
+                    createNewTrackingRoom();
+                }
+            } else {
+                panel.style.display = "none";
+                if (btn) btn.classList.remove("active");
+            }
+        }
+
+        function fallbackCopyText(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                var successful = document.execCommand('copy');
+                if (successful) {
+                    alert("लिंक कॉपी कर लिया गया है!");
+                } else {
+                    alert("लिंक कॉपी करने में विफल!");
+                }
+            } catch (err) {
+                alert("कॉपी करने में त्रुटि: " + err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function createNewTrackingRoom() {
+            try {
+                var roomId = Math.floor(100000 + Math.random() * 900000).toString();
+                var roomIndex = Object.keys(activeRooms).length;
+                var color = roomColors[roomIndex % roomColors.length];
+                
+                var domain = "https://harshcscemitra.vercel.app";
+                var shareLink = domain + "/share.html?room=" + roomId;
+                
+                activeRooms[roomId] = {
+                    roomId: roomId,
+                    name: "डिवाइस " + (roomIndex + 1),
+                    color: color,
+                    shareLink: shareLink,
+                    latlng: null,
+                    marker: null,
+                    isFirst: true
+                };
+                
+                var qrDiv = document.getElementById("qrcode");
+                qrDiv.innerHTML = "";
+                qrDiv.style.display = "block";
+                
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrDiv, {
+                        text: shareLink,
+                        width: 120,
+                        height: 120,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                } else {
+                    var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" + encodeURIComponent(shareLink);
+                    qrDiv.innerHTML = "<img src='" + qrUrl + "' alt='QR' style='display:block; width:120px; height:120px; margin: 0 auto;' />";
+                }
+                
+                renderTrackingDevices();
+                
+                activeRooms[roomId].interval = setInterval(function() {
+                    fetchRoomLocation(roomId);
+                }, 3000);
+            } catch (err) {
+                document.title = "LOG:Error in createNewTrackingRoom: " + err.message;
+            }
+        }
+
+        function renderTrackingDevices() {
+            try {
+                var listDiv = document.getElementById("trackingDevicesList");
+                listDiv.innerHTML = "";
+                var keys = Object.keys(activeRooms);
+                if (keys.length === 0) {
+                    listDiv.innerHTML = "<div style='text-align: center; color: #64748b; font-size: 12px; padding: 10px;'>कोई सक्रिय ट्रैकर नहीं है। ऊपर क्लिक करके जोड़ें।</div>";
+                    document.getElementById("qrcode").style.display = "none";
+                    return;
+                }
+                
+                keys.forEach(function(roomId) {
+                    var room = activeRooms[roomId];
+                    var deviceRow = document.createElement("div");
+                    deviceRow.style.cssText = "display: flex; flex-direction: column; gap: 4px; padding: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px;";
+                    
+                    var topRow = document.createElement("div");
+                    topRow.style.cssText = "display: flex; justify-content: space-between; align-items: center;";
+                    
+                    var nameSpan = document.createElement("span");
+                    nameSpan.innerHTML = "<span style='display:inline-block; width:8px; height:8px; border-radius:50%; background:" + room.color + "; margin-right:6px;'></span>" + room.name + " (" + roomId + ")";
+                    nameSpan.style.cssText = "font-size: 11px; font-weight: bold; color: #f1f5f9;";
+                    
+                    var rightControls = document.createElement("div");
+                    rightControls.style.cssText = "display: flex; gap: 8px;";
+                    
+                    var copyBtn = document.createElement("button");
+                    copyBtn.innerText = "📋";
+                    copyBtn.title = "लिंक कॉपी करें";
+                    copyBtn.style.cssText = "background:none; border:none; color:#38bdf8; cursor:pointer; font-size:11px; padding:0;";
+                    copyBtn.onclick = function() {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(room.shareLink).then(function() {
+                                alert("लिंक कॉपी कर लिया गया है!");
+                            }).catch(function(err) {
+                                fallbackCopyText(room.shareLink);
+                            });
+                        } else {
+                            fallbackCopyText(room.shareLink);
+                        }
+                    };
+                    
+                    var delBtn = document.createElement("button");
+                    delBtn.innerText = "✕";
+                    delBtn.title = "हटाएं";
+                    delBtn.style.cssText = "background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:11px; padding:0;";
+                    delBtn.onclick = function() {
+                        stopSingleTrackingRoom(roomId);
+                    };
+                    
+                    rightControls.appendChild(copyBtn);
+                    rightControls.appendChild(delBtn);
+                    topRow.appendChild(nameSpan);
+                    topRow.appendChild(rightControls);
+                    
+                    var detailsRow = document.createElement("div");
+                    detailsRow.style.cssText = "font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between;";
+                    var statusText = room.latlng ? "अक्षांश: " + room.latlng[0].toFixed(5) + ", देशांतर: " + room.latlng[1].toFixed(5) : "⏳ मोबाइल जुड़ने का इंतज़ार...";
+                    var statusSpan = document.createElement("span");
+                    statusSpan.innerText = statusText;
+                    if (!room.latlng) statusSpan.style.color = "#f59e0b";
+                    
+                    detailsRow.appendChild(statusSpan);
+                    
+                    deviceRow.appendChild(topRow);
+                    deviceRow.appendChild(detailsRow);
+                    listDiv.appendChild(deviceRow);
+                });
+            } catch (err) {
+                document.title = "LOG:Error in renderTrackingDevices: " + err.message;
+            }
+        }
+
+        function fetchRoomLocation(roomId) {
+            var room = activeRooms[roomId];
+            if (!room) return;
+            
+            var url = "https://harshcscemitra.vercel.app/api/share-location?roomId=" + roomId;
+            fetch(url)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success && data.location) {
+                        var loc = data.location;
+                        var latlng = [loc.lat, loc.lng];
+                        
+                        var updated = false;
+                        if (!room.latlng || room.latlng[0] !== latlng[0] || room.latlng[1] !== latlng[1]) {
+                            room.latlng = latlng;
+                            updated = true;
+                        }
+                        
+                        if (room.marker) {
+                            room.marker.setLatLng(latlng);
+                        } else {
+                            var svgHtml = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="' + room.color + '" stroke="#fff" stroke-width="1.5"/></svg>';
+                            var customIcon = L.divIcon({
+                                html: svgHtml,
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 32],
+                                className: 'custom-tracker-icon'
+                            });
+                            
+                            room.marker = L.marker(latlng, {icon: customIcon}).addTo(map);
+                            room.marker.bindPopup("<b>📱 " + room.name + " (" + roomId + ")</b>").openPopup();
+                        }
+                        
+                        if (updated) {
+                            renderTrackingDevices();
+                            calculateTrackingDistances();
+                            
+                            var autoFollow = document.getElementById("autoFollowCheck").checked;
+                            if (room.isFirst) {
+                                map.setView(latlng, 17);
+                                room.isFirst = false;
+                            } else if (autoFollow) {
+                                map.panTo(latlng);
+                            }
+                        }
+                    }
+                })
+                .catch(function(e) { console.error("Poll error:", e); });
+        }
+
+        function enableManualPointAdd() {
+            addingManualPoint = true;
+            map.getContainer().style.cursor = 'crosshair';
+            alert("नक्शे पर कहीं भी क्लिक करके एक नया कंप्यूटर पॉइंट जोड़ें। इस पॉइंट को आप खींचकर (drag) भी बदल सकते हैं।");
+        }
+
+        function calculateTrackingDistances() {
+            var keys = Object.keys(activeRooms);
+            var points = [];
+            keys.forEach(function(k) {
+                var r = activeRooms[k];
+                if (r.latlng) {
+                    points.push({ name: r.name, latlng: L.latLng(r.latlng[0], r.latlng[1]) });
+                }
+            });
+            
+            if (activeDistanceLine) {
+                map.removeLayer(activeDistanceLine);
+                activeDistanceLine = null;
+            }
+            if (activeDistancePolygon) {
+                map.removeLayer(activeDistancePolygon);
+                activeDistancePolygon = null;
+            }
+            
+            var panel = document.getElementById("devicesDistancePanel");
+            var valDiv = document.getElementById("devicesDistanceVal");
+            
+            if (points.length < 2) {
+                panel.style.display = "none";
+                return;
+            }
+            
+            var latlngs = points.map(function(p) { return p.latlng; });
+            var html = "";
+            
+            // 1. Show pairwise distances for all combinations
+            html += "<strong>📏 उपकरणों के बीच की दूरियां (All Combinations):</strong><br/>";
+            for (var i = 0; i < points.length; i++) {
+                for (var j = i + 1; j < points.length; j++) {
+                    var d = points[i].latlng.distanceTo(points[j].latlng);
+                    html += "• " + points[i].name + " ➔ " + points[j].name + ": " + d.toFixed(1) + " मीटर (" + (d * 3.28084).toFixed(1) + " फीट)<br/>";
+                }
+            }
+            
+            if (points.length >= 3) {
+                // Draw a closed polygon
+                activeDistancePolygon = L.polygon(latlngs, {
+                    color: '#22d3ee',
+                    fillColor: '#22d3ee',
+                    fillOpacity: 0.15,
+                    weight: 2,
+                    dashArray: '5, 5'
+                }).addTo(map);
+                
+                // Draw open polyline boundary for outline styling
+                activeDistanceLine = L.polyline(latlngs.concat([latlngs[0]]), {
+                    color: '#22d3ee',
+                    weight: 3,
+                    dashArray: '8, 8',
+                    opacity: 0.8
+                }).addTo(map);
+                
+                var area = calculateGeodesicArea(latlngs);
+                var bigha = area / 2529.285;
+                var hectare = area / 10000;
+                
+                html += "<br/><strong>📐 घेरा क्षेत्र (Area of Polygon):</strong><br/>";
+                html += "• क्षेत्रफल: " + area.toFixed(1) + " वर्ग मीटर<br/>";
+                html += "• बीघा (Bigha): " + bigha.toFixed(2) + "<br/>";
+                html += "• हेक्टेयर (Hectare): " + hectare.toFixed(4);
+            } else {
+                // Just draw polyline
+                activeDistanceLine = L.polyline(latlngs, {
+                    color: '#22d3ee',
+                    weight: 3,
+                    dashArray: '8, 8',
+                    opacity: 0.8
+                }).addTo(map);
+            }
+            
+            valDiv.innerHTML = html;
+            panel.style.display = "block";
+        }
+
+        function stopSingleTrackingRoom(roomId) {
+            var room = activeRooms[roomId];
+            if (!room) return;
+            
+            if (room.interval) clearInterval(room.interval);
+            if (room.marker) map.removeLayer(room.marker);
+            
+            delete activeRooms[roomId];
+            renderTrackingDevices();
+            calculateTrackingDistances();
+        }
+
+        function stopTrackingRoom() {
+            var keys = Object.keys(activeRooms);
+            keys.forEach(function(roomId) {
+                stopSingleTrackingRoom(roomId);
+            });
+            if (typeof trackingMarker !== 'undefined' && trackingMarker) {
+                map.removeLayer(trackingMarker);
+                trackingMarker = null;
+            }
+            if (activeDistancePolygon) {
+                map.removeLayer(activeDistancePolygon);
+                activeDistancePolygon = null;
+            }
+            if (activeDistanceLine) {
+                map.removeLayer(activeDistanceLine);
+                activeDistanceLine = null;
+            }
+            if (document.getElementById("trackStatus")) {
+                document.getElementById("trackStatus").innerText = "निष्क्रिय (Inactive)";
+                document.getElementById("trackStatus").style.color = "#ef4444";
+            }
+            if (document.getElementById("trackTime")) {
+                document.getElementById("trackTime").innerText = "-";
+            }
+        }
+
+    </script>
+</body>
+</html>
