@@ -22,6 +22,7 @@
       --accent-glow: #3b82f6;
       --gold: #f59e0b;
       --green: #10b981;
+      --purple: #8b5cf6;
       --text: #f8fafc;
       --text-muted: #94a3b8;
     }
@@ -33,7 +34,7 @@
       padding: 16px;
     }
     .app-container {
-      max-width: 650px;
+      max-width: 750px;
       margin: 0 auto;
     }
     
@@ -379,33 +380,32 @@
       transform: scale(1.03);
     }
 
-    /* Owner Row inside Khata Drawer */
-    .owner-row {
+    /* Grouping / Merge Control Bar */
+    .group-action-bar {
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 10px 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
-      margin-bottom: 6px;
-      font-size: 12.5px;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .owner-name {
-      font-weight: 700;
+    .btn-merge-group {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       color: #fff;
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-color: var(--gold);
-    }
-    .owner-share {
-      color: var(--accent-glow);
-      font-weight: 700;
-      margin-left: 6px;
-    }
-    .owner-land-val {
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
       font-weight: 800;
-      color: var(--gold);
-      text-align: right;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
     }
 
     /* Consolidated Master Table */
@@ -554,7 +554,7 @@
         <span>🌾</span> eSign जमाबंदी QR & कृषक श्रेणी प्रमाण-पत्र
       </div>
       <div class="card-desc">
-        जमाबंदी का QR स्कैन करें। ऐप सर्वर से <b>खाता संख्या, काश्तकार नाम, पिता/पति का नाम, जाति, कुल हेक्टेयर जमीन</b> एक्सट्रैक्ट करेगा। काश्तकार के नाम पर टैप करके <b>कृषक श्रेणी प्रमाण-पत्र PDF</b> डाउनलोड करें!
+        जमाबंदी का QR स्कैन करें। नाम स्पेलिंग में अंतर होने पर <b>काश्तकारों को सिलेक्ट करके ग्रुप (मर्ज) बनाएं</b>। ऐप समेकित हेक्टेयर के आधार पर <b>कृषक श्रेणी प्रमाण-पत्र PDF</b> जनरेट करेगा!
       </div>
 
       <!-- Action Buttons -->
@@ -597,7 +597,7 @@
           </div>
           <div class="form-group">
             <label>काश्तकार व हिस्सा (1 पंक्ति में 1 काश्तकार नाम व हिस्सा)</label>
-            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30 जाति- ब्राह्मण&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180 जाति- ब्राह्मण&#10;3. नदूं पत्नि तोलाराम हिस्सा- 1/5 जाति- ब्राह्मण" required></textarea>
+            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30 जाति- ब्राह्मण&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180 जाति- ब्राह्मण" required></textarea>
           </div>
           <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी खाता जोड़ें</button>
         </form>
@@ -640,6 +640,17 @@
           <div class="consolidated-title">
             <span>👑 समस्त अद्वितीय काश्तकारों की समेकित कृषि श्रेणी रिपोर्ट</span>
             <span id="uniqueOwnerCount" style="font-size:12px; color:var(--gold);">0 काश्तकार</span>
+          </div>
+
+          <!-- Group / Merge Control Action Bar -->
+          <div class="group-action-bar">
+            <div style="font-size:12px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+              <span>🔗 काश्तकार मर्ज ग्रुपिंग:</span>
+              <span style="font-size:11px; color:var(--text-muted);">(स्पेलिंग मिस्टेक या एक ही काश्तकार के लिए काश्तकारों को चुनें)</span>
+            </div>
+            <button class="btn-merge-group" onclick="mergeSelectedKashtkars()">
+              🔗 चुने गए काश्तकारों का ग्रुप बनाएं
+            </button>
           </div>
 
           <div id="masterKashtkarList"></div>
@@ -689,6 +700,8 @@
     let scannedKhatas = [];
     let masterMapGlobal = {};
     let activeKashtkarNameForPdf = "Kashtkar";
+    let selectedForGroupSet = new Set();
+    let mergedGroupsList = []; // Custom user-created merged groups [{ groupName, memberKeys: [] }]
 
     // Helper: Determine Farmer Category based on Total Hectares
     function getFarmerCategory(hectares) {
@@ -796,7 +809,6 @@
       updateUI();
     }
 
-    // Call Vercel Serverless Function `/api/parse-qr` to fetch & parse eSign Jamabandi
     async function processQrPayload(qrInput) {
       const loadingBox = document.getElementById('loadingBox');
       loadingBox.style.display = 'block';
@@ -824,7 +836,7 @@
             owners: data.owners,
             sourceUrl: data.sourceUrl
           });
-          alert(`✅ खाता संख्या ${data.khata} (${data.village}) के ${data.owners.length} काश्तकारों का डाटा लाइव एक्सट्रैक्ट हुआ!`);
+          alert(`✅ खाता संख्या ${data.khata} (${data.village}) के ${data.owners.length} काश्तकारों का डेटा एक्सट्रैक्ट हुआ!`);
           updateUI();
         } else {
           fallbackLocalParse(qrInput);
@@ -912,7 +924,6 @@
       return results;
     }
 
-    // TOGGLE DRAWER: Toggles clicked drawer & closes others
     function toggleDrawer(khataIdx) {
       scannedKhatas.forEach((_, idx) => {
         const el = document.getElementById(`khata-drawer-${idx}`);
@@ -931,6 +942,43 @@
       const item = scannedKhatas[idx];
       if (confirm(`क्या आप खाता संख्या ${item.khata} को सूची से हटाना चाहते हैं?`)) {
         scannedKhatas.splice(idx, 1);
+        updateUI();
+      }
+    }
+
+    function toggleGroupSelection(key, isChecked) {
+      if (isChecked) {
+        selectedForGroupSet.add(key);
+      } else {
+        selectedForGroupSet.delete(key);
+      }
+    }
+
+    function mergeSelectedKashtkars() {
+      if (selectedForGroupSet.size < 2) {
+        alert("कृपया मर्ज (ग्रुप) बनाने के लिए कम से कम 2 काश्तकारों को टिक (Select) करें!");
+        return;
+      }
+
+      const keysArray = Array.from(selectedForGroupSet);
+      const defaultName = masterMapGlobal[keysArray[0]]?.displayName || keysArray[0];
+
+      const userGroupName = prompt("मर्ज किए जा रहे काश्तकारों के ग्रुप का नाम दर्ज करें:", defaultName);
+      if (!userGroupName || !userGroupName.trim()) return;
+
+      mergedGroupsList.push({
+        groupName: userGroupName.trim(),
+        memberKeys: keysArray
+      });
+
+      selectedForGroupSet.clear();
+      alert(`✅ ${keysArray.length} काश्तकारों को सफलता पूर्वक "${userGroupName.trim()}" के नाम से 1 ग्रुप में मर्ज कर दिया गया!`);
+      updateUI();
+    }
+
+    function unmergeGroup(groupIndex) {
+      if (confirm("क्या आप इस ग्रुप को अन-मर्ज (अलग-अलग) करना चाहते हैं?")) {
+        mergedGroupsList.splice(groupIndex, 1);
         updateUI();
       }
     }
@@ -1031,14 +1079,13 @@
           const shreni = getFarmerCategory(o.area);
           const normKey = o.name.replace(/\s+/g, ' ').trim();
           khataHtml += `
-            <div class="owner-row">
+            <div class="owner-row" style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.03); border-radius:10px; margin-bottom:4px; font-size:12px;">
               <div>
-                <span class="owner-name" onclick="openCertificate('${normKey}')">👤 ${o.name}</span>
-                <span class="owner-share">(हिस्सा: ${o.fracStr})</span><br/>
+                <span class="owner-name" onclick="openCertificate('${normKey}')" style="cursor:pointer; font-weight:700; color:#fff;">👤 ${o.name}</span>
+                <span class="owner-share" style="color:var(--accent-glow);">(हिस्सा: ${o.fracStr})</span><br/>
                 <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
-                <button class="btn-cert" onclick="openCertificate('${normKey}')">📄 PDF प्रमाण-पत्र</button>
               </div>
-              <div class="owner-land-val">${o.area.toFixed(4)} हेक्टेयर</div>
+              <div style="color:var(--gold); font-weight:800; text-align:right;">${o.area.toFixed(4)} हे.</div>
             </div>
           `;
         });
@@ -1048,12 +1095,12 @@
       document.getElementById('khataListLog').innerHTML = khataHtml;
 
       // Master Consolidation across ALL Khatas
-      masterMapGlobal = {};
+      const rawMap = {};
       scannedKhatas.forEach(k => {
         k.owners.forEach(o => {
           const normKey = o.name.replace(/\s+/g, ' ').trim();
-          if (!masterMapGlobal[normKey]) {
-            masterMapGlobal[normKey] = {
+          if (!rawMap[normKey]) {
+            rawMap[normKey] = {
               displayName: o.name,
               primaryName: o.primaryName,
               relation: o.relation,
@@ -1063,13 +1110,13 @@
               khataBreakdown: []
             };
           }
-          masterMapGlobal[normKey].totalArea += o.area;
-          if (o.caste && !masterMapGlobal[normKey].caste) masterMapGlobal[normKey].caste = o.caste;
-          if (o.guardian && !masterMapGlobal[normKey].guardian) {
-            masterMapGlobal[normKey].guardian = o.guardian;
-            masterMapGlobal[normKey].relation = o.relation;
+          rawMap[normKey].totalArea += o.area;
+          if (o.caste && !rawMap[normKey].caste) rawMap[normKey].caste = o.caste;
+          if (o.guardian && !rawMap[normKey].guardian) {
+            rawMap[normKey].guardian = o.guardian;
+            rawMap[normKey].relation = o.relation;
           }
-          masterMapGlobal[normKey].khataBreakdown.push({
+          rawMap[normKey].khataBreakdown.push({
             khata: k.khata,
             fracStr: o.fracStr,
             area: o.area
@@ -1077,12 +1124,59 @@
         });
       });
 
-      const uniqueNames = Object.keys(masterMapGlobal);
-      document.getElementById('uniqueOwnerCount').innerText = `${uniqueNames.length} काश्तकार`;
-      document.getElementById('statOwnersCount').innerText = uniqueNames.length;
+      // APPLY USER-DEFINED MERGED GROUPS
+      masterMapGlobal = {};
+      const processedKeys = new Set();
+
+      mergedGroupsList.forEach((groupObj, grpIdx) => {
+        const groupKey = `__GROUP_${grpIdx}__`;
+        let combinedArea = 0;
+        let combinedBreakdown = [];
+        let groupPrimaryName = groupObj.groupName;
+        let groupCaste = "";
+        let groupGuardian = "";
+        let groupRelation = "पुत्र";
+
+        groupObj.memberKeys.forEach(mKey => {
+          if (rawMap[mKey]) {
+            processedKeys.add(mKey);
+            combinedArea += rawMap[mKey].totalArea;
+            combinedBreakdown = combinedBreakdown.concat(rawMap[mKey].khataBreakdown);
+            if (!groupCaste && rawMap[mKey].caste) groupCaste = rawMap[mKey].caste;
+            if (!groupGuardian && rawMap[mKey].guardian) {
+              groupGuardian = rawMap[mKey].guardian;
+              groupRelation = rawMap[mKey].relation;
+            }
+          }
+        });
+
+        masterMapGlobal[groupKey] = {
+          displayName: groupObj.groupName,
+          primaryName: groupPrimaryName,
+          relation: groupRelation,
+          guardian: groupGuardian,
+          caste: groupCaste,
+          totalArea: combinedArea,
+          khataBreakdown: combinedBreakdown,
+          isGroup: true,
+          groupIndex: grpIdx,
+          membersCount: groupObj.memberKeys.length
+        };
+      });
+
+      // Add remaining un-grouped Kashtkars
+      Object.keys(rawMap).forEach(key => {
+        if (!processedKeys.has(key)) {
+          masterMapGlobal[key] = rawMap[key];
+        }
+      });
+
+      const finalKeys = Object.keys(masterMapGlobal);
+      document.getElementById('uniqueOwnerCount').innerText = `${finalKeys.length} काश्तकार`;
+      document.getElementById('statOwnersCount').innerText = finalKeys.length;
 
       let masterHtml = '';
-      uniqueNames.forEach(key => {
+      finalKeys.forEach(key => {
         const item = masterMapGlobal[key];
         const shreni = getFarmerCategory(item.totalArea);
         let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join(' | ');
@@ -1090,11 +1184,15 @@
         masterHtml += `
           <div class="master-owner-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div>
-                <span class="owner-name" onclick="openCertificate('${key}')" style="font-size:15px; font-weight:800;">👤 ${item.displayName}</span><br/>
-                <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
-                ${item.caste ? `<span style="font-size:11px; color:var(--accent-glow); margin-left:6px;">(जाति: ${item.caste})</span>` : ''}<br/>
-                <button class="btn-cert" onclick="openCertificate('${key}')">📥 कृषक श्रेणी प्रमाण-पत्र PDF डाउनलोड करें</button>
+              <div style="display:flex; align-items:flex-start; gap:10px;">
+                ${!item.isGroup ? `<input type="checkbox" onchange="toggleGroupSelection('${key}', this.checked)" style="width:18px; height:18px; margin-top:3px; cursor:pointer;" title="ग्रुप बनाने के लिए चुनें"/>` : ''}
+                <div>
+                  <span class="owner-name" onclick="openCertificate('${key}')" style="font-size:15px; font-weight:800; cursor:pointer;">👤 ${item.displayName}</span>
+                  ${item.isGroup ? `<span style="font-size:11px; background:rgba(139,92,246,0.3); border:1px solid #8b5cf6; color:#c084fc; padding:2px 6px; border-radius:6px; margin-left:6px; font-weight:800;">🔗 merged (${item.membersCount} खातेदार)</span> <button onclick="unmergeGroup(${item.groupIndex})" style="background:none; border:none; color:#f87171; font-size:11px; cursor:pointer; text-decoration:underline;">[अन-मर्ज]</button>` : ''}<br/>
+                  <span class="shreni-tag ${shreni.class}">${shreni.label}</span>
+                  ${item.caste ? `<span style="font-size:11px; color:var(--accent-glow); margin-left:6px;">(जाति: ${item.caste})</span>` : ''}<br/>
+                  <button class="btn-cert" onclick="openCertificate('${key}')">📥 कृषक श्रेणी प्रमाण-पत्र PDF डाउनलोड करें</button>
+                </div>
               </div>
               <span style="font-size:15px; font-weight:900; color:var(--gold);">${item.totalArea.toFixed(4)} हेक्टेयर</span>
             </div>
@@ -1112,6 +1210,8 @@
       if (confirm("क्या आप स्कैन की गई सभी जमाबंदियों की सूची रीसेट करना चाहते हैं?")) {
         scannedKhatas = [];
         masterMapGlobal = {};
+        mergedGroupsList = [];
+        selectedForGroupSet.clear();
         updateUI();
       }
     }

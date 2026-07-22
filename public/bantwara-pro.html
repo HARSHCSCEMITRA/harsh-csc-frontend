@@ -362,18 +362,16 @@
       gap: 8px;
     }
 
-    /* Kashtkar Selection Bar */
+    /* Kashtkar Selection & Grouping Bar */
     .kashtkar-select-bar {
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 14px;
-      padding: 12px 16px;
+      padding: 14px 16px;
       margin-bottom: 16px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
       gap: 12px;
-      flex-wrap: wrap;
     }
     .select-dropdown {
       padding: 8px 12px;
@@ -384,6 +382,21 @@
       font-weight: 700;
       font-size: 13px;
       outline: none;
+      width: 100%;
+    }
+    .btn-merge-group {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
     }
 
     /* Zamify Desktop Software Table Formatting */
@@ -533,7 +546,7 @@
         <span>📜</span> बंटवारा प्रो रिपोर्ट & एक्सेल शीट टूल
       </div>
       <div class="card-desc">
-        जमाबंदी का <b>QR स्कैन करें</b> अथवा अपने डिवाइस से <b>जमाबंदी PDF / फोटो चुनें</b>। टूल Zamify डेस्कटॉप सॉफ्टवेयर के **सटीक EXCEL & PDF फॉर्मेट** में खसरा-वार हिस्सा गणना तैयार करेगा!
+        जमाबंदी का <b>QR स्कैन करें</b> अथवा <b>PDF / फोटो चुनें</b>। स्पेलिंग मिस्टेक होने पर <b>काश्तकारों को सिलेक्ट करके ग्रुप (मर्ज) बनाएं</b>। ऐप Zamify सॉफ्टवेयर के **सटीक EXCEL & PDF फॉर्मेट** में खसरा-वार हिस्सा रिपोर्ट तैयार करेगा!
       </div>
 
       <!-- Action Buttons Grid -->
@@ -626,14 +639,25 @@
             </div>
           </div>
 
-          <!-- Kashtkar Selection Bar -->
+          <!-- Kashtkar Selection & Grouping Bar -->
           <div class="kashtkar-select-bar">
-            <div style="font-size:13px; font-weight:700; color:#fff;">
-              🎯 रिपोर्ट के लिए काश्तकार चुनें:
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div style="font-size:13px; font-weight:700; color:#fff;">
+                🎯 रिपोर्ट हेतु काश्तकार चुनें:
+              </div>
+              <button class="btn-merge-group" onclick="mergeSelectedKashtkars()">
+                🔗 चुने गए टिक (Checked) काश्तकारों का ग्रुप बनाएं
+              </button>
             </div>
+
             <select id="kashtkarSelectDropdown" class="select-dropdown" onchange="onSelectedKashtkarChange(this.value)">
               <!-- JS Filled -->
             </select>
+
+            <!-- Selection Checkboxes for Merge Grouping -->
+            <div id="kashtkarCheckboxesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; border:1px dashed rgba(255,255,255,0.15);">
+              <!-- JS Filled Checkboxes -->
+            </div>
           </div>
 
           <!-- Exact Zamify Desktop Software Formatted Table Container for Display and PDF Generation -->
@@ -678,6 +702,8 @@
     let masterMapGlobal = {};
     let activeKashtkarKey = "";
     let userProposedSelectionMap = {}; // Stores proposed partition selections per khasra row
+    let selectedForGroupSet = new Set();
+    let mergedGroupsList = []; // Custom user-created merged groups [{ groupName, memberKeys: [] }]
 
     // Convert Hectares to Bigha-Biswa (Standard Zamify Format e.g. 1-04, 0-03)
     function haToBighaBiswa(ha) {
@@ -940,6 +966,43 @@
       }
     }
 
+    function toggleGroupSelection(key, isChecked) {
+      if (isChecked) {
+        selectedForGroupSet.add(key);
+      } else {
+        selectedForGroupSet.delete(key);
+      }
+    }
+
+    function mergeSelectedKashtkars() {
+      if (selectedForGroupSet.size < 2) {
+        alert("कृपया मर्ज (ग्रुप) बनाने के लिए कम से कम 2 काश्तकारों को टिक (Check) करें!");
+        return;
+      }
+
+      const keysArray = Array.from(selectedForGroupSet);
+      const defaultName = masterMapGlobal[keysArray[0]]?.displayName || keysArray[0];
+
+      const userGroupName = prompt("मर्ज किए जा रहे काश्तकारों के ग्रुप का नाम दर्ज करें:", defaultName);
+      if (!userGroupName || !userGroupName.trim()) return;
+
+      mergedGroupsList.push({
+        groupName: userGroupName.trim(),
+        memberKeys: keysArray
+      });
+
+      selectedForGroupSet.clear();
+      alert(`✅ ${keysArray.length} काश्तकारों को सफलता पूर्वक "${userGroupName.trim()}" के नाम से 1 ग्रुप में मर्ज कर दिया गया!`);
+      updateUI();
+    }
+
+    function unmergeGroup(groupIndex) {
+      if (confirm("क्या आप इस ग्रुप को अन-मर्ज (अलग-अलग) करना चाहते हैं?")) {
+        mergedGroupsList.splice(groupIndex, 1);
+        updateUI();
+      }
+    }
+
     function onSelectedKashtkarChange(val) {
       activeKashtkarKey = val;
       renderZamifyFormattedTable();
@@ -996,13 +1059,13 @@
       });
       document.getElementById('khataListLog').innerHTML = khataHtml;
 
-      // Master Consolidation across ALL Khatas
-      masterMapGlobal = {};
+      // Raw Consolidation across ALL Khatas
+      const rawMap = {};
       scannedKhatas.forEach(k => {
         k.owners.forEach(o => {
           const normKey = o.primaryName || o.name.replace(/\s+/g, ' ').trim();
-          if (!masterMapGlobal[normKey]) {
-            masterMapGlobal[normKey] = {
+          if (!rawMap[normKey]) {
+            rawMap[normKey] = {
               displayName: o.name,
               primaryName: o.primaryName || normKey,
               caste: o.caste,
@@ -1010,9 +1073,9 @@
               khataBreakdown: []
             };
           }
-          masterMapGlobal[normKey].totalArea += o.area;
-          if (o.caste && !masterMapGlobal[normKey].caste) masterMapGlobal[normKey].caste = o.caste;
-          masterMapGlobal[normKey].khataBreakdown.push({
+          rawMap[normKey].totalArea += o.area;
+          if (o.caste && !rawMap[normKey].caste) rawMap[normKey].caste = o.caste;
+          rawMap[normKey].khataBreakdown.push({
             khata: k.khata,
             fracStr: o.fracStr,
             area: o.area
@@ -1020,20 +1083,72 @@
         });
       });
 
+      // APPLY USER-DEFINED MERGED GROUPS
+      masterMapGlobal = {};
+      const processedKeys = new Set();
+
+      mergedGroupsList.forEach((groupObj, grpIdx) => {
+        const groupKey = `__GROUP_${grpIdx}__`;
+        let combinedArea = 0;
+        let memberKeysList = groupObj.memberKeys;
+
+        memberKeysList.forEach(mKey => {
+          if (rawMap[mKey]) {
+            processedKeys.add(mKey);
+            combinedArea += rawMap[mKey].totalArea;
+          }
+        });
+
+        masterMapGlobal[groupKey] = {
+          displayName: groupObj.groupName,
+          primaryName: groupObj.groupName,
+          totalArea: combinedArea,
+          isGroup: true,
+          groupIndex: grpIdx,
+          memberKeys: memberKeysList
+        };
+      });
+
+      // Add remaining un-grouped Kashtkars
+      Object.keys(rawMap).forEach(key => {
+        if (!processedKeys.has(key)) {
+          masterMapGlobal[key] = rawMap[key];
+        }
+      });
+
       const uniqueKeys = Object.keys(masterMapGlobal);
       document.getElementById('statOwnersCount').innerText = uniqueKeys.length;
 
-      // Populate Dropdown
+      // Populate Dropdown & Checkboxes for Grouping
       const dropdown = document.getElementById('kashtkarSelectDropdown');
       dropdown.innerHTML = '';
 
+      let chkHtml = '';
+
       uniqueKeys.forEach(key => {
         const item = masterMapGlobal[key];
-        dropdown.innerHTML += `<option value="${key}">${item.displayName} (${item.totalArea.toFixed(4)} हे.)</option>`;
+        dropdown.innerHTML += `<option value="${key}">${item.isGroup ? '🔗 ' : ''}${item.displayName} (${item.totalArea.toFixed(4)} हे.)</option>`;
+
+        if (!item.isGroup) {
+          chkHtml += `
+            <label style="font-size:12px; color:#fff; cursor:pointer; display:flex; align-items:center; gap:4px; background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:6px;">
+              <input type="checkbox" onchange="toggleGroupSelection('${key}', this.checked)"/>
+              <span>${item.displayName}</span>
+            </label>
+          `;
+        } else {
+          chkHtml += `
+            <span style="font-size:11px; color:#c084fc; background:rgba(139,92,246,0.2); padding:4px 8px; border-radius:6px; border:1px solid #8b5cf6;">
+              🔗 ${item.displayName} [मर्ज्ड] <button onclick="unmergeGroup(${item.groupIndex})" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:bold;">[अन-मर्ज]</button>
+            </span>
+          `;
+        }
       });
       dropdown.innerHTML += `<option value="__ALL__">👥 समस्त काश्तकार (समेकित)</option>`;
 
-      if (uniqueKeys.length > 0 && !activeKashtkarKey) {
+      document.getElementById('kashtkarCheckboxesList').innerHTML = chkHtml || `<span style="font-size:11px; color:var(--text-muted);">कोई अतिरिक्त काश्तकार उपलब्ध नहीं है।</span>`;
+
+      if (uniqueKeys.length > 0 && (!activeKashtkarKey || !masterMapGlobal[activeKashtkarKey])) {
         activeKashtkarKey = uniqueKeys[0];
       }
       dropdown.value = activeKashtkarKey;
@@ -1047,14 +1162,14 @@
 
     // RENDER EXACT TABLE MATCHING ZAMIFY DESKTOP EXCEL FORMAT
     function renderZamifyFormattedTable() {
-      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
+      const activeObj = masterMapGlobal[activeKashtkarKey];
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : (activeObj ? activeObj.displayName : activeKashtkarKey);
       document.getElementById('docTitleKashtkar').innerText = `बंटवारा प्रो रिपोर्ट — ${selectedName}`;
 
       const totalAreaAll = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
       document.getElementById('docSubtitleMeta').innerText = `कुल खाते: ${scannedKhatas.length} | कुल खसरा रकबा: ${totalAreaAll.toFixed(4)} हे. (${haToBighaBiswa(totalAreaAll)} बीघा)`;
 
-      // Headers exact matching EXCEL FORMAT.xlsx:
-      // खाता क्र. | खाता संख्या | खसरा क्र. | खसरा संख्या | भूमि वर्गीकरण | {नाम} (Ha) | {नाम} (बीघा-बिस्वा) | {नाम} (SqFt) | कुल रकबा (Ha) | कुल रकबा (बीघा-बिस्वा) | कुल रकबा (SqFt) | जगह का उपनाम | प्रस्तावित बँटवारा | प्रस्तावित {नाम} (Ha)
+      // Headers exact matching EXCEL FORMAT.xlsx
       const theadHtml = `
         <tr>
           <th>खाता क्र.</th>
@@ -1101,15 +1216,18 @@
 
         const khatas = villageGroups[vName];
         khatas.forEach(k => {
-          // Find Kashtkar's share fraction in this Khata
-          let kashtkarFrac = 1.0;
-          if (activeKashtkarKey !== "__ALL__") {
+          // Find Kashtkar's share fraction in this Khata (Supporting Merged Group Shares)
+          let kashtkarFrac = 0.0;
+          if (activeKashtkarKey === "__ALL__") {
+            kashtkarFrac = 1.0;
+          } else if (activeObj && activeObj.isGroup) {
+            activeObj.memberKeys.forEach(mKey => {
+              const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(mKey));
+              if (matchedOwner) kashtkarFrac += matchedOwner.fracVal;
+            });
+          } else {
             const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(activeKashtkarKey));
-            if (matchedOwner) {
-              kashtkarFrac = matchedOwner.fracVal;
-            } else {
-              kashtkarFrac = 0.0;
-            }
+            if (matchedOwner) kashtkarFrac = matchedOwner.fracVal;
           }
 
           let khataKashtkarHa = 0;
@@ -1122,7 +1240,6 @@
           ];
 
           khasras.forEach((kh, khIdx) => {
-            // FIX KHSRA SANKHYA UNDEFINED PERMANENTLY:
             const khasraNoStr = kh.khasraNo || kh.khasra || kh.number || (khIdx + 1).toString();
             const khasraTotalHa = kh.area || (k.totalArea / khasras.length);
             const khasraKashtkarHa = khasraTotalHa * kashtkarFrac;
@@ -1217,7 +1334,8 @@
         return;
       }
 
-      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
+      const activeObj = masterMapGlobal[activeKashtkarKey];
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : (activeObj ? activeObj.displayName : activeKashtkarKey);
       const excelRows = [];
 
       // Row 1: Headers matching EXCEL FORMAT.xlsx
@@ -1251,23 +1369,25 @@
       let grandTotalSqFt = 0;
 
       let khataCounter = 1;
-      let sheetRowIndex = 3; // Row index in Excel (1-based, starts at 3 for first data row after village header at row 2)
+      let sheetRowIndex = 3;
 
       Object.keys(villageGroups).forEach(vName => {
-        // Village Header
         excelRows.push([`--- ग्राम: ${vName} ---`, '', '', '', '', '', '', '', '', '', '', '', '', '']);
         sheetRowIndex++;
 
         const khatas = villageGroups[vName];
         khatas.forEach(k => {
-          let kashtkarFrac = 1.0;
-          if (activeKashtkarKey !== "__ALL__") {
+          let kashtkarFrac = 0.0;
+          if (activeKashtkarKey === "__ALL__") {
+            kashtkarFrac = 1.0;
+          } else if (activeObj && activeObj.isGroup) {
+            activeObj.memberKeys.forEach(mKey => {
+              const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(mKey));
+              if (matchedOwner) kashtkarFrac += matchedOwner.fracVal;
+            });
+          } else {
             const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(activeKashtkarKey));
-            if (matchedOwner) {
-              kashtkarFrac = matchedOwner.fracVal;
-            } else {
-              kashtkarFrac = 0.0;
-            }
+            if (matchedOwner) kashtkarFrac = matchedOwner.fracVal;
           }
 
           let khataKashtkarHa = 0;
@@ -1297,8 +1417,6 @@
             const rowKey = `${k.khata}_${khasraNoStr}`;
             const propVal = userProposedSelectionMap[rowKey] || "";
 
-            // EXCEL FORMULA IN COLUMN 14 MATCHING ZAMIFY DESKTOP EXCEL FORMAT EXACTLY:
-            // =IF($M3="कालुसिंह", $I3, IF($M3="सबका बराबर", $I3/1, IF(ISNUMBER(SEARCH("कालुसिंह", $M3)), $I3/2, 0)))
             const formulaStr = `=IF($M${sheetRowIndex}="${selectedName}", $I${sheetRowIndex}, IF($M${sheetRowIndex}="सबका बराबर", $I${sheetRowIndex}/1, IF(ISNUMBER(SEARCH("${selectedName}", $M${sheetRowIndex})), $I${sheetRowIndex}/2, 0)))`;
 
             excelRows.push([
@@ -1314,7 +1432,7 @@
               haToBighaBiswa(khasraTotalHa),
               khasraTotalSqFt,
               '',
-              propVal, // Initially blank or user selected partition option
+              propVal,
               { f: formulaStr, v: parseFloat(khasraKashtkarHa.toFixed(4)) }
             ]);
 
@@ -1324,7 +1442,6 @@
           const endKhasraRowIndex = sheetRowIndex - 1;
           const subtotalFormulaStr = `=SUM(N${startKhasraRowIndex}:N${endKhasraRowIndex})`;
 
-          // Khata Subtotal Row
           excelRows.push([
             '',
             `KHATA ${k.khata} TOTAL`,
@@ -1392,7 +1509,8 @@
       btn.innerHTML = "⏳ PDF जनरेट हो रहा है...";
       btn.disabled = true;
 
-      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त_काश्तकार" : activeKashtkarKey;
+      const activeObj = masterMapGlobal[activeKashtkarKey];
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त_काश्तकार" : (activeObj ? activeObj.displayName : activeKashtkarKey);
       const filename = `Bantwara_Pro_Report_${selectedName.replace(/\s+/g, '_')}.pdf`;
 
       const sourceEl = document.getElementById('printableZamifyDoc');
@@ -1428,6 +1546,8 @@
         masterMapGlobal = {};
         activeKashtkarKey = "";
         userProposedSelectionMap = {};
+        mergedGroupsList = [];
+        selectedForGroupSet.clear();
         updateUI();
       }
     }
@@ -1435,7 +1555,8 @@
     function shareWhatsAppBantwara() {
       if (scannedKhatas.length === 0) return;
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
-      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
+      const activeObj = masterMapGlobal[activeKashtkarKey];
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : (activeObj ? activeObj.displayName : activeKashtkarKey);
 
       let msg = `📜 *Zamify बंटवारा प्रो हिस्सा रिपोर्ट (${selectedName})*\n\n`;
       msg += `📑 *कुल जमाबंदी खाते*: ${scannedKhatas.length}\n`;
