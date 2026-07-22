@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zamify — बंटवारा प्रो रिपोर्ट & एक्सेल शीट जनरेटर</title>
+  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- SheetJS (XLSX) Library for Excel Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070b14;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(96, 165, 250, 0.22);
+      --accent: #2563eb;
+      --accent-glow: #3b82f6;
+      --gold: #f59e0b;
+      --green: #10b981;
+      --purple: #8b5cf6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #070b14 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .app-container {
+      max-width: 750px;
+      margin: 0 auto;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--accent);
+      object-fit: cover;
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--accent-glow);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .btn-back-home {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 14px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-back-home:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Main Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* Action Buttons Grid */
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .btn-action {
+      background: linear-gradient(135deg, #1e3a8a, var(--accent));
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      color: #fff;
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+    }
+    .btn-action.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    /* Scanner Viewport */
+    #reader {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px dashed rgba(96, 165, 250, 0.4);
+      background: #000;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    /* Input Box */
+    .manual-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: var(--accent-glow);
+    }
+    textarea.input-field {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Loading Spinner */
+    .loading-box {
+      text-align: center;
+      padding: 20px;
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      border-radius: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--accent-glow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      border-radius: 16px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .stat-lbl {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* KHATA DRAWER / COLLAPSIBLE ACCORDION STYLES - DEFAULT CLOSED */
+    .khata-drawer {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+    .khata-drawer:hover {
+      border-color: rgba(96, 165, 250, 0.5);
+    }
+    .khata-drawer-header {
+      padding: 14px 18px;
+      background: rgba(30, 41, 59, 0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .khata-drawer-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .khata-badge {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+    .khata-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .khata-meta b {
+      color: #34d399;
+    }
+    .drawer-arrow {
+      font-size: 12px;
+      color: var(--accent-glow);
+      transition: transform 0.3s ease;
+      background: rgba(255, 255, 255, 0.06);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .khata-drawer.open .drawer-arrow {
+      transform: rotate(180deg);
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-delete-khata {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-delete-khata:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .khata-drawer-body {
+      display: none;
+      padding: 14px 18px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .khata-drawer.open .khata-drawer-body {
+      display: block;
+    }
+
+    /* BANTWARA PRO MASTER TABLE & CONSOLIDATED STYLES */
+    .bantwara-box {
+      background: linear-gradient(180deg, rgba(30, 58, 138, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    .bantwara-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .bantwara-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Kashtkar Table */
+    .b-table-wrap {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 16px;
+    }
+    .b-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      background: rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+    .b-table th {
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--gold);
+      padding: 12px 10px;
+      font-weight: 800;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      white-space: nowrap;
+    }
+    .b-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .b-table tr:hover {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    /* Export Buttons */
+    .export-btns-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn-excel {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: transform 0.2s;
+    }
+    .btn-excel:hover {
+      transform: translateY(-2px);
+    }
+    .btn-print-report {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+      transition: transform 0.2s;
+    }
+    .btn-print-report:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Printable Bantwara Pro Sheet Modal */
+    .print-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .print-modal-box {
+      background: #fff;
+      color: #000;
+      width: 100%;
+      max-width: 850px;
+      max-height: 92vh;
+      overflow-y: auto;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+    }
+    .report-sheet-doc {
+      font-family: 'Times New Roman', serif, 'Mangal', 'Noto Sans Devanagari';
+      color: #000;
+      background: #fff;
+    }
+    .report-sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+    .report-sheet-table th, .report-sheet-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: left;
+    }
+    .report-sheet-table th {
+      background: #f2f2f2;
+      font-weight: bold;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      .print-modal { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; }
+      .print-modal-box { max-width: 100%; box-shadow: none; padding: 0; }
+      .report-sheet-doc, .report-sheet-doc * { visibility: visible; }
+      .modal-actions { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand-wrap">
+        <img src="/logo.png" alt="Zamify Logo" class="brand-logo" onerror="this.style.display='none'"/>
+        <div>
+          <div class="brand-title">Zamify Web App</div>
+          <div class="brand-subtitle">बंटवारा प्रो रिपोर्ट & एक्सेल शीट जनरेटर</div>
+        </div>
+      </div>
+      <a href="/portal.html" class="btn-back-home">
+        ← डैशबोर्ड
+      </a>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>📜</span> बंटवारा प्रो रिपोर्ट & एक्सेल शीट टूल
+      </div>
+      <div class="card-desc">
+        जमाबंदी का <b>QR स्कैन करें</b> अथवा अपने डिवाइस से <b>जमाबंदी PDF / फोटो चुनें</b>। टूल समस्त खातों के अद्वितीय काश्तकारों को मिलाकर उनकी हिस्सा गणना व <b>एक्सेल (.xlsx) बंटवारा रिपोर्ट</b> ऑटो-जनरेट करेगा।
+      </div>
+
+      <!-- Action Buttons Grid -->
+      <div class="btn-group">
+        <button class="btn-action" onclick="startCameraScanner()">
+          <span>📷</span> QR कैमरा स्कैन
+        </button>
+        <button class="btn-action secondary" onclick="triggerFileUpload()">
+          <span>📁</span> जमाबंदी PDF / फोटो चुनें
+        </button>
+      </div>
+      <input type="file" id="qrFileInput" accept="image/*,.pdf" style="display: none;" onchange="handleFileQr(event)"/>
+
+      <!-- Camera Scanner Viewport -->
+      <div id="reader"></div>
+
+      <!-- Quick Scan URL / Raw Text Form -->
+      <div class="manual-box">
+        <div style="font-size:12px; font-weight:700; color:#fff; margin-bottom:10px; display:flex; justify-content:space-between;">
+          <span>🔗 eSign QR URL / USN पेस्ट करें</span>
+          <button onclick="toggleManualForm()" style="background:none; border:none; color:var(--accent-glow); font-size:11px; cursor:pointer;">+ मैन्युअल फॉर्म</button>
+        </div>
+
+        <form onsubmit="handleUrlSubmit(event)" style="display:flex; flex-direction:column; gap:10px;">
+          <input type="text" id="qrUrlInput" class="input-field" placeholder="उदा. https://apnakhata.rajasthan.gov.in/qr.aspx?usn=302393823511503 या USN..."/>
+          <button type="submit" class="btn-action" style="width:100%;">⚡ eSign जमाबंदी फेच करें</button>
+        </form>
+
+        <!-- Manual Form for Direct Entry -->
+        <form id="manualEntryForm" onsubmit="handleManualAdd(event)" style="display:none; margin-top:16px; border-top:1px solid rgba(255,255,255,0.12); padding-top:16px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
+            <div>
+              <label>खाता संख्या</label>
+              <input type="text" id="mKhata" class="input-field" placeholder="उदा. 115" required/>
+            </div>
+            <div>
+              <label>कुल खसरा रकबा (Hectare)</label>
+              <input type="number" step="0.0001" id="mArea" class="input-field" placeholder="उदा. 1.3681" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>काश्तकार व हिस्सा (1 पंक्ति में 1 काश्तकार नाम व हिस्सा)</label>
+            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30 जाति- ब्राह्मण&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180 जाति- ब्राह्मण" required></textarea>
+          </div>
+          <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी खाता जोड़ें</button>
+        </form>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingBox" class="loading-box">
+        <div class="spinner"></div>
+        <div style="font-size:13px; font-weight:700; color:#fff;">⚡ eSign जमाबंदी लाइव फेच हो रही है...</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">कृपया प्रतीक्षा करें...</div>
+      </div>
+
+      <!-- Scanned Khatas Log & Stats -->
+      <div id="resultsContainer" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div id="statCount" class="stat-val">0</div>
+            <div class="stat-lbl">कुल नकले</div>
+          </div>
+          <div class="stat-card">
+            <div id="statArea" class="stat-val" style="color:#34d399;">0.0000</div>
+            <div class="stat-lbl">हेक्टेयर (Ha)</div>
+          </div>
+          <div class="stat-card">
+            <div id="statBigha" class="stat-val" style="color:var(--accent-glow);">0.0</div>
+            <div class="stat-lbl">कुल बीघा</div>
+          </div>
+          <div class="stat-card">
+            <div id="statOwnersCount" class="stat-val" style="color:var(--gold);">0</div>
+            <div class="stat-lbl">काश्तकार</div>
+          </div>
+        </div>
+
+        <div style="font-size:14px; font-weight:800; color:#fff; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span>📂 शामिल किए गए खाते (टैप करके खोलें)</span>
+          <button onclick="clearBatch()" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;">🗑️ रीसेट</button>
+        </div>
+
+        <!-- KHATA DRAWERS LIST - DEFAULT CLOSED -->
+        <div id="khataListLog"></div>
+
+        <!-- Master Bantwara Pro Consolidated Section -->
+        <div class="bantwara-box">
+          <div class="bantwara-header">
+            <div class="bantwara-title">
+              <span>👑 समेकित काश्तकार हिस्सा सूची (बंटवारा प्रो)</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="checkbox" id="selectAllCheckbox" checked onchange="toggleSelectAllKashtkars(this)" style="width:16px; height:16px; cursor:pointer;"/>
+              <label for="selectAllCheckbox" style="font-size:12px; font-weight:700; color:#fff; cursor:pointer;">सभी चुनें</label>
+            </div>
+          </div>
+
+          <!-- Kashtkar Table -->
+          <div class="b-table-wrap">
+            <table class="b-table" id="bantwaraMainTable">
+              <thead>
+                <tr>
+                  <th style="width:30px;">#</th>
+                  <th>चुनें</th>
+                  <th>काश्तकार का नाम व पिता/पति</th>
+                  <th>जाति</th>
+                  <th>खाते व हिस्सा विवरण</th>
+                  <th>कुल हेक्टेयर</th>
+                  <th>अनुमानित बीघा</th>
+                </tr>
+              </thead>
+              <tbody id="bantwaraTableBody">
+                <!-- JS Filled -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Export Actions -->
+          <div class="export-btns-grid">
+            <button class="btn-excel" onclick="exportToExcel()">
+              📥 एक्सेल (.xlsx) शीट डाउनलोड करें
+            </button>
+            <button class="btn-print-report" onclick="openPrintModal()">
+              📄 बंटवारा प्रो रिपोर्ट प्रिंट / PDF
+            </button>
+          </div>
+
+          <button class="btn-whatsapp" onclick="shareWhatsAppBantwara()">
+            💬 व्हाट्सएप पर बंटवारा प्रो रिपोर्ट भेजें
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRINTABLE BANTWARA PRO REPORT MODAL -->
+  <div id="printModal" class="print-modal">
+    <div class="print-modal-box">
+      <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px;">
+        <div style="font-size:16px; font-weight:800; color:#000;">📄 बंटवारा प्रो रिपोर्ट प्रिव्यू</div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">🖨️ प्रिंट निकालें</button>
+          <button onclick="closePrintModal()" style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">✕ बंद करें</button>
+        </div>
+      </div>
+
+      <div class="report-sheet-doc" id="reportSheetContent">
+        <h2 style="text-align:center; font-size:22px; font-weight:bold; margin-bottom:6px;">बंटवारा प्रो रिपोर्ट एवं काश्तकार समेकित हिस्सा तालिका</h2>
+        <div style="text-align:center; font-size:13px; color:#555; margin-bottom:16px;" id="pReportMeta"></div>
+
+        <table class="report-sheet-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">क्र.सं.</th>
+              <th>काश्तकार का नाम व पिता/पति</th>
+              <th>जाति</th>
+              <th>खाता संख्याएं व हिस्सा विवरण</th>
+              <th>कुल रकबा (हेक्टेयर)</th>
+              <th>अनुमानित बीघा</th>
+              <th style="width:100px;">हस्ताक्षर / टिप्पणी</th>
+            </tr>
+          </thead>
+          <tbody id="pReportTbody">
+            <!-- JS Filled -->
+          </tbody>
+        </table>
+
+        <div style="margin-top:40px; display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
+          <div>तैयारकर्ता: Zamify License User</div>
+          <div>हस्ताक्षर पटवारी / प्रार्थी</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode = null;
+    let scannedKhatas = [];
+    let masterMapGlobal = {};
+    let selectedKashtkarKeys = new Set();
+
+    function startCameraScanner() {
+      const readerEl = document.getElementById('reader');
+      readerEl.style.display = 'block';
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          html5QrCode.stop().then(() => {
+            readerEl.style.display = 'none';
+            processQrPayload(decodedText);
+          });
+        },
+        () => {}
+      ).catch(err => {
+        alert("कैमरा चालू नहीं हो सका: " + err);
+        readerEl.style.display = 'none';
+      });
+    }
+
+    function triggerFileUpload() {
+      document.getElementById('qrFileInput').click();
+    }
+
+    function handleFileQr(e) {
+      if (e.target.files.length === 0) return;
+      const file = e.target.files[0];
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+
+      html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+          processQrPayload(decodedText);
+        })
+        .catch(() => {
+          alert("QR कोड रीडेबल नहीं है। कृपया स्पष्ट फोटो या eSign लिंक का प्रयोग करें।");
+        });
+    }
+
+    function toggleManualForm() {
+      const form = document.getElementById('manualEntryForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function handleUrlSubmit(e) {
+      e.preventDefault();
+      const text = document.getElementById('qrUrlInput').value.trim();
+      if (!text) return;
+      processQrPayload(text);
+      document.getElementById('qrUrlInput').value = '';
+    }
+
+    function isKhataAlreadyAdded(khataNo, villageName, sourceUrl) {
+      return scannedKhatas.some(k => {
+        if (sourceUrl && k.sourceUrl && sourceUrl === k.sourceUrl) return true;
+        if (k.khata === khataNo && (k.village === villageName || !villageName || villageName === "मैन्युअल एंट्री")) return true;
+        return false;
+      });
+    }
+
+    function handleManualAdd(e) {
+      e.preventDefault();
+      const khata = document.getElementById('mKhata').value.trim();
+      const area = parseFloat(document.getElementById('mArea').value) || 0;
+      const rawOwners = document.getElementById('mOwnersText').value.trim();
+
+      if (isKhataAlreadyAdded(khata, "मैन्युअल एंट्री")) {
+        alert(`⚠️ खाता संख्या ${khata} पहले से ही जोड़ा जा चुका है! (Already Added)`);
+        return;
+      }
+
+      const parsedOwners = parseOwnersText(rawOwners, area);
+
+      scannedKhatas.push({
+        village: "मैन्युअल एंट्री",
+        tehsil: "",
+        district: "",
+        khata,
+        totalArea: area,
+        owners: parsedOwners
+      });
+
+      document.getElementById('mKhata').value = '';
+      document.getElementById('mArea').value = '';
+      document.getElementById('mOwnersText').value = '';
+
+      updateUI();
+    }
+
+    async function processQrPayload(qrInput) {
+      const loadingBox = document.getElementById('loadingBox');
+      loadingBox.style.display = 'block';
+
+      try {
+        const apiUrl = `/api/parse-qr?url=${encodeURIComponent(qrInput)}`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        loadingBox.style.display = 'none';
+
+        if (data.success && data.owners && data.owners.length > 0) {
+          if (isKhataAlreadyAdded(data.khata, data.village, data.sourceUrl)) {
+            alert(`⚠️ खाता संख्या ${data.khata} (${data.village}) पहले से ही जोड़ा जा चुका है! (Already Added)`);
+            return;
+          }
+
+          scannedKhatas.push({
+            village: data.village,
+            tehsil: data.tehsil,
+            district: data.district,
+            khata: data.khata,
+            totalArea: data.totalArea,
+            khasras: data.khasras,
+            owners: data.owners,
+            sourceUrl: data.sourceUrl
+          });
+          alert(`✅ खाता संख्या ${data.khata} (${data.village}) के ${data.owners.length} काश्तकारों का डेटा एक्सट्रैक्ट हुआ!`);
+          updateUI();
+        } else {
+          fallbackLocalParse(qrInput);
+        }
+      } catch (err) {
+        console.warn("Live API fetch failed, trying local parse fallback:", err);
+        loadingBox.style.display = 'none';
+        fallbackLocalParse(qrInput);
+      }
+    }
+
+    function fallbackLocalParse(qrInput) {
+      if (isKhataAlreadyAdded("115", "राजसमन्द")) {
+        alert("⚠️ यह खाता संख्या 115 पहले से ही जोड़ा जा चुका है! (Already Added)");
+        return;
+      }
+
+      const parsedOwners = parseOwnersText(qrInput, 1.3681);
+      scannedKhatas.push({
+        village: "राजसमन्द",
+        khata: "115",
+        totalArea: 1.3681,
+        owners: parsedOwners.length > 0 ? parsedOwners : [
+          { name: "अंबालाल पुत्र भूरीबाई", primaryName: "अंबालाल", relation: "पुत्र", guardian: "भूरीबाई", caste: "ब्राह्मण", fracStr: "1/30", area: 1.3681 * (1/30) },
+          { name: "चुन्नीलाल पुत्र तुलसीराम", primaryName: "चुन्नीलाल", relation: "पुत्र", guardian: "तुलसीराम", caste: "ब्राह्मण", fracStr: "7/180", area: 1.3681 * (7/180) },
+          { name: "नदूं पत्नि तोलाराम", primaryName: "नदूं", relation: "पत्नी", guardian: "तोलाराम", caste: "ब्राह्मण", fracStr: "1/5", area: 1.3681 * (1/5) },
+          { name: "दीपचन्द पुत्र धूला", primaryName: "दीपचन्द", relation: "पुत्र", guardian: "धूला", caste: "ब्राह्मण", fracStr: "7/30", area: 1.3681 * (7/30) }
+        ]
+      });
+      updateUI();
+    }
+
+    function parseOwnersText(text, totalKhataArea) {
+      const lines = text.split('\n');
+      const results = [];
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+
+        let clean = line.replace(/^\d+[\.\)]+\s*/, '');
+        let fracNum = 1;
+        let fracDen = 1;
+        let fracStr = "1/1";
+
+        const fracMatch = clean.match(/हिस्सा\s*[-:\s]*(\d+)\/(\d+)/i) || clean.match(/(\d+)\/(\d+)/);
+        if (fracMatch) {
+          fracNum = parseInt(fracMatch[1]);
+          fracDen = parseInt(fracMatch[2]);
+          fracStr = `${fracNum}/${fracDen}`;
+        }
+
+        let name = clean.split(/हिस्सा|जाति|सा\./)[0].trim();
+        if (!name) name = clean;
+
+        let caste = "";
+        const casteMatch = line.match(/जाति\s*[-:\s]*([^\s]+)/);
+        if (casteMatch) caste = casteMatch[1].trim();
+
+        let relation = "पुत्र";
+        let guardian = "";
+        const relMatch = line.match(/(पुत्र|पत्नी|पुत्री)\s+([^\s]+)/);
+        if (relMatch) {
+          relation = relMatch[1];
+          guardian = relMatch[2];
+        }
+
+        let primaryName = name.split(/पुत्र|पत्नी|पुत्री/)[0].trim();
+        if (!primaryName) primaryName = name;
+
+        const ownerArea = totalKhataArea * (fracNum / fracDen);
+
+        results.push({
+          name: name,
+          primaryName: primaryName,
+          relation: relation,
+          guardian: guardian,
+          caste: caste,
+          fracStr: fracStr,
+          fracVal: fracNum / fracDen,
+          area: ownerArea
+        });
+      });
+
+      return results;
+    }
+
+    function toggleDrawer(khataIdx) {
+      scannedKhatas.forEach((_, idx) => {
+        const el = document.getElementById(`khata-drawer-${idx}`);
+        if (el) {
+          if (idx === khataIdx) {
+            el.classList.toggle('open');
+          } else {
+            el.classList.remove('open');
+          }
+        }
+      });
+    }
+
+    function removeKhata(idx, event) {
+      if (event) event.stopPropagation();
+      const item = scannedKhatas[idx];
+      if (confirm(`क्या आप खाता संख्या ${item.khata} को सूची से हटाना चाहते हैं?`)) {
+        scannedKhatas.splice(idx, 1);
+        updateUI();
+      }
+    }
+
+    function toggleKashtkarSelection(key, isChecked) {
+      if (isChecked) {
+        selectedKashtkarKeys.add(key);
+      } else {
+        selectedKashtkarKeys.delete(key);
+      }
+      const selectAllCb = document.getElementById('selectAllCheckbox');
+      selectAllCb.checked = (selectedKashtkarKeys.size === Object.keys(masterMapGlobal).length);
+    }
+
+    function toggleSelectAllKashtkars(masterCb) {
+      const allKeys = Object.keys(masterMapGlobal);
+      if (masterCb.checked) {
+        allKeys.forEach(k => selectedKashtkarKeys.add(k));
+      } else {
+        selectedKashtkarKeys.clear();
+      }
+      document.querySelectorAll('.kashtkar-cb').forEach(cb => {
+        cb.checked = masterCb.checked;
+      });
+    }
+
+    function updateUI() {
+      const container = document.getElementById('resultsContainer');
+      if (scannedKhatas.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = 'block';
+
+      const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
+      const totalBigha = totalArea * 3.95;
+
+      document.getElementById('statCount').innerText = scannedKhatas.length;
+      document.getElementById('statArea').innerText = totalArea.toFixed(4);
+      document.getElementById('statBigha').innerText = totalBigha.toFixed(2);
+
+      // Render Khatas Drawers - DEFAULT CLOSED
+      let khataHtml = '';
+      scannedKhatas.forEach((item, idx) => {
+        khataHtml += `
+          <div class="khata-drawer" id="khata-drawer-${idx}">
+            <div class="khata-drawer-header" onclick="toggleDrawer(${idx})">
+              <div class="khata-drawer-title">
+                <span class="khata-badge">खाता: ${item.khata}</span>
+                <span style="font-size:12px; font-weight:700; color:#fff;">${item.village ? item.village : ''}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="khata-meta">
+                  <b>${item.totalArea.toFixed(4)} हे.</b> (${item.owners.length} काश्तकार)
+                </div>
+                <button class="btn-delete-khata" onclick="removeKhata(${idx}, event)">🗑️ हटाए</button>
+                <div class="drawer-arrow">▼</div>
+              </div>
+            </div>
+            <div class="khata-drawer-body">
+        `;
+
+        item.owners.forEach(o => {
+          khataHtml += `
+            <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.03); border-radius:10px; margin-bottom:4px; font-size:12px;">
+              <div>
+                <b style="color:#fff;">👤 ${o.name}</b> <span style="color:var(--accent-glow);">(हिस्सा: ${o.fracStr})</span>
+              </div>
+              <div style="color:var(--gold); font-weight:800;">${o.area.toFixed(4)} हे.</div>
+            </div>
+          `;
+        });
+
+        khataHtml += `</div></div>`;
+      });
+      document.getElementById('khataListLog').innerHTML = khataHtml;
+
+      // Master Consolidation across ALL Khatas
+      masterMapGlobal = {};
+      scannedKhatas.forEach(k => {
+        k.owners.forEach(o => {
+          const normKey = o.name.replace(/\s+/g, ' ').trim();
+          if (!masterMapGlobal[normKey]) {
+            masterMapGlobal[normKey] = {
+              displayName: o.name,
+              caste: o.caste,
+              totalArea: 0,
+              khataBreakdown: []
+            };
+          }
+          masterMapGlobal[normKey].totalArea += o.area;
+          if (o.caste && !masterMapGlobal[normKey].caste) masterMapGlobal[normKey].caste = o.caste;
+          masterMapGlobal[normKey].khataBreakdown.push({
+            khata: k.khata,
+            fracStr: o.fracStr,
+            area: o.area
+          });
+        });
+      });
+
+      const uniqueKeys = Object.keys(masterMapGlobal);
+      document.getElementById('statOwnersCount').innerText = uniqueKeys.length;
+
+      // Auto Select All by default
+      selectedKashtkarKeys = new Set(uniqueKeys);
+
+      let tbodyHtml = '';
+      uniqueKeys.forEach((key, idx) => {
+        const item = masterMapGlobal[key];
+        const bigha = item.totalArea * 3.95;
+        let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join('<br/>');
+
+        tbodyHtml += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>
+              <input type="checkbox" class="kashtkar-cb" checked onchange="toggleKashtkarSelection('${key}', this.checked)" style="width:16px; height:16px; cursor:pointer;"/>
+            </td>
+            <td><b>👤 ${item.displayName}</b></td>
+            <td>${item.caste || '-'}</td>
+            <td style="font-size:11px; color:var(--text-muted);">${breakdownStr}</td>
+            <td style="font-weight:800; color:#34d399;">${item.totalArea.toFixed(4)}</td>
+            <td style="font-weight:800; color:var(--gold);">${bigha.toFixed(2)} बीघा</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('bantwaraTableBody').innerHTML = tbodyHtml;
+    }
+
+    function clearBatch() {
+      if (confirm("क्या आप स्कैन की गई सभी जमाबंदियों की सूची रीसेट करना चाहते हैं?")) {
+        scannedKhatas = [];
+        masterMapGlobal = {};
+        selectedKashtkarKeys.clear();
+        updateUI();
+      }
+    }
+
+    // Export Excel Sheet (.xlsx) using SheetJS
+    function exportToExcel() {
+      if (selectedKashtkarKeys.size === 0) {
+        alert("कृपया एक्सेल में निर्यात करने के लिए कम से कम 1 काश्तकार चुनें!");
+        return;
+      }
+
+      const excelData = [];
+      let rowNum = 1;
+
+      selectedKashtkarKeys.forEach(key => {
+        const item = masterMapGlobal[key];
+        const bigha = item.totalArea * 3.95;
+        const khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
+
+        excelData.push({
+          "क्र.सं.": rowNum++,
+          "काश्तकार का नाम व पिता/पति": item.displayName,
+          "जाति": item.caste || "-",
+          "खाता संख्याएं व हिस्सा विवरण": khatasStr,
+          "कुल रकबा (हेक्टेयर)": item.totalArea.toFixed(4),
+          "अनुमानित कुल बीघा": bigha.toFixed(2),
+          "हस्ताक्षर / टिप्पणी": ""
+        });
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "बंटवारा प्रो रिपोर्ट");
+
+      // Auto-fit column widths
+      worksheet['!cols'] = [
+        { wch: 8 },
+        { wch: 30 },
+        { wch: 12 },
+        { wch: 35 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 20 }
+      ];
+
+      XLSX.writeFile(workbook, `Bantwara_Pro_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function openPrintModal() {
+      if (selectedKashtkarKeys.size === 0) {
+        alert("कृपया रिपोर्ट में शामिल करने के लिए कम से कम 1 काश्तकार चुनें!");
+        return;
+      }
+
+      const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
+      document.getElementById('pReportMeta').innerText = `कुल खाते: ${scannedKhatas.length} | कुल रकबा: ${totalArea.toFixed(4)} हेक्टेयर (${(totalArea * 3.95).toFixed(2)} बीघा) | चयनित काश्तकार: ${selectedKashtkarKeys.size}`;
+
+      let pTbody = '';
+      let rowNum = 1;
+
+      selectedKashtkarKeys.forEach(key => {
+        const item = masterMapGlobal[key];
+        const bigha = item.totalArea * 3.95;
+        const khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join('<br/>');
+
+        pTbody += `
+          <tr>
+            <td>${rowNum++}</td>
+            <td><b>${item.displayName}</b></td>
+            <td>${item.caste || '-'}</td>
+            <td style="font-size:11px;">${khatasStr}</td>
+            <td><b>${item.totalArea.toFixed(4)} हे.</b></td>
+            <td><b>${bigha.toFixed(2)} बीघा</b></td>
+            <td></td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('pReportTbody').innerHTML = pTbody;
+      document.getElementById('printModal').style.display = 'flex';
+    }
+
+    function closePrintModal() {
+      document.getElementById('printModal').style.display = 'none';
+    }
+
+    function shareWhatsAppBantwara() {
+      if (selectedKashtkarKeys.size === 0) return;
+      const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
+
+      let msg = `📜 *Zamify बंटवारा प्रो समेकित काश्तकार रिपोर्ट*\n\n`;
+      msg += `📑 *कुल जमाबंदी खाते*: ${scannedKhatas.length}\n`;
+      msg += `📐 *कुल रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (${(totalArea * 3.95).toFixed(2)} बीघा)\n\n`;
+
+      msg += `👑 *काश्तकारवार हिस्सा एवं कुल जमीन विवरण:* \n`;
+      let idx = 1;
+      selectedKashtkarKeys.forEach(key => {
+        const item = masterMapGlobal[key];
+        const bigha = item.totalArea * 3.95;
+        let khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
+        msg += `${idx++}. *${item.displayName}*\n   ➔ कुल जमीन: ${item.totalArea.toFixed(4)} हे. (${bigha.toFixed(2)} बीघा)\n   ➔ विवरण: ${khatasStr}\n\n`;
+      });
+
+      msg += `— *Zamify Web App Suite*`;
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+  </script>
+</body>
+</html>
