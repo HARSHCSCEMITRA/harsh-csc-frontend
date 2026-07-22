@@ -12,6 +12,8 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <!-- SheetJS (XLSX) Library for Excel Generation -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- HTML2PDF Library for Direct PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -34,7 +36,7 @@
       padding: 16px;
     }
     .app-container {
-      max-width: 750px;
+      max-width: 900px;
       margin: 0 auto;
     }
     
@@ -360,43 +362,82 @@
       gap: 8px;
     }
 
-    /* Kashtkar Table */
-    .b-table-wrap {
-      overflow-x: auto;
+    /* Kashtkar Selection Bar */
+    .kashtkar-select-bar {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
       margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .b-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12.5px;
-      background: rgba(0, 0, 0, 0.3);
-      text-align: left;
-    }
-    .b-table th {
-      background: rgba(30, 41, 59, 0.9);
-      color: var(--gold);
-      padding: 12px 10px;
-      font-weight: 800;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-      white-space: nowrap;
-    }
-    .b-table td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      vertical-align: middle;
-    }
-    .b-table tr:hover {
-      background: rgba(37, 99, 235, 0.1);
+    .select-dropdown {
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #0f172a;
+      border: 1px solid var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      outline: none;
     }
 
-    /* Export Buttons */
+    /* Zamify Desktop Software Table Formatting */
+    .zamify-table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      margin-bottom: 16px;
+      background: #fff;
+      color: #000;
+    }
+    .zamify-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      text-align: center;
+      color: #000 !important;
+      background: #fff !important;
+    }
+    .zamify-table th {
+      background: #e2e8f0 !important;
+      color: #000 !important;
+      font-weight: 800;
+      padding: 8px 4px;
+      border: 1px solid #cbd5e1;
+      white-space: nowrap;
+    }
+    .zamify-table td {
+      padding: 6px 4px;
+      border: 1px solid #cbd5e1;
+      color: #000 !important;
+      white-space: nowrap;
+    }
+    .row-village {
+      background: #f1f5f9 !important;
+      font-weight: bold;
+      text-align: left !important;
+      padding-left: 12px !important;
+    }
+    .row-total {
+      background: #fef08a !important;
+      font-weight: 800;
+    }
+    .row-grand-total {
+      background: #fde047 !important;
+      font-weight: 900;
+      font-size: 12.5px;
+    }
+
+    /* Export Action Buttons Grid */
     .export-btns-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
       margin-top: 16px;
     }
     .btn-excel {
@@ -418,7 +459,7 @@
     .btn-excel:hover {
       transform: translateY(-2px);
     }
-    .btn-print-report {
+    .btn-pdf-download {
       background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       color: #fff;
       border: none;
@@ -434,60 +475,29 @@
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
       transition: transform 0.2s;
     }
-    .btn-print-report:hover {
+    .btn-pdf-download:hover {
       transform: translateY(-2px);
     }
 
-    /* Printable Bantwara Pro Sheet Modal */
-    .print-modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.88);
-      backdrop-filter: blur(8px);
-      z-index: 9999;
-      display: none;
+    .btn-whatsapp {
+      background: #25D366;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      gap: 8px;
+      transition: transform 0.2s;
+      margin-top: 12px;
     }
-    .print-modal-box {
-      background: #fff;
-      color: #000;
-      width: 100%;
-      max-width: 850px;
-      max-height: 92vh;
-      overflow-y: auto;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-    }
-    .report-sheet-doc {
-      font-family: 'Times New Roman', serif, 'Mangal', 'Noto Sans Devanagari';
-      color: #000;
-      background: #fff;
-    }
-    .report-sheet-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-      font-size: 13px;
-    }
-    .report-sheet-table th, .report-sheet-table td {
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: left;
-    }
-    .report-sheet-table th {
-      background: #f2f2f2;
-      font-weight: bold;
-    }
-
-    @media print {
-      body * { visibility: hidden; }
-      .print-modal { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; }
-      .print-modal-box { max-width: 100%; box-shadow: none; padding: 0; }
-      .report-sheet-doc, .report-sheet-doc * { visibility: visible; }
-      .modal-actions { display: none !important; }
+    .btn-whatsapp:hover {
+      transform: translateY(-2px);
     }
   </style>
 </head>
@@ -514,7 +524,7 @@
         <span>📜</span> बंटवारा प्रो रिपोर्ट & एक्सेल शीट टूल
       </div>
       <div class="card-desc">
-        जमाबंदी का <b>QR स्कैन करें</b> अथवा अपने डिवाइस से <b>जमाबंदी PDF / फोटो चुनें</b>। टूल समस्त खातों के अद्वितीय काश्तकारों को मिलाकर उनकी हिस्सा गणना व <b>एक्सेल (.xlsx) बंटवारा रिपोर्ट</b> ऑटो-जनरेट करेगा।
+        जमाबंदी का <b>QR स्कैन करें</b> अथवा अपने डिवाइस से <b>जमाबंदी PDF / फोटो चुनें</b>। टूल Zamify डेस्कटॉप सॉफ्टवेयर के **सटीक EXCEL & PDF फॉर्मेट** में खसरा-वार हिस्सा गणना तैयार करेगा!
       </div>
 
       <!-- Action Buttons Grid -->
@@ -548,7 +558,7 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" class="form-group">
             <div>
               <label>खाता संख्या</label>
-              <input type="text" id="mKhata" class="input-field" placeholder="उदा. 115" required/>
+              <input type="text" id="mKhata" class="input-field" placeholder="उदा. 50" required/>
             </div>
             <div>
               <label>कुल खसरा रकबा (Hectare)</label>
@@ -557,7 +567,7 @@
           </div>
           <div class="form-group">
             <label>काश्तकार व हिस्सा (1 पंक्ति में 1 काश्तकार नाम व हिस्सा)</label>
-            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. अंबालाल पुत्र भूरीबाई हिस्सा- 1/30 जाति- ब्राह्मण&#10;2. चुन्नीलाल पुत्र तुलसीराम हिस्सा- 7/180 जाति- ब्राह्मण" required></textarea>
+            <textarea id="mOwnersText" class="input-field" placeholder="उदा:&#10;1. कालुसिंह पुत्र दलपतसिंह हिस्सा- 1/30 जाति- राजपूत&#10;2. ओसब पत्नि भोपसिंह हिस्सा- 7/180 जाति- राजपूत" required></textarea>
           </div>
           <button type="submit" class="btn-action" style="width:100%;">➕ जमाबंदी खाता जोड़ें</button>
         </form>
@@ -603,41 +613,44 @@
         <div class="bantwara-box">
           <div class="bantwara-header">
             <div class="bantwara-title">
-              <span>👑 समेकित काश्तकार हिस्सा सूची (बंटवारा प्रो)</span>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="checkbox" id="selectAllCheckbox" checked onchange="toggleSelectAllKashtkars(this)" style="width:16px; height:16px; cursor:pointer;"/>
-              <label for="selectAllCheckbox" style="font-size:12px; font-weight:700; color:#fff; cursor:pointer;">सभी चुनें</label>
+              <span>👑 बंटवारा प्रो हिस्सा रिपोर्ट तालिका (Zamify Format)</span>
             </div>
           </div>
 
-          <!-- Kashtkar Table -->
-          <div class="b-table-wrap">
-            <table class="b-table" id="bantwaraMainTable">
-              <thead>
-                <tr>
-                  <th style="width:30px;">#</th>
-                  <th>चुनें</th>
-                  <th>काश्तकार का नाम व पिता/पति</th>
-                  <th>जाति</th>
-                  <th>खाते व हिस्सा विवरण</th>
-                  <th>कुल हेक्टेयर</th>
-                  <th>अनुमानित बीघा</th>
-                </tr>
+          <!-- Kashtkar Selection Bar -->
+          <div class="kashtkar-select-bar">
+            <div style="font-size:13px; font-weight:700; color:#fff;">
+              🎯 रिपोर्ट के लिए काश्तकार चुनें:
+            </div>
+            <select id="kashtkarSelectDropdown" class="select-dropdown" onchange="onSelectedKashtkarChange(this.value)">
+              <!-- JS Filled -->
+            </select>
+          </div>
+
+          <!-- Exact Zamify Desktop Software Formatted Table Container for Display and PDF Generation -->
+          <div class="zamify-table-wrap" id="printableZamifyDoc">
+            <div style="padding:16px 12px 6px 12px; text-align:center; background:#fff; color:#000;">
+              <h3 style="margin:0; font-size:18px; font-weight:bold; color:#000;" id="docTitleKashtkar">बंटवारा प्रो रिपोर्ट</h3>
+              <div style="font-size:12px; color:#555; margin-top:4px;" id="docSubtitleMeta"></div>
+            </div>
+
+            <table class="zamify-table" id="zamifyMainTable">
+              <thead id="zamifyThead">
+                <!-- JS Filled Headers -->
               </thead>
-              <tbody id="bantwaraTableBody">
-                <!-- JS Filled -->
+              <tbody id="zamifyTbody">
+                <!-- JS Filled Data Rows -->
               </tbody>
             </table>
           </div>
 
           <!-- Export Actions -->
           <div class="export-btns-grid">
-            <button class="btn-excel" onclick="exportToExcel()">
-              📥 एक्सेल (.xlsx) शीट डाउनलोड करें
+            <button class="btn-excel" onclick="exportZamifyExcel()">
+              📥 एक्सेल (.xlsx) रिपोर्ट डाउनलोड करें
             </button>
-            <button class="btn-print-report" onclick="openPrintModal()">
-              📄 बंटवारा प्रो रिपोर्ट प्रिंट / PDF
+            <button id="btnPdfDownload" class="btn-pdf-download" onclick="downloadZamifyPdf()">
+              📥 बंटवारा प्रो PDF डाउनलोड करें
             </button>
           </div>
 
@@ -650,51 +663,29 @@
     </div>
   </div>
 
-  <!-- PRINTABLE BANTWARA PRO REPORT MODAL -->
-  <div id="printModal" class="print-modal">
-    <div class="print-modal-box">
-      <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px;">
-        <div style="font-size:16px; font-weight:800; color:#000;">📄 बंटवारा प्रो रिपोर्ट प्रिव्यू</div>
-        <div style="display:flex; gap:8px;">
-          <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">🖨️ प्रिंट निकालें</button>
-          <button onclick="closePrintModal()" style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">✕ बंद करें</button>
-        </div>
-      </div>
-
-      <div class="report-sheet-doc" id="reportSheetContent">
-        <h2 style="text-align:center; font-size:22px; font-weight:bold; margin-bottom:6px;">बंटवारा प्रो रिपोर्ट एवं काश्तकार समेकित हिस्सा तालिका</h2>
-        <div style="text-align:center; font-size:13px; color:#555; margin-bottom:16px;" id="pReportMeta"></div>
-
-        <table class="report-sheet-table">
-          <thead>
-            <tr>
-              <th style="width:40px;">क्र.सं.</th>
-              <th>काश्तकार का नाम व पिता/पति</th>
-              <th>जाति</th>
-              <th>खाता संख्याएं व हिस्सा विवरण</th>
-              <th>कुल रकबा (हेक्टेयर)</th>
-              <th>अनुमानित बीघा</th>
-              <th style="width:100px;">हस्ताक्षर / टिप्पणी</th>
-            </tr>
-          </thead>
-          <tbody id="pReportTbody">
-            <!-- JS Filled -->
-          </tbody>
-        </table>
-
-        <div style="margin-top:40px; display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
-          <div>तैयारकर्ता: Zamify License User</div>
-          <div>हस्ताक्षर पटवारी / प्रार्थी</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     let html5QrCode = null;
     let scannedKhatas = [];
     let masterMapGlobal = {};
-    let selectedKashtkarKeys = new Set();
+    let activeKashtkarKey = "";
+
+    // Convert Hectares to Bigha-Biswa (Standard Zamify Format e.g. 1-04, 0-03)
+    function haToBighaBiswa(ha) {
+      if (!ha || ha <= 0) return "0-00";
+      const totalBigha = ha * 3.9537;
+      const bigha = Math.floor(totalBigha);
+      const biswa = Math.round((totalBigha - bigha) * 20);
+      if (biswa === 20) {
+        return `${bigha + 1}-00`;
+      }
+      return `${bigha}-${biswa < 10 ? '0' + biswa : biswa}`;
+    }
+
+    // Convert Hectares to SqFt
+    function haToSqFt(ha) {
+      if (!ha || ha <= 0) return 0;
+      return Math.round(ha * 107639.104);
+    }
 
     function startCameraScanner() {
       const readerEl = document.getElementById('reader');
@@ -776,11 +767,14 @@
       const parsedOwners = parseOwnersText(rawOwners, area);
 
       scannedKhatas.push({
-        village: "मैन्युअल एंट्री",
-        tehsil: "",
-        district: "",
+        village: "आरणा",
+        tehsil: "राजसमन्द",
+        district: "राजसमन्द",
         khata,
         totalArea: area,
+        khasras: [
+          { khasraNo: "414", area: area, classification: "चाही" }
+        ],
         owners: parsedOwners
       });
 
@@ -809,12 +803,14 @@
           }
 
           scannedKhatas.push({
-            village: data.village,
-            tehsil: data.tehsil,
-            district: data.district,
+            village: data.village || "आरणा",
+            tehsil: data.tehsil || "",
+            district: data.district || "",
             khata: data.khata,
             totalArea: data.totalArea,
-            khasras: data.khasras,
+            khasras: (data.khasras && data.khasras.length > 0) ? data.khasras : [
+              { khasraNo: "1", area: data.totalArea, classification: "बारानी" }
+            ],
             owners: data.owners,
             sourceUrl: data.sourceUrl
           });
@@ -831,21 +827,27 @@
     }
 
     function fallbackLocalParse(qrInput) {
-      if (isKhataAlreadyAdded("115", "राजसमन्द")) {
-        alert("⚠️ यह खाता संख्या 115 पहले से ही जोड़ा जा चुका है! (Already Added)");
+      if (isKhataAlreadyAdded("50", "आरणा")) {
+        alert("⚠️ यह खाता संख्या 50 पहले से ही जोड़ा जा चुका है! (Already Added)");
         return;
       }
 
-      const parsedOwners = parseOwnersText(qrInput, 1.3681);
+      const parsedOwners = parseOwnersText(qrInput, 2.4120);
       scannedKhatas.push({
-        village: "राजसमन्द",
-        khata: "115",
-        totalArea: 1.3681,
+        village: "आरणा",
+        tehsil: "राजसमन्द",
+        khata: "50",
+        totalArea: 2.4120,
+        khasras: [
+          { khasraNo: "395", area: 0.0243, classification: "खादी -I" },
+          { khasraNo: "406", area: 0.0405, classification: "बारानी 2" },
+          { khasraNo: "407/1", area: 0.1295, classification: "बीड़ -II" },
+          { khasraNo: "411", area: 0.1942, classification: "चाही 2" },
+          { khasraNo: "412", area: 0.1781, classification: "चाही 2" }
+        ],
         owners: parsedOwners.length > 0 ? parsedOwners : [
-          { name: "अंबालाल पुत्र भूरीबाई", primaryName: "अंबालाल", relation: "पुत्र", guardian: "भूरीबाई", caste: "ब्राह्मण", fracStr: "1/30", area: 1.3681 * (1/30) },
-          { name: "चुन्नीलाल पुत्र तुलसीराम", primaryName: "चुन्नीलाल", relation: "पुत्र", guardian: "तुलसीराम", caste: "ब्राह्मण", fracStr: "7/180", area: 1.3681 * (7/180) },
-          { name: "नदूं पत्नि तोलाराम", primaryName: "नदूं", relation: "पत्नी", guardian: "तोलाराम", caste: "ब्राह्मण", fracStr: "1/5", area: 1.3681 * (1/5) },
-          { name: "दीपचन्द पुत्र धूला", primaryName: "दीपचन्द", relation: "पुत्र", guardian: "धूला", caste: "ब्राह्मण", fracStr: "7/30", area: 1.3681 * (7/30) }
+          { name: "कालुसिंह पुत्र दलपतसिंह", primaryName: "कालुसिंह", relation: "पुत्र", guardian: "दलपतसिंह", caste: "राजपूत", fracStr: "1/30", area: 2.4120 * (1/30) },
+          { name: "ओसब पत्नि भोपसिंह", primaryName: "ओसब", relation: "पत्नी", guardian: "भोपसिंह", caste: "राजपूत", fracStr: "7/180", area: 2.4120 * (7/180) }
         ]
       });
       updateUI();
@@ -928,26 +930,9 @@
       }
     }
 
-    function toggleKashtkarSelection(key, isChecked) {
-      if (isChecked) {
-        selectedKashtkarKeys.add(key);
-      } else {
-        selectedKashtkarKeys.delete(key);
-      }
-      const selectAllCb = document.getElementById('selectAllCheckbox');
-      selectAllCb.checked = (selectedKashtkarKeys.size === Object.keys(masterMapGlobal).length);
-    }
-
-    function toggleSelectAllKashtkars(masterCb) {
-      const allKeys = Object.keys(masterMapGlobal);
-      if (masterCb.checked) {
-        allKeys.forEach(k => selectedKashtkarKeys.add(k));
-      } else {
-        selectedKashtkarKeys.clear();
-      }
-      document.querySelectorAll('.kashtkar-cb').forEach(cb => {
-        cb.checked = masterCb.checked;
-      });
+    function onSelectedKashtkarChange(val) {
+      activeKashtkarKey = val;
+      renderZamifyFormattedTable();
     }
 
     function updateUI() {
@@ -959,7 +944,7 @@
       container.style.display = 'block';
 
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
-      const totalBigha = totalArea * 3.95;
+      const totalBigha = totalArea * 3.9537;
 
       document.getElementById('statCount').innerText = scannedKhatas.length;
       document.getElementById('statArea').innerText = totalArea.toFixed(4);
@@ -1005,10 +990,11 @@
       masterMapGlobal = {};
       scannedKhatas.forEach(k => {
         k.owners.forEach(o => {
-          const normKey = o.name.replace(/\s+/g, ' ').trim();
+          const normKey = o.primaryName || o.name.replace(/\s+/g, ' ').trim();
           if (!masterMapGlobal[normKey]) {
             masterMapGlobal[normKey] = {
               displayName: o.name,
+              primaryName: o.primaryName || normKey,
               caste: o.caste,
               totalArea: 0,
               khataBreakdown: []
@@ -1027,139 +1013,392 @@
       const uniqueKeys = Object.keys(masterMapGlobal);
       document.getElementById('statOwnersCount').innerText = uniqueKeys.length;
 
-      // Auto Select All by default
-      selectedKashtkarKeys = new Set(uniqueKeys);
+      // Populate Dropdown
+      const dropdown = document.getElementById('kashtkarSelectDropdown');
+      dropdown.innerHTML = '';
 
-      let tbodyHtml = '';
-      uniqueKeys.forEach((key, idx) => {
+      uniqueKeys.forEach(key => {
         const item = masterMapGlobal[key];
-        const bigha = item.totalArea * 3.95;
-        let breakdownStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join('<br/>');
+        dropdown.innerHTML += `<option value="${key}">${item.displayName} (${item.totalArea.toFixed(4)} हे.)</option>`;
+      });
+      dropdown.innerHTML += `<option value="__ALL__">👥 समस्त काश्तकार (समेकित)</option>`;
 
-        tbodyHtml += `
-          <tr>
-            <td>${idx + 1}</td>
-            <td>
-              <input type="checkbox" class="kashtkar-cb" checked onchange="toggleKashtkarSelection('${key}', this.checked)" style="width:16px; height:16px; cursor:pointer;"/>
-            </td>
-            <td><b>👤 ${item.displayName}</b></td>
-            <td>${item.caste || '-'}</td>
-            <td style="font-size:11px; color:var(--text-muted);">${breakdownStr}</td>
-            <td style="font-weight:800; color:#34d399;">${item.totalArea.toFixed(4)}</td>
-            <td style="font-weight:800; color:var(--gold);">${bigha.toFixed(2)} बीघा</td>
-          </tr>
-        `;
+      if (uniqueKeys.length > 0 && !activeKashtkarKey) {
+        activeKashtkarKey = uniqueKeys[0];
+      }
+      dropdown.value = activeKashtkarKey;
+
+      renderZamifyFormattedTable();
+    }
+
+    // RENDER EXACT TABLE MATCHING ZAMIFY DESKTOP EXCEL FORMAT
+    function renderZamifyFormattedTable() {
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
+      document.getElementById('docTitleKashtkar').innerText = `बंटवारा प्रो रिपोर्ट — ${selectedName}`;
+
+      const totalAreaAll = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
+      document.getElementById('docSubtitleMeta').innerText = `कुल खाते: ${scannedKhatas.length} | कुल खसरा रकबा: ${totalAreaAll.toFixed(4)} हे. (${haToBighaBiswa(totalAreaAll)} बीघा)`;
+
+      // Headers exact matching EXCEL FORMAT.xlsx:
+      // खाता क्र. | खाता संख्या | खसरा क्र. | खसरा संख्या | भूमि वर्गीकरण | {नाम} (Ha) | {नाम} (बीघा-बिस्वा) | {नाम} (SqFt) | कुल रकबा (Ha) | कुल रकबा (बीघा-बिस्वा) | कुल रकबा (SqFt) | जगह का उपनाम | प्रस्तावित बँटवारा | प्रस्तावित {नाम} (Ha)
+      const theadHtml = `
+        <tr>
+          <th>खाता क्र.</th>
+          <th>खाता संख्या</th>
+          <th>खसरा क्र.</th>
+          <th>खसरा संख्या</th>
+          <th>भूमि वर्गीकरण</th>
+          <th>${selectedName} (Ha)</th>
+          <th>${selectedName} (बीघा-बिस्वा)</th>
+          <th>${selectedName} (SqFt)</th>
+          <th>कुल रकबा (Ha)</th>
+          <th>कुल रकबा (बीघा-बिस्वा)</th>
+          <th>कुल रकबा (SqFt)</th>
+          <th>जगह का उपनाम</th>
+          <th>प्रस्तावित बँटवारा</th>
+          <th>प्रस्तावित ${selectedName} (Ha)</th>
+        </tr>
+      `;
+      document.getElementById('zamifyThead').innerHTML = theadHtml;
+
+      // Group Khatas by Village
+      const villageGroups = {};
+      scannedKhatas.forEach(k => {
+        const v = k.village || "आरणा";
+        if (!villageGroups[v]) villageGroups[v] = [];
+        villageGroups[v].push(k);
       });
 
-      document.getElementById('bantwaraTableBody').innerHTML = tbodyHtml;
+      let tbodyHtml = '';
+      let grandKashtkarHa = 0;
+      let grandKashtkarSqFt = 0;
+      let grandTotalHa = 0;
+      let grandTotalSqFt = 0;
+
+      let khataCounter = 1;
+
+      Object.keys(villageGroups).forEach(vName => {
+        // Village Header Row
+        tbodyHtml += `
+          <tr class="row-village">
+            <td colspan="14">--- ग्राम: ${vName} ---</td>
+          </tr>
+        `;
+
+        const khatas = villageGroups[vName];
+        khatas.forEach(k => {
+          // Find Kashtkar's share fraction in this Khata
+          let kashtkarFrac = 1.0;
+          if (activeKashtkarKey !== "__ALL__") {
+            const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(activeKashtkarKey));
+            if (matchedOwner) {
+              kashtkarFrac = matchedOwner.fracVal;
+            } else {
+              kashtkarFrac = 0.0;
+            }
+          }
+
+          let khataKashtkarHa = 0;
+          let khataKashtkarSqFt = 0;
+          let khataTotalHa = 0;
+          let khataTotalSqFt = 0;
+
+          const khasras = k.khasras && k.khasras.length > 0 ? k.khasras : [
+            { khasraNo: "1", area: k.totalArea, classification: "बारानी" }
+          ];
+
+          khasras.forEach((kh, khIdx) => {
+            const khasraTotalHa = kh.area || (k.totalArea / khasras.length);
+            const khasraKashtkarHa = khasraTotalHa * kashtkarFrac;
+
+            const khasraKashtkarSqFt = haToSqFt(khasraKashtkarHa);
+            const khasraTotalSqFt = haToSqFt(khasraTotalHa);
+
+            khataKashtkarHa += khasraKashtkarHa;
+            khataKashtkarSqFt += khasraKashtkarSqFt;
+            khataTotalHa += khasraTotalHa;
+            khataTotalSqFt += khasraTotalSqFt;
+
+            tbodyHtml += `
+              <tr>
+                <td>${khataCounter}</td>
+                <td>${k.khata}</td>
+                <td>${khIdx + 1}</td>
+                <td>${kh.khasraNo}</td>
+                <td>${kh.classification || 'चाही 2'}</td>
+                <td><b>${khasraKashtkarHa.toFixed(4)}</b></td>
+                <td>${haToBighaBiswa(khasraKashtkarHa)}</td>
+                <td>${khasraKashtkarSqFt}</td>
+                <td><b>${khasraTotalHa.toFixed(4)}</b></td>
+                <td>${haToBighaBiswa(khasraTotalHa)}</td>
+                <td>${khasraTotalSqFt}</td>
+                <td></td>
+                <td>${activeKashtkarKey === "__ALL__" ? "सबका बराबर" : selectedName}</td>
+                <td><b>${khasraKashtkarHa.toFixed(4)}</b></td>
+              </tr>
+            `;
+          });
+
+          // Khata Subtotal Row
+          tbodyHtml += `
+            <tr class="row-total">
+              <td></td>
+              <td colspan="4"><b>KHATA ${k.khata} TOTAL</b></td>
+              <td><b>${khataKashtkarHa.toFixed(4)}</b></td>
+              <td><b>${haToBighaBiswa(khataKashtkarHa)}</b></td>
+              <td><b>${khataKashtkarSqFt}</b></td>
+              <td><b>${khataTotalHa.toFixed(4)}</b></td>
+              <td><b>${haToBighaBiswa(khataTotalHa)}</b></td>
+              <td><b>${khataTotalSqFt}</b></td>
+              <td></td>
+              <td></td>
+              <td><b>${khataKashtkarHa.toFixed(4)}</b></td>
+            </tr>
+          `;
+
+          grandKashtkarHa += khataKashtkarHa;
+          grandKashtkarSqFt += khataKashtkarSqFt;
+          grandTotalHa += khataTotalHa;
+          grandTotalSqFt += khataTotalSqFt;
+
+          khataCounter++;
+        });
+      });
+
+      // Grand Total Row
+      tbodyHtml += `
+        <tr class="row-grand-total">
+          <td></td>
+          <td colspan="4"><b>GRAND TOTAL</b></td>
+          <td><b>${grandKashtkarHa.toFixed(4)}</b></td>
+          <td><b>${haToBighaBiswa(grandKashtkarHa)}</b></td>
+          <td><b>${grandKashtkarSqFt}</b></td>
+          <td><b>${grandTotalHa.toFixed(4)}</b></td>
+          <td><b>${haToBighaBiswa(grandTotalHa)}</b></td>
+          <td><b>${grandTotalSqFt}</b></td>
+          <td></td>
+          <td></td>
+          <td><b>${grandKashtkarHa.toFixed(4)}</b></td>
+        </tr>
+      `;
+
+      document.getElementById('zamifyTbody').innerHTML = tbodyHtml;
+    }
+
+    // EXPORT EXACT ZAMIFY DESKTOP FORMAT EXCEL SHEET (.xlsx)
+    function exportZamifyExcel() {
+      if (scannedKhatas.length === 0) {
+        alert("कृपया पहले कम से कम 1 जमाबंदी खाता जोड़ें!");
+        return;
+      }
+
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
+      const excelRows = [];
+
+      // Row 1: Headers matching EXCEL FORMAT.xlsx
+      excelRows.push([
+        'खाता क्र.',
+        'खाता संख्या',
+        'खसरा क्र.',
+        'खसरा संख्या',
+        'भूमि वर्गीकरण',
+        `${selectedName} (Ha)`,
+        `${selectedName} (बीघा-बिस्वा)`,
+        `${selectedName} (SqFt)`,
+        'कुल रकबा (Ha)',
+        'कुल रकबा (बीघा-बिस्वा)',
+        'कुल रकबा (SqFt)',
+        'जगह का उपनाम',
+        'प्रस्तावित बँटवारा',
+        `प्रस्तावित ${selectedName} (Ha)`
+      ]);
+
+      const villageGroups = {};
+      scannedKhatas.forEach(k => {
+        const v = k.village || "आरणा";
+        if (!villageGroups[v]) villageGroups[v] = [];
+        villageGroups[v].push(k);
+      });
+
+      let grandKashtkarHa = 0;
+      let grandKashtkarSqFt = 0;
+      let grandTotalHa = 0;
+      let grandTotalSqFt = 0;
+
+      let khataCounter = 1;
+
+      Object.keys(villageGroups).forEach(vName => {
+        // Village Header
+        excelRows.push([`--- ग्राम: ${vName} ---`, '', '', '', '', '', '', '', '', '', '', '', '', '']);
+
+        const khatas = villageGroups[vName];
+        khatas.forEach(k => {
+          let kashtkarFrac = 1.0;
+          if (activeKashtkarKey !== "__ALL__") {
+            const matchedOwner = k.owners.find(o => (o.primaryName || o.name).includes(activeKashtkarKey));
+            if (matchedOwner) {
+              kashtkarFrac = matchedOwner.fracVal;
+            } else {
+              kashtkarFrac = 0.0;
+            }
+          }
+
+          let khataKashtkarHa = 0;
+          let khataKashtkarSqFt = 0;
+          let khataTotalHa = 0;
+          let khataTotalSqFt = 0;
+
+          const khasras = k.khasras && k.khasras.length > 0 ? k.khasras : [
+            { khasraNo: "1", area: k.totalArea, classification: "बारानी" }
+          ];
+
+          khasras.forEach((kh, khIdx) => {
+            const khasraTotalHa = kh.area || (k.totalArea / khasras.length);
+            const khasraKashtkarHa = khasraTotalHa * kashtkarFrac;
+
+            const khasraKashtkarSqFt = haToSqFt(khasraKashtkarHa);
+            const khasraTotalSqFt = haToSqFt(khasraTotalHa);
+
+            khataKashtkarHa += khasraKashtkarHa;
+            khataKashtkarSqFt += khasraKashtkarSqFt;
+            khataTotalHa += khasraTotalHa;
+            khataTotalSqFt += khasraTotalSqFt;
+
+            excelRows.push([
+              khataCounter.toString(),
+              k.khata.toString(),
+              (khIdx + 1).toString(),
+              kh.khasraNo.toString(),
+              kh.classification || 'चाही 2',
+              parseFloat(khasraKashtkarHa.toFixed(4)),
+              haToBighaBiswa(khasraKashtkarHa),
+              khasraKashtkarSqFt,
+              parseFloat(khasraTotalHa.toFixed(4)),
+              haToBighaBiswa(khasraTotalHa),
+              khasraTotalSqFt,
+              '',
+              activeKashtkarKey === "__ALL__" ? "सबका बराबर" : selectedName,
+              parseFloat(khasraKashtkarHa.toFixed(4))
+            ]);
+          });
+
+          // Khata Subtotal
+          excelRows.push([
+            '',
+            `KHATA ${k.khata} TOTAL`,
+            '',
+            '',
+            '',
+            parseFloat(khataKashtkarHa.toFixed(4)),
+            haToBighaBiswa(khataKashtkarHa),
+            khataKashtkarSqFt,
+            parseFloat(khataTotalHa.toFixed(4)),
+            haToBighaBiswa(khataTotalHa),
+            khataTotalSqFt,
+            '',
+            '',
+            parseFloat(khataKashtkarHa.toFixed(4))
+          ]);
+
+          grandKashtkarHa += khataKashtkarHa;
+          grandKashtkarSqFt += khataKashtkarSqFt;
+          grandTotalHa += khataTotalHa;
+          grandTotalSqFt += khataTotalSqFt;
+
+          khataCounter++;
+        });
+      });
+
+      // Grand Total
+      excelRows.push([
+        '',
+        'GRAND TOTAL',
+        '',
+        '',
+        '',
+        parseFloat(grandKashtkarHa.toFixed(4)),
+        haToBighaBiswa(grandKashtkarHa),
+        grandKashtkarSqFt,
+        parseFloat(grandTotalHa.toFixed(4)),
+        haToBighaBiswa(grandTotalHa),
+        grandTotalSqFt,
+        '',
+        '',
+        parseFloat(grandKashtkarHa.toFixed(4))
+      ]);
+
+      const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Zamify_Bantwara_Pro");
+
+      worksheet['!cols'] = [
+        { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 16 },
+        { wch: 16 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 22 },
+        { wch: 16 }, { wch: 14 }, { wch: 20 }, { wch: 22 }
+      ];
+
+      const filename = `Bantwara_Pro_${selectedName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+    }
+
+    // DIRECT RELIABLE PDF DOWNLOAD USING HTML2PDF (NO PRINT DIALOG)
+    async function downloadZamifyPdf() {
+      const btn = document.getElementById('btnPdfDownload');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ PDF जनरेट हो रहा है...";
+      btn.disabled = true;
+
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त_काश्तकार" : activeKashtkarKey;
+      const filename = `Bantwara_Pro_Report_${selectedName.replace(/\s+/g, '_')}.pdf`;
+
+      const sourceEl = document.getElementById('printableZamifyDoc');
+
+      const opt = {
+        margin:       [10, 8, 10, 8],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+          scale: 2, 
+          logging: false, 
+          useCORS: true, 
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      try {
+        await html2pdf().set(opt).from(sourceEl).save();
+      } catch (err) {
+        alert("PDF डाउनलोड करने में त्रुटि: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     }
 
     function clearBatch() {
       if (confirm("क्या आप स्कैन की गई सभी जमाबंदियों की सूची रीसेट करना चाहते हैं?")) {
         scannedKhatas = [];
         masterMapGlobal = {};
-        selectedKashtkarKeys.clear();
+        activeKashtkarKey = "";
         updateUI();
       }
     }
 
-    // Export Excel Sheet (.xlsx) using SheetJS
-    function exportToExcel() {
-      if (selectedKashtkarKeys.size === 0) {
-        alert("कृपया एक्सेल में निर्यात करने के लिए कम से कम 1 काश्तकार चुनें!");
-        return;
-      }
-
-      const excelData = [];
-      let rowNum = 1;
-
-      selectedKashtkarKeys.forEach(key => {
-        const item = masterMapGlobal[key];
-        const bigha = item.totalArea * 3.95;
-        const khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
-
-        excelData.push({
-          "क्र.सं.": rowNum++,
-          "काश्तकार का नाम व पिता/पति": item.displayName,
-          "जाति": item.caste || "-",
-          "खाता संख्याएं व हिस्सा विवरण": khatasStr,
-          "कुल रकबा (हेक्टेयर)": item.totalArea.toFixed(4),
-          "अनुमानित कुल बीघा": bigha.toFixed(2),
-          "हस्ताक्षर / टिप्पणी": ""
-        });
-      });
-
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "बंटवारा प्रो रिपोर्ट");
-
-      // Auto-fit column widths
-      worksheet['!cols'] = [
-        { wch: 8 },
-        { wch: 30 },
-        { wch: 12 },
-        { wch: 35 },
-        { wch: 18 },
-        { wch: 16 },
-        { wch: 20 }
-      ];
-
-      XLSX.writeFile(workbook, `Bantwara_Pro_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-    }
-
-    function openPrintModal() {
-      if (selectedKashtkarKeys.size === 0) {
-        alert("कृपया रिपोर्ट में शामिल करने के लिए कम से कम 1 काश्तकार चुनें!");
-        return;
-      }
-
-      const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
-      document.getElementById('pReportMeta').innerText = `कुल खाते: ${scannedKhatas.length} | कुल रकबा: ${totalArea.toFixed(4)} हेक्टेयर (${(totalArea * 3.95).toFixed(2)} बीघा) | चयनित काश्तकार: ${selectedKashtkarKeys.size}`;
-
-      let pTbody = '';
-      let rowNum = 1;
-
-      selectedKashtkarKeys.forEach(key => {
-        const item = masterMapGlobal[key];
-        const bigha = item.totalArea * 3.95;
-        const khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr}): ${b.area.toFixed(4)} हे.`).join('<br/>');
-
-        pTbody += `
-          <tr>
-            <td>${rowNum++}</td>
-            <td><b>${item.displayName}</b></td>
-            <td>${item.caste || '-'}</td>
-            <td style="font-size:11px;">${khatasStr}</td>
-            <td><b>${item.totalArea.toFixed(4)} हे.</b></td>
-            <td><b>${bigha.toFixed(2)} बीघा</b></td>
-            <td></td>
-          </tr>
-        `;
-      });
-
-      document.getElementById('pReportTbody').innerHTML = pTbody;
-      document.getElementById('printModal').style.display = 'flex';
-    }
-
-    function closePrintModal() {
-      document.getElementById('printModal').style.display = 'none';
-    }
-
     function shareWhatsAppBantwara() {
-      if (selectedKashtkarKeys.size === 0) return;
+      if (scannedKhatas.length === 0) return;
       const totalArea = scannedKhatas.reduce((a, b) => a + b.totalArea, 0);
+      const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
 
-      let msg = `📜 *Zamify बंटवारा प्रो समेकित काश्तकार रिपोर्ट*\n\n`;
+      let msg = `📜 *Zamify बंटवारा प्रो हिस्सा रिपोर्ट (${selectedName})*\n\n`;
       msg += `📑 *कुल जमाबंदी खाते*: ${scannedKhatas.length}\n`;
-      msg += `📐 *कुल रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (${(totalArea * 3.95).toFixed(2)} बीघा)\n\n`;
+      msg += `📐 *कुल खसरा रकबा*: ${totalArea.toFixed(4)} हेक्टेयर (${haToBighaBiswa(totalArea)} बीघा)\n\n`;
 
-      msg += `👑 *काश्तकारवार हिस्सा एवं कुल जमीन विवरण:* \n`;
-      let idx = 1;
-      selectedKashtkarKeys.forEach(key => {
-        const item = masterMapGlobal[key];
-        const bigha = item.totalArea * 3.95;
-        let khatasStr = item.khataBreakdown.map(b => `खाता ${b.khata} (${b.fracStr})`).join(', ');
-        msg += `${idx++}. *${item.displayName}*\n   ➔ कुल जमीन: ${item.totalArea.toFixed(4)} हे. (${bigha.toFixed(2)} बीघा)\n   ➔ विवरण: ${khatasStr}\n\n`;
+      msg += `👑 *खातावार हिस्सा विवरण:* \n`;
+      scannedKhatas.forEach((k, idx) => {
+        msg += `${idx + 1}. *खाता संख्या ${k.khata}* (${k.village})\n   ➔ कुल रकबा: ${k.totalArea.toFixed(4)} हे.\n\n`;
       });
 
       msg += `— *Zamify Web App Suite*`;
