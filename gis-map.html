@@ -763,6 +763,20 @@
         var khasraVisible = true;
         var khasraOverlayObj = null;
 
+        // Continuous TileLayer for automatic Khasra Boundary rendering across all zoom levels (11-23)
+        var khasraTileLayer = L.tileLayer.arcGISExport({
+            proxyBase: PROXY_BASE,
+            serviceUrl: SETTLEMENT_BASE,
+            layers: 'show:0',
+            transparent: true,
+            format: 'png32',
+            tileSize: 256,
+            maxZoom: 23,
+            minZoom: 11,
+            dynamicLayers: JSON.stringify(khasraStyle)
+        }).addTo(map);
+
+
         function _showOverlayStatus(msg, color) {
             var el = document.getElementById('overlayStatus');
             if (!el) return;
@@ -777,13 +791,13 @@
 
         function updateKhasraOverlay() {
             if (!khasraVisible) return;
-            if (map.getZoom() < 15) {
+            if (map.getZoom() < 11) {
                 if (khasraOverlayObj) {
                     map.removeLayer(khasraOverlayObj);
                     URL.revokeObjectURL(khasraOverlayObj._url);
                     khasraOverlayObj = null;
                 }
-                _showOverlayStatus('🔍 खसरा बाउंड्री देखने के लिए ज़ूम इन करें (15+)', '#94a3b8');
+                _showOverlayStatus('🔍 खसरा बाउंड्री देखने के लिए ज़ूम इन करें (11+)', '#94a3b8');
                 return;
             }
             
