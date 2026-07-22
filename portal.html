@@ -956,7 +956,6 @@
       document.getElementById('certModal').style.display = 'none';
     }
 
-    // Direct 100% Reliable PDF Download using Cloned Container Outside Modal Overlay
     async function downloadCertPdf() {
       const btn = document.getElementById('btnPdfDownload');
       const originalText = btn.innerHTML;
@@ -964,38 +963,28 @@
       btn.disabled = true;
 
       const sourceEl = document.getElementById('certDocContent');
-      
-      // Create clone outside modal overlay to guarantee zero blank PDF rendering
-      const clone = sourceEl.cloneNode(true);
-      clone.id = 'cert-pdf-render-clone';
-      clone.style.position = 'fixed';
-      clone.style.top = '-9999px';
-      clone.style.left = '-9999px';
-      clone.style.width = '700px';
-      clone.style.background = '#ffffff';
-      clone.style.color = '#000000';
-      clone.style.padding = '30px';
-      clone.style.boxSizing = 'border-box';
-      document.body.appendChild(clone);
-
       const filename = `Krishi_Shreni_Praman_Patra_${activeKashtkarNameForPdf.replace(/\s+/g, '_')}.pdf`;
 
       const opt = {
-        margin:       [10, 10, 10, 10],
+        margin:       [12, 12, 12, 12],
         filename:     filename,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 2, logging: false, useCORS: true, backgroundColor: '#ffffff' },
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+          scale: 2, 
+          logging: false, 
+          useCORS: true, 
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          scrollX: 0
+        },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
       try {
-        await html2pdf().set(opt).from(clone).save();
+        await html2pdf().set(opt).from(sourceEl).save();
       } catch (err) {
         alert("PDF डाउनलोड करने में त्रुटि: " + err.message);
       } finally {
-        if (document.body.contains(clone)) {
-          document.body.removeChild(clone);
-        }
         btn.innerHTML = originalText;
         btn.disabled = false;
       }
