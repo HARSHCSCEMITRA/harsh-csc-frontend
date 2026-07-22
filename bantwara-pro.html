@@ -36,7 +36,7 @@
       padding: 16px;
     }
     .app-container {
-      max-width: 900px;
+      max-width: 950px;
       margin: 0 auto;
     }
     
@@ -398,7 +398,7 @@
     .zamify-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11.5px;
+      font-size: 11px;
       text-align: center;
       color: #000 !important;
       background: #fff !important;
@@ -417,6 +417,15 @@
       color: #000 !important;
       white-space: nowrap;
     }
+    .zamify-table input, .zamify-table select {
+      font-size: 11px;
+      font-family: inherit;
+      padding: 2px 4px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+    }
     .row-village {
       background: #f1f5f9 !important;
       font-weight: bold;
@@ -430,7 +439,7 @@
     .row-grand-total {
       background: #fde047 !important;
       font-weight: 900;
-      font-size: 12.5px;
+      font-size: 12px;
     }
 
     /* Export Action Buttons Grid */
@@ -627,7 +636,7 @@
             </select>
           </div>
 
-          <!-- Exact Zamify Software Formatted Table Container for Display and PDF Generation -->
+          <!-- Exact Zamify Desktop Software Formatted Table Container for Display and PDF Generation -->
           <div class="zamify-table-wrap" id="printableZamifyDoc">
             <div style="padding:16px 12px 6px 12px; text-align:center; background:#fff; color:#000;">
               <h3 style="margin:0; font-size:18px; font-weight:bold; color:#000;" id="docTitleKashtkar">बंटवारा प्रो रिपोर्ट</h3>
@@ -668,6 +677,7 @@
     let scannedKhatas = [];
     let masterMapGlobal = {};
     let activeKashtkarKey = "";
+    let userProposedSelectionMap = {}; // Stores proposed partition selections per khasra row
 
     // Convert Hectares to Bigha-Biswa (Standard Zamify Format e.g. 1-04, 0-03)
     function haToBighaBiswa(ha) {
@@ -1031,6 +1041,10 @@
       renderZamifyFormattedTable();
     }
 
+    function onProposedSelectionChange(rowKey, val) {
+      userProposedSelectionMap[rowKey] = val;
+    }
+
     // RENDER EXACT TABLE MATCHING ZAMIFY DESKTOP EXCEL FORMAT
     function renderZamifyFormattedTable() {
       const selectedName = activeKashtkarKey === "__ALL__" ? "समस्त काश्तकार" : activeKashtkarKey;
@@ -1108,6 +1122,8 @@
           ];
 
           khasras.forEach((kh, khIdx) => {
+            // FIX KHSRA SANKHYA UNDEFINED PERMANENTLY:
+            const khasraNoStr = kh.khasraNo || kh.khasra || kh.number || (khIdx + 1).toString();
             const khasraTotalHa = kh.area || (k.totalArea / khasras.length);
             const khasraKashtkarHa = khasraTotalHa * kashtkarFrac;
 
@@ -1119,12 +1135,15 @@
             khataTotalHa += khasraTotalHa;
             khataTotalSqFt += khasraTotalSqFt;
 
+            const rowKey = `${k.khata}_${khasraNoStr}`;
+            const currentPropVal = userProposedSelectionMap[rowKey] || "";
+
             tbodyHtml += `
               <tr>
                 <td>${khataCounter}</td>
                 <td>${k.khata}</td>
                 <td>${khIdx + 1}</td>
-                <td>${kh.khasraNo}</td>
+                <td><b>${khasraNoStr}</b></td>
                 <td>${kh.classification || 'चाही 2'}</td>
                 <td><b>${khasraKashtkarHa.toFixed(4)}</b></td>
                 <td>${haToBighaBiswa(khasraKashtkarHa)}</td>
@@ -1132,8 +1151,14 @@
                 <td><b>${khasraTotalHa.toFixed(4)}</b></td>
                 <td>${haToBighaBiswa(khasraTotalHa)}</td>
                 <td>${khasraTotalSqFt}</td>
-                <td></td>
-                <td>${activeKashtkarKey === "__ALL__" ? "सबका बराबर" : selectedName}</td>
+                <td><input type="text" placeholder="उपनाम" style="width:65px; text-align:center;"/></td>
+                <td>
+                  <select onchange="onProposedSelectionChange('${rowKey}', this.value)" style="width:95px;">
+                    <option value="" ${currentPropVal===''?'selected':''}>[खाली]</option>
+                    <option value="${selectedName}" ${currentPropVal===selectedName?'selected':''}>${selectedName}</option>
+                    <option value="सबका बराबर" ${currentPropVal==='सबका बराबर'?'selected':''}>सबका बराबर</option>
+                  </select>
+                </td>
                 <td><b>${khasraKashtkarHa.toFixed(4)}</b></td>
               </tr>
             `;
@@ -1226,10 +1251,12 @@
       let grandTotalSqFt = 0;
 
       let khataCounter = 1;
+      let sheetRowIndex = 3; // Row index in Excel (1-based, starts at 3 for first data row after village header at row 2)
 
       Object.keys(villageGroups).forEach(vName => {
         // Village Header
         excelRows.push([`--- ग्राम: ${vName} ---`, '', '', '', '', '', '', '', '', '', '', '', '', '']);
+        sheetRowIndex++;
 
         const khatas = villageGroups[vName];
         khatas.forEach(k => {
@@ -1252,7 +1279,10 @@
             { khasraNo: "1", area: k.totalArea, classification: "बारानी" }
           ];
 
+          const startKhasraRowIndex = sheetRowIndex;
+
           khasras.forEach((kh, khIdx) => {
+            const khasraNoStr = (kh.khasraNo || kh.khasra || kh.number || (khIdx + 1)).toString();
             const khasraTotalHa = kh.area || (k.totalArea / khasras.length);
             const khasraKashtkarHa = khasraTotalHa * kashtkarFrac;
 
@@ -1264,11 +1294,18 @@
             khataTotalHa += khasraTotalHa;
             khataTotalSqFt += khasraTotalSqFt;
 
+            const rowKey = `${k.khata}_${khasraNoStr}`;
+            const propVal = userProposedSelectionMap[rowKey] || "";
+
+            // EXCEL FORMULA IN COLUMN 14 MATCHING ZAMIFY DESKTOP EXCEL FORMAT EXACTLY:
+            // =IF($M3="कालुसिंह", $I3, IF($M3="सबका बराबर", $I3/1, IF(ISNUMBER(SEARCH("कालुसिंह", $M3)), $I3/2, 0)))
+            const formulaStr = `=IF($M${sheetRowIndex}="${selectedName}", $I${sheetRowIndex}, IF($M${sheetRowIndex}="सबका बराबर", $I${sheetRowIndex}/1, IF(ISNUMBER(SEARCH("${selectedName}", $M${sheetRowIndex})), $I${sheetRowIndex}/2, 0)))`;
+
             excelRows.push([
               khataCounter.toString(),
               k.khata.toString(),
               (khIdx + 1).toString(),
-              kh.khasraNo.toString(),
+              khasraNoStr,
               kh.classification || 'चाही 2',
               parseFloat(khasraKashtkarHa.toFixed(4)),
               haToBighaBiswa(khasraKashtkarHa),
@@ -1277,12 +1314,17 @@
               haToBighaBiswa(khasraTotalHa),
               khasraTotalSqFt,
               '',
-              activeKashtkarKey === "__ALL__" ? "सबका बराबर" : selectedName,
-              parseFloat(khasraKashtkarHa.toFixed(4))
+              propVal, // Initially blank or user selected partition option
+              { f: formulaStr, v: parseFloat(khasraKashtkarHa.toFixed(4)) }
             ]);
+
+            sheetRowIndex++;
           });
 
-          // Khata Subtotal
+          const endKhasraRowIndex = sheetRowIndex - 1;
+          const subtotalFormulaStr = `=SUM(N${startKhasraRowIndex}:N${endKhasraRowIndex})`;
+
+          // Khata Subtotal Row
           excelRows.push([
             '',
             `KHATA ${k.khata} TOTAL`,
@@ -1297,8 +1339,10 @@
             khataTotalSqFt,
             '',
             '',
-            parseFloat(khataKashtkarHa.toFixed(4))
+            { f: subtotalFormulaStr, v: parseFloat(khataKashtkarHa.toFixed(4)) }
           ]);
+
+          sheetRowIndex++;
 
           grandKashtkarHa += khataKashtkarHa;
           grandKashtkarSqFt += khataKashtkarSqFt;
@@ -1309,7 +1353,7 @@
         });
       });
 
-      // Grand Total
+      // Grand Total Row
       excelRows.push([
         '',
         'GRAND TOTAL',
@@ -1383,6 +1427,7 @@
         scannedKhatas = [];
         masterMapGlobal = {};
         activeKashtkarKey = "";
+        userProposedSelectionMap = {};
         updateUI();
       }
     }
