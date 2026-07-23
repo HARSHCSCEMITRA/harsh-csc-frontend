@@ -1948,13 +1948,8 @@
             }
             return "";
         }
-            }
-            for (var key in properties) {
-                var lkey = key.toLowerCase();
-                if (lkey.includes('dist')) return properties[key];
-            }
-            return "";
-        }
+
+
 
         function findTehsilName(properties) {
             var exactKeys = ['TEH_NAME', 'teh_name', 'tehsil_name', 'tehsil', 'TEHNAME', 'TEH_CODE', 'TEHCODE', 'tehsil_code', 'TEHSIL'];
@@ -1975,13 +1970,8 @@
             }
             return "";
         }
-            }
-            for (var key in properties) {
-                var lkey = key.toLowerCase();
-                if (lkey.includes('teh')) return properties[key];
-            }
-            return "";
-        }
+
+
 
         function findVillageName(properties) {
             // First try name-specific keys (not code keys)
@@ -2144,6 +2134,8 @@
             return "";
         }
 
+
+
         function findHalkasName(properties) {
             var exactKeys = ['PATWARNAME', 'patwarname', 'HALKA_NAME', 'halka_name', 'halka', 'HALKAS', 'PC', 'PATWAR'];
             for (var i = 0; i < exactKeys.length; i++) {
@@ -2159,6 +2151,8 @@
             }
             return "";
         }
+
+
 
         function showDetails(properties) {
             selectedPlot = findPlotNo(properties);
@@ -2287,7 +2281,7 @@
         };
 
         window.updateVillageOwners = function(ownersJson) {};
-        function closeVillageOwners() {}
+        
 
         function displayVillageOwners(list) {
             var container = document.getElementById("villageOwnersList");
