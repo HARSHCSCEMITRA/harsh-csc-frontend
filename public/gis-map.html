@@ -1462,12 +1462,492 @@
             return "";
         }
 
+        
+        // Complete Rajasthan District and Tehsil Devanagari Hindi Translation Dictionaries
+        var HINDI_DISTRICTS = {
+        "GANGANAGAR": "श्री गंगानगर",
+        "JALOR": "जालौर",
+        "JHUNJHUNUN": "झुंझुनूं",
+        "SIKAR": "सीकर",
+        "JODHPUR": "जोधपुर",
+        "BARAN": "बारां",
+        "BARMER": "बाड़मेर",
+        "AJMER": "अजमेर",
+        "BHILWARA": "भीलवाड़ा",
+        "BIKANER": "बीकानेर",
+        "ALWAR": "अलवर",
+        "CHITTAURGARH": "चित्तौड़गढ़",
+        "CHURU": "चूरू",
+        "DAUSA": "दौसा",
+        "HANUMANGARH": "हनुमानगढ़",
+        "BANSWARA": "बांसवाड़ा",
+        "JAIPUR": "जयपुर",
+        "JHALAWAR": "झालावाड़",
+        "BHARATPUR": "भरतपुर",
+        "DHAULPUR": "धौलपुर",
+        "DUNGARPUR": "डूंगरपुर",
+        "NAGAUR": "नागौर",
+        "PALI": "पाली",
+        "RAJSAMAND": "राजसमंद",
+        "TONK": "टोंक",
+        "KARAULI": "करौली",
+        "KOTA": "कोटा",
+        "BUNDI": "बूंदी",
+        "SAWAI MADHOPUR": "सवाई माधोपुर",
+        "SIROHI": "सिरोही",
+        "JAISALMER": "जैसलमेर",
+        "UDAIPUR": "उदयपुर",
+        "PRATAPGARH": "प्रतापगढ़",
+        "RAJSAMAND ": "राजसमंद",
+        "SRI GANGANAGAR": "श्री गंगानगर",
+        "JALORE": "जालौर",
+        "JHUNJHUNU": "झुंझुनूं",
+        "CHITTORGARH": "चित्तौड़गढ़",
+        "DHOLPUR": "धौलपुर",
+        "KOTPUTLI-BEHROR": "कोटपूतली-बहरोड़",
+        "KHAIRTHAL-TIJARA": "खैरथल-तिजारा",
+        "NEEM KA THANA": "नीम का थाना",
+        "DEEDWANA-KUCHAMAN": "डीडवाना-कुचामन",
+        "PHALODI": "फलोदी",
+        "BALOTRA": "बालोतरा",
+        "SANCHORE": "सांचौर",
+        "SALUMBAR": "सलूम्बर",
+        "SHAHURA": "शाहपुरा",
+        "ANUPGARH": "अनूपगढ़",
+        "GANGAPUR CITY": "गंगापुर सिटी",
+        "DUDU": "दूदू",
+        "KEKRI": "केकड़ी",
+        "BEAWAR": "ब्यावर",
+        "JAIPUR RURAL": "जयपुर ग्रामीण",
+        "JODHPUR RURAL": "जोधपुर ग्रामीण",
+        "DEEG": "डीग"
+};
+        var HINDI_TEHSILS = {
+        "KARANPUR": "करनपुर",
+        "BHINMAL": "भीनमाल",
+        "JALOR": "जालोर",
+        "NAWALGARH": "नवलगढ़",
+        "DANTA RAMGARH": "दंत  रामगढ",
+        "FATEHPUR": "फतेहपुर",
+        "LACHHMANGARH": "लाछ्मंगढ़",
+        "BHOPALGARH": "भोपालगढ़",
+        "BILARA": "बिलारा",
+        "JODHPUR": "जोधपुर",
+        "LUNI": "लूनी",
+        "OSIAN": "ओसियन",
+        "PHALODI": "फलोदी",
+        "KISHANGANJ": "किशनगंज",
+        "MANGROL": "मांगरोल",
+        "SHAHBAD": "शाहाबाद",
+        "BARMER": "बारमेर",
+        "BAYTOO": "बायतू",
+        "KISHANGARH": "किशनगढ़",
+        "JAHAZPUR": "जहाजपुर",
+        "KOTRI": "कोटरी",
+        "BIKANER": "बीकानेर",
+        "CHHATARGARH": "छतरगढ",
+        "ALWAR": "अलवर",
+        "NIMBAHERA": "निम्बहेरा",
+        "CHURU": "चुरू",
+        "RAJGARH": "राजगढ़",
+        "RATANGARH": "रतनगढ़",
+        "SUJANGARH": "सुजानगढ़",
+        "TARANAGAR": "तारानगर",
+        "SARDARSHAHAR": "सरदारशहर",
+        "KATHUMAR": "कठूमर",
+        "KISHANGARH BAS": "किशनगढ़  बस",
+        "LALSOT": "लालसोट",
+        "BHADRA": "भद्र",
+        "HANUMANGARH": "हनुमानगढ़",
+        "NOHAR": "नोहर",
+        "BANSWARA": "बन्स्वारा",
+        "CHOMU": "चोमू",
+        "AKLERA": "अकलेरा",
+        "KUMHER": "कुम्हेर",
+        "NAGAR": "नगर",
+        "RUPBAS": "रूपबास",
+        "ASPUR": "आसपुर",
+        "DUNGARPUR": "डूंगरपुर",
+        "SAGWARA": "सगवारा",
+        "SIMALWARA": "सिमल्वारा",
+        "GANGDHAR": "गंगधार",
+        "JHALRAPATAN": "झालरापाटन",
+        "KHANPUR": "खानपुर",
+        "MANOHAR THANA": "मनोहर  थाना",
+        "JAMWA RAMGARH": "जमवा  रामगढ",
+        "KOTPUTLI": "कोटपूतली",
+        "UDAIPURWATI": "उदैपुर्वती",
+        "LADNU": "लद्नु",
+        "MAKRANA": "मकराना",
+        "MERTA": "मरता",
+        "PALI": "पाली",
+        "RAIPUR": "रायपुर",
+        "SAYLA": "सायला",
+        "NATHDWARA": "नाथद्वारा",
+        "MALPURA": "मालपुरा",
+        "NIWAI": "निवाई",
+        "AJMER": "अजमेर",
+        "DIGOD": "दीगोद",
+        "CHOHTAN": "चोह्टन",
+        "PACHPADRA": "पचपदरा",
+        "BAYANA": "बयाना",
+        "BHILWARA": "भिल्वारा",
+        "HURDA": "हरदा",
+        "MANDAL": "मंद अल",
+        "MANDALGARH": "मंडलगढ़",
+        "SAHARA": "सहारा",
+        "SHAHPURA": "शाहपुरा",
+        "BEEJOLIYA": "बीजोलिया",
+        "BEGUN": "बेगुन",
+        "BHADESAR": "भदेसर",
+        "DUNGLA": "दुन्गला",
+        "GANGRAR": "गंगरार",
+        "KAPASAN": "कपासन",
+        "RASHMI": "रश्मि",
+        "RAWATBHATA": "रावतभाटा",
+        "BARI SADRI": "बरी  सादरी",
+        "CHITTAURGARH": "चित्तौर्गा रह",
+        "KHANDAR": "खान्दर",
+        "BUHANA": "बुहाना",
+        "CHIRAWA": "आ  सिरव",
+        "JHUNJHUNUN": "झुंझुनूं",
+        "KHETRI": "खेत्री",
+        "HINDAUN": "हिन्दौन",
+        "KARAULI": "करौली",
+        "MANDRAIL": "मन्द्रिल",
+        "NADOTI": "नदोती",
+        "TODABHIM": "टोडाभीम",
+        "LADPURA": "लाडपुरा",
+        "PIPALDA": "पीपल्दा",
+        "RAMGANJ MANDI": "रामगंज  मंदी",
+        "SANGOD": "सांगोद",
+        "DEGANA": "डेगाना",
+        "DIDWANA": "दिद्वाना",
+        "JAYAL": "जयल",
+        "DESURI": "देसूरी",
+        "JAITARAN": "जैतारण",
+        "ROHAT": "रोहट",
+        "SOJAT": "सोजत",
+        "SUMERPUR": "सुमेरपुर",
+        "SHERGARH": "शेरगढ़",
+        "PARBATSAR": "परबतसर",
+        "BALI": "बाली",
+        "NASIRABAD": "नसीराबाद",
+        "PEESANGAN": "पीसांगन",
+        "NAGAUR": "नागौर",
+        "NAWA": "नवा",
+        "ABU ROAD": "आबू रोड",
+        "PINDWARA": "पिन्द्वारा",
+        "SHEOGANJ": "शिवगंज",
+        "SIROHI": "सिरोही",
+        "DEOLI": "डोली",
+        "GHATOL": "घाटोल",
+        "ANUPGARH": "अनूपगढ़",
+        "RAWATSAR": "रावतसर",
+        "PHAGI": "फागी",
+        "PACHPAHAR": "पचपहर",
+        "PIRAWA": "पिरवा",
+        "NEEM-KA-THANA": "नीम -का -थाना",
+        "BEAWAR": "बावर",
+        "CHHIPABAROD": "छिपबरोड़",
+        "BHINAY": "भीने",
+        "KEKRI": "ककरी",
+        "KESHORAIPATAN": "केशोरैपतन",
+        "NAINWA": "नैनवा",
+        "MASUDA": "मसुदा",
+        "SARWAR": "सर्वर",
+        "DAUSA": "दौसा",
+        "VIJAINAGAR": "विजैनगर",
+        "CHAKSU": "चाकसू",
+        "BAGORA": "बगोरा",
+        "BEHROR": "बहरोड़",
+        "KOTKASIM": "कोटकासिम",
+        "MANDAWAR": "मंडावर",
+        "RAMGARH": "रामगढ",
+        "THANAGAZI": "थानागाजी",
+        "TIJARA": "तिजारा",
+        "BANSUR": "बाँसुर",
+        "SAPOTRA": "सपुत्र",
+        "KHEENVSAR": "खींवसर",
+        "BAGIDORA": "बागीडोरा",
+        "MARWAR JUNCTION": "मारवाड़ जंक्शन",
+        "GARHI": "गढ़ी",
+        "KUMBHALGARH": "कुम्भलगढ़",
+        "MAHWA": "महुआ",
+        "REODAR": "रेवदर",
+        "ANTAH": "अन्तः",
+        "ATRU": "अतरु",
+        "BARAN": "भरन",
+        "CHHABRA": "छाबरा",
+        "RAMSAR": "रामसर",
+        "SHEO": "क्षेओ",
+        "SIWANA": "सिवाना",
+        "GUDHA MALANI": "गुदा  मालानी",
+        "BHARATPUR": "भरतपुर",
+        "DEEG": "डीग",
+        "KAMAN": "कमान",
+        "NADBAI": "नदबई",
+        "PAHARI": "पहरी",
+        "WEIR": "वीयर",
+        "ASIND": "असिन्द",
+        "BANERA": "भनेर",
+        "KHAJUWALA": "खाजूवाला",
+        "KOLAYAT": "कोलायत",
+        "LUNKARANSAR": "लुन्करंसर",
+        "NOKHA": "नोखा",
+        "POOGAL": "पूगल",
+        "SRIDUNGARGARH": "सृदुन्गार्गढ़",
+        "BUNDI": "बूंदी",
+        "HINDOLI": "हिन्दोली",
+        "INDRAGARH": "इन्द्रगढ",
+        "BASWA": "बसवा",
+        "SIKRAI": "सिकराय",
+        "BARI": "बरी",
+        "BASERI": "बसेरी",
+        "DHAULPUR": "धौलपुर",
+        "RAJAKHERA": "राजखेरा",
+        "SEPAU": "सेपु",
+        "GANGANAGAR": "गंगानगर",
+        "GHARSANA": "घरसाना",
+        "PADAMPUR": "पदमपुर",
+        "RAISINGHNAGAR": "रैसिंघनगर",
+        "SADULSHAHAR": "सादुलशहर",
+        "SURATGARH": "सूरतगढ़",
+        "PILIBANGA": "पीलीबंगा",
+        "SANGARIA": "संगरिया",
+        "TIBI": "टीबी",
+        "AMBER": "एम्बर",
+        "BASSI": "बस्सी",
+        "JAIPUR": "जयपुर",
+        "MAUZAMABAD": "मौज़माबाद",
+        "SANGANER": "सांगानेर",
+        "VIRATNAGAR": "विराटनगर",
+        "PHULERA (HQ.SAMBHAR)": "फुलेरा  (Hq.सांभर )",
+        "FATEHGARH": "फतेहगढ़",
+        "JAISALMER": "जैसलमेर",
+        "POKARAN": "पोकरण",
+        "AHORE": "अहोरे",
+        "RANIWARA": "रानिवारा",
+        "SANCHORE": "संचोरे",
+        "SAWAI MADHOPUR": "सवाई  माधोपुर",
+        "SIKAR": "सीकर",
+        "SRI MADHOPUR": "श्री  माधोपुर",
+        "PEEPLU": "पीपलू",
+        "TODARAISINGH": "तोदारैसिंह",
+        "TONK": "टोंक",
+        "UNIARA": "ऊनिअर",
+        "GIRWA": "गिरवा",
+        "GOGUNDA": "गोगुन्दा",
+        "JHADOL": "झाडोल",
+        "KHERWARA": "खेर्वारा",
+        "KOTRA": "कोटरा",
+        "LASADIYA": "लसाडिया",
+        "MAVLI": "मावली",
+        "RISHABHDEO": "ऋइशभ्देओ",
+        "SALUMBAR": "सलुम्बर",
+        "SARADA": "सरदा",
+        "VALLABHNAGAR": "वल्लभनगर",
+        "KUSHALGARH": "कुशलगढ़",
+        "ARNOD": "अरनोद",
+        "CHHOTI SADRI": "छोटी  सादरी",
+        "DHARIAWAD": "ढरिअवद",
+        "PEEPALKHOONT": "पीपलखूंट",
+        "PRATAPGARH": "प्रतापगढ़",
+        "AMET": "आमेट",
+        "BHIM": "भीम",
+        "DEOGARH": "देवगढ़",
+        "RAILMAGRA": "रेलमगरा",
+        "RAJSAMAND": "राजसमंद",
+        "BAMANWAS": "बामनवास",
+        "BONLI": "Bonli",
+        "CHAUTH KA BARWARA": "चौथ  का  बरवारा",
+        "GANGAPUR": "गंगापुर",
+        "MALARNA DOONGAR": "मलारना  डूंगर",
+        "AMER": "आमेर",
+        "AIMAT": "आमेट",
+        "BANDIKUI": "बांदीकुई",
+        "SANGANEER": "सांगानेर",
+        "NEEMRANA": "नीमराना",
+        "KUMBALGARH": "कुंभलगढ़"
+};
+
+        function toHindiDistrict(val) {
+            if (!val) return "";
+            var strVal = String(val).trim().toUpperCase();
+            if (HINDI_DISTRICTS[strVal]) return HINDI_DISTRICTS[strVal];
+            var cleanVal = strVal.replace(/[^A-Z]/g, '');
+            for (var dKey in HINDI_DISTRICTS) {
+                if (dKey.replace(/[^A-Z]/g, '') === cleanVal) return HINDI_DISTRICTS[dKey];
+            }
+            return val;
+        }
+
+        function toHindiTehsil(val) {
+            if (!val) return "";
+            var strVal = String(val).trim().toUpperCase();
+            if (HINDI_TEHSILS[strVal]) return HINDI_TEHSILS[strVal];
+            var cleanVal = strVal.replace(/[^A-Z]/g, '');
+            for (var tKey in HINDI_TEHSILS) {
+                if (tKey.replace(/[^A-Z]/g, '') === cleanVal) return HINDI_TEHSILS[tKey];
+            }
+            return val;
+        }
+
+        // Web GIS Cascading Dropdown Auto-Fetcher (Populates Districts, Tehsils, RIs, Halkas, Villages in Hindi Devanagari)
+        function fetchWebOptions(level, selections) {
+            try {
+                if (level === 1) {
+                    var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/3', '/query', {
+                        where: '1=1',
+                        outFields: 'DISTRICT_CODE,DISTRICT_NAME_EN,DISTRICT_NAME_HI',
+                        returnGeometry: 'false',
+                        f: 'json'
+                    });
+                    fetch(url)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data.features && data.features.length > 0) {
+                                var opts = {};
+                                data.features.forEach(function(feat) {
+                                    var code = (feat.attributes.DISTRICT_CODE || '').toString().trim();
+                                    var nameEn = (feat.attributes.DISTRICT_NAME_EN || '').toString().trim();
+                                    var nameHi = (feat.attributes.DISTRICT_NAME_HI || '').toString().trim();
+                                    var finalName = nameHi || toHindiDistrict(nameEn) || nameEn;
+                                    if (code) opts[code] = finalName;
+                                });
+                                setOptions(1, opts);
+                            }
+                        }).catch(function(e) { console.error('Level 1 fetch error:', e); });
+                } else if (level === 2 && selections) {
+                    var distCode = selections.trim();
+                    var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/7', '/query', {
+                        where: "DISTRICT_CODE='" + distCode + "' OR DISTRICT_CODE=" + parseInt(distCode),
+                        outFields: 'TEHSIL_CODE,TEHSIL_NAME_EN,TEHSIL_NAME_HI',
+                        returnGeometry: 'false',
+                        f: 'json'
+                    });
+                    fetch(url)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data.features && data.features.length > 0) {
+                                var opts = {};
+                                data.features.forEach(function(feat) {
+                                    var code = (feat.attributes.TEHSIL_CODE || '').toString().trim();
+                                    var nameEn = (feat.attributes.TEHSIL_NAME_EN || '').toString().trim();
+                                    var nameHi = (feat.attributes.TEHSIL_NAME_HI || '').toString().trim();
+                                    var finalName = nameHi || toHindiTehsil(nameEn) || nameEn;
+                                    if (code) opts[code] = finalName;
+                                });
+                                setOptions(2, opts);
+                            }
+                        }).catch(function(e) { console.error('Level 2 fetch error:', e); });
+                } else if (level === 3 && selections) {
+                    var parts = selections.split(',');
+                    var tehCode = parts[1] || parts[0];
+                    var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/9', '/query', {
+                        where: "TEHSIL_CODE='" + tehCode.trim() + "' OR TEHSIL_CODE=" + parseInt(tehCode),
+                        outFields: 'ILR_CODE,ILR_NAME',
+                        returnGeometry: 'false',
+                        f: 'json'
+                    });
+                    fetch(url)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            var opts = {};
+                            if (data.features && data.features.length > 0) {
+                                data.features.forEach(function(feat) {
+                                    var fullCode = (feat.attributes.ILR_CODE || '').toString().trim();
+                                    var ilrName = (feat.attributes.ILR_NAME || '').toString().trim();
+                                    var shortCode = fullCode.length >= 2 ? fullCode.substring(fullCode.length - 2) : fullCode;
+                                    if (shortCode) opts[shortCode] = ilrName ? ("आर.आई. " + ilrName) : ("आर.आई. वृत्त " + shortCode);
+                                });
+                            }
+                            if (Object.keys(opts).length === 0) {
+                                opts["01"] = "आर.आई. वृत्त 01";
+                                opts["02"] = "आर.आई. वृत्त 02";
+                            }
+                            setOptions(3, opts);
+                        }).catch(function() {
+                            setOptions(3, { "01": "आर.आई. वृत्त 01", "02": "आर.आई. वृत्त 02" });
+                        });
+                } else if (level === 4 && selections) {
+                    var parts = selections.split(',');
+                    var tehCode = parts[1] || parts[0];
+                    var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/10', '/query', {
+                        where: "TEHSIL_CODE='" + tehCode.trim() + "' OR TEHSIL_CODE=" + parseInt(tehCode),
+                        outFields: 'PATWAR_CODE,PATWAR_NAME,ILR_CODE',
+                        returnGeometry: 'false',
+                        f: 'json'
+                    });
+                    fetch(url)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            var opts = {};
+                            if (data.features && data.features.length > 0) {
+                                data.features.forEach(function(feat) {
+                                    var fullCode = (feat.attributes.PATWAR_CODE || '').toString().trim();
+                                    var pName = (feat.attributes.PATWAR_NAME || '').toString().trim();
+                                    var shortCode = fullCode.length >= 3 ? fullCode.substring(fullCode.length - 3) : fullCode;
+                                    if (shortCode) opts[shortCode] = pName ? ("पटवार " + pName) : ("पटवार हल्का " + shortCode);
+                                });
+                            }
+                            if (Object.keys(opts).length === 0) {
+                                opts["01"] = "पटवार हल्का 01";
+                                opts["02"] = "पटवार हल्का 02";
+                            }
+                            setOptions(4, opts);
+                        }).catch(function() {
+                            setOptions(4, { "01": "पटवार हल्का 01", "02": "पटवार हल्का 02" });
+                        });
+                } else if (level === 5 && selections) {
+                    var parts = selections.split(',');
+                    var tehCode = parts[1] || parts[0];
+                    var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Settlement/Settlement/MapServer/1', '/query', {
+                        where: "TEHSIL_CODE='" + tehCode.trim() + "' OR TEHSIL_CODE=" + parseInt(tehCode),
+                        outFields: 'VILLAGE_CODE,VILL_CODE_NIC,VNAME_E,CENSUS_NM_2011',
+                        returnGeometry: 'false',
+                        f: 'json'
+                    });
+                    fetch(url)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            var opts = {};
+                            if (data.features && data.features.length > 0) {
+                                data.features.forEach(function(feat) {
+                                    var code = (feat.attributes.VILL_CODE_NIC || feat.attributes.VILLAGE_CODE || '').toString().trim();
+                                    var vName = (feat.attributes.CENSUS_NM_2011 || feat.attributes.VNAME_E || '').toString().trim();
+                                    if (code && vName) opts[code] = vName;
+                                });
+                            }
+                            setOptions(5, opts);
+                        }).catch(function(e) { console.error('Level 5 fetch error:', e); });
+                } else if (level === 6) {
+                    setOptions(6, { "01": "शीट 01", "02": "शीट 02", "03": "शीट 03" });
+                }
+            } catch (e) {
+                console.error("fetchWebOptions error:", e);
+            }
+        }
+
         function findDistrictName(properties) {
-            var exactKeys = ['DIST_NAME', 'dist_name', 'district_name', 'district', 'DISTNAME', 'DIST_CODE', 'DISTCODE', 'district_code'];
+            var exactKeys = ['DIST_NAME', 'dist_name', 'district_name', 'district', 'DISTNAME', 'DIST_CODE', 'DISTCODE', 'district_code', 'DISTRICT'];
             for (var i = 0; i < exactKeys.length; i++) {
                 for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
+                        var val = String(properties[key]).trim();
+                        if (val) return toHindiDistrict(val);
+                    }
                 }
+            }
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if (lkey.includes('dist') && properties[key]) {
+                    var val = String(properties[key]).trim();
+                    if (val) return toHindiDistrict(val);
+                }
+            }
+            return "";
+        }
             }
             for (var key in properties) {
                 var lkey = key.toLowerCase();
@@ -1477,11 +1957,24 @@
         }
 
         function findTehsilName(properties) {
-            var exactKeys = ['TEH_NAME', 'teh_name', 'tehsil_name', 'tehsil', 'TEHNAME', 'TEH_CODE', 'TEHCODE', 'tehsil_code'];
+            var exactKeys = ['TEH_NAME', 'teh_name', 'tehsil_name', 'tehsil', 'TEHNAME', 'TEH_CODE', 'TEHCODE', 'tehsil_code', 'TEHSIL'];
             for (var i = 0; i < exactKeys.length; i++) {
                 for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
+                        var val = String(properties[key]).trim();
+                        if (val) return toHindiTehsil(val);
+                    }
                 }
+            }
+            for (var key in properties) {
+                var lkey = key.toLowerCase();
+                if (lkey.includes('teh') && properties[key]) {
+                    var val = String(properties[key]).trim();
+                    if (val) return toHindiTehsil(val);
+                }
+            }
+            return "";
+        }
             }
             for (var key in properties) {
                 var lkey = key.toLowerCase();
@@ -1636,20 +2129,32 @@
         }
 
         function findRIName(properties) {
-            var exactKeys = ['ILRNAME', 'ilrname', 'RI_NAME', 'ri_name', 'ri', 'RI'];
+            var exactKeys = ['ILRNAME', 'ilrname', 'RI_NAME', 'ri_name', 'ri', 'RI', 'ILR'];
             for (var i = 0; i < exactKeys.length; i++) {
                 for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
+                        var val = String(properties[key]).trim();
+                        if (val) {
+                            if (/^\d+$/.test(val)) return "आर.आई. वृत्त " + val;
+                            return "आर.आई. " + val;
+                        }
+                    }
                 }
             }
             return "";
         }
 
         function findHalkasName(properties) {
-            var exactKeys = ['PATWARNAME', 'patwarname', 'HALKA_NAME', 'halka_name', 'halka', 'HALKAS'];
+            var exactKeys = ['PATWARNAME', 'patwarname', 'HALKA_NAME', 'halka_name', 'halka', 'HALKAS', 'PC', 'PATWAR'];
             for (var i = 0; i < exactKeys.length; i++) {
                 for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase()) return properties[key];
+                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
+                        var val = String(properties[key]).trim();
+                        if (val) {
+                            if (/^\d+$/.test(val)) return "पटवार हल्का " + val;
+                            return "पटवार " + val;
+                        }
+                    }
                 }
             }
             return "";
@@ -2054,6 +2559,7 @@
 
         function requestOptions(level, selections) {
             document.title = "GET_OPTIONS:" + level + ":" + (selections || "");
+            fetchWebOptions(level, selections);
         }
 
         function setOptions(level, opts) {
