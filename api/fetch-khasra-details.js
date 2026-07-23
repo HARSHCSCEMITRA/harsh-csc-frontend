@@ -1,5 +1,6 @@
-// api/fetch-khasra-details.js - Vercel Serverless API for BhuNaksha Khasra Khata & Owner Extraction
-import { PDFParse } from 'pdf-parse';
+// api/fetch-khasra-details.js - Production Vercel Serverless Function for BhuNaksha Khasra Details
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,13 +44,13 @@ export default async function handler(req, res) {
     });
 
     if (!pdfResponse.ok) {
-      return res.status(pdfResponse.status).json({ error: `BhuNaksha PDF HTTP ${pdfResponse.status}` });
+      return res.status(200).json({ success: false, khata: "-", owner: "-" });
     }
 
     const arrayBuffer = await pdfResponse.arrayBuffer();
     let buffer = Buffer.from(arrayBuffer);
 
-    // If base64 encoded by government gateway
+    // Decode base64 if needed
     const rawStr = buffer.toString('utf-8');
     if (!rawStr.startsWith('%PDF')) {
       try {
@@ -59,37 +60,46 @@ export default async function handler(req, res) {
     }
 
     if (buffer.length < 500) {
-      return res.status(200).json({
-        success: false,
-        giscode: targetGis,
-        plotno: plotno,
-        khata: "-",
-        owner: "-"
-      });
+      return res.status(200).json({ success: false, khata: "-", owner: "-" });
     }
 
-    const parser = new PDFParse(new Uint8Array(buffer));
-    const parsed = await parser.getText();
-    const fullText = parsed.text || '';
+    let fullText = "";
+    try {
+      const { PDFParse } = require('pdf-parse');
+      const parser = new PDFParse(new Uint8Array(buffer));
+      const parsed = await parser.getText();
+      fullText = parsed.text || '';
+    } catch (e1) {
+      try {
+        const pdfParse = require('pdf-parse');
+        const parsed = await pdfParse(buffer);
+        fullText = parsed.text || '';
+      } catch (e2) {
+        console.error("PDF parse fallback error:", e2.message);
+      }
+    }
 
-    // Extract Khata Number
     let khataNo = "-";
-    const khataMatch = fullText.match(/(?:Khata\s*No|खाता\s*संख्या|खाता\s*नं|खाता)[^\d]*(\d+)/i);
-    if (khataMatch) {
-      khataNo = khataMatch[1];
-    }
-
-    // Extract Owners
     let ownerName = "-";
-    const cleanText = fullText.split(/नोट\s*[:-]|सक्षम\s+अधिकारी|Note\s*[:-]/i)[0];
-    const ownerMatches = cleanText.match(/\b[0-9]{1,2}\s*[\.\)]+\s*([\u0900-\u097F].+?)(?=\s+हिस्सा|\s+जाति|\s+सा\.|\s+खेती|\s+खातेदार|\n|\r|$)/g);
-    
-    if (ownerMatches && ownerMatches.length > 0) {
-      const owners = ownerMatches
-        .map(m => m.replace(/^[0-9]{1,2}\s*[\.\)]+\s*/, '').replace(/\s*(?:हिस्सा|जाति|सा\.|खेती).*$/, '').trim())
-        .filter(Boolean);
-      if (owners.length > 0) {
-        ownerName = Array.from(new Set(owners)).join(', ');
+
+    if (fullText) {
+      // Extract Khata Number
+      const khataMatch = fullText.match(/(?:Khata\s*No|खाता\s*संख्या|खाता\s*नं|खाता)[^\d]*(\d+)/i);
+      if (khataMatch) {
+        khataNo = khataMatch[1];
+      }
+
+      // Extract Owner Names
+      const cleanText = fullText.split(/नोट\s*[:-]|सक्षम\s+अधिकारी|Note\s*[:-]/i)[0];
+      const ownerMatches = cleanText.match(/\b[0-9]{1,2}\s*[\.\)]+\s*([\u0900-\u097F].+?)(?=\s+हिस्सा|\s+जाति|\s+सा\.|\s+खेती|\s+खातेदार|\n|\r|$)/g);
+
+      if (ownerMatches && ownerMatches.length > 0) {
+        const owners = ownerMatches
+          .map(m => m.replace(/^[0-9]{1,2}\s*[\.\)]+\s*/, '').replace(/\s*(?:हिस्सा|जाति|सा\.|खेती).*$/, '').trim())
+          .filter(Boolean);
+        if (owners.length > 0) {
+          ownerName = Array.from(new Set(owners)).join(', ');
+        }
       }
     }
 
@@ -102,6 +112,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("fetch-khasra-details error:", err);
-    return res.status(500).json({ error: "Failed to fetch khasra details: " + err.message });
+    return res.status(200).json({ success: false, khata: "-", owner: "-", error: err.message });
   }
 }
