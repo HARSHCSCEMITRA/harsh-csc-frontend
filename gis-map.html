@@ -668,7 +668,8 @@
         });
 
         // Keep compatibility with python token replacement logic
-        var tokenVal = '{dynamicquery_token}';
+        var rawToken = '{dynamicquery_token}';
+        var tokenVal = (rawToken && !rawToken.includes('dynamicquery_token')) ? rawToken : '';
 
         // Custom ArcGIS Export TileLayer - bypasses Esri-Leaflet's broken proxy URL construction
         // Renders khasra boundaries by manually building MapServer/export URLs through the proxy using POST and dynamicLayers

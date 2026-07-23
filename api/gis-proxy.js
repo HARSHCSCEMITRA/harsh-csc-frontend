@@ -49,6 +49,11 @@ export default async function handler(req, res) {
         bodyStr = new URLSearchParams(req.body).toString();
       }
 
+      // Strip token={dynamicquery_token} or unusable token params from POST body
+      bodyStr = bodyStr.replace(/([?&]|%26)?token=\{dynamicquery_token\}/gi, '');
+      bodyStr = bodyStr.replace(/([?&]|%26)?token=%7Bdynamicquery_token%7D/gi, '');
+      bodyStr = bodyStr.replace(/^&+|&+$|(?<=&)&/g, '');
+
       fetchOptions.headers['Content-Type'] = req.headers['content-type'] || 'application/x-www-form-urlencoded';
       fetchOptions.body = bodyStr;
     }
