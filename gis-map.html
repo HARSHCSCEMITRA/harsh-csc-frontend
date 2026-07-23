@@ -1488,7 +1488,7 @@
         "DUNGARPUR": "डूंगरपुर",
         "NAGAUR": "नागौर",
         "PALI": "पाली",
-        "RAJSAMAND": "राजसमंद",
+        "RAJSAMAND": "राजसमन्द",
         "TONK": "टोंक",
         "KARAULI": "करौली",
         "KOTA": "कोटा",
@@ -1498,7 +1498,7 @@
         "JAISALMER": "जैसलमेर",
         "UDAIPUR": "उदयपुर",
         "PRATAPGARH": "प्रतापगढ़",
-        "RAJSAMAND ": "राजसमंद",
+        "RAJSAMAND ": "राजसमन्द",
         "SRI GANGANAGAR": "श्री गंगानगर",
         "JALORE": "जालौर",
         "JHUNJHUNU": "झुंझुनूं",
@@ -1757,7 +1757,7 @@
         "BHIM": "भीम",
         "DEOGARH": "देवगढ़",
         "RAILMAGRA": "रेलमगरा",
-        "RAJSAMAND": "राजसमंद",
+        "RAJSAMAND": "राजसमन्द",
         "BAMANWAS": "बामनवास",
         "BONLI": "Bonli",
         "CHAUTH KA BARWARA": "चौथ  का  बरवारा",
@@ -2262,16 +2262,21 @@
             document.getElementById("detailKhataNo").innerText = khata || "-";
             selectedKhata = khata || "";
             if (resolved_vil) {
-                document.getElementById("detailVillage").innerText = resolved_vil;
-                selectedVillage = resolved_vil;
+                var cleanVil = String(resolved_vil).split('-')[0].trim();
+                document.getElementById("detailVillage").innerText = cleanVil;
+                selectedVillage = cleanVil;
             }
             if (resolved_ri) {
-                document.getElementById("detailRI").innerText = resolved_ri;
-                selectedRI = resolved_ri;
+                var cleanRI = String(resolved_ri).replace(/^\d+\s*/, '').trim();
+                if (cleanRI && !cleanRI.startsWith("आर.आई.")) cleanRI = "आर.आई. " + cleanRI;
+                document.getElementById("detailRI").innerText = cleanRI || resolved_ri;
+                selectedRI = cleanRI || resolved_ri;
             }
             if (resolved_halka) {
-                document.getElementById("detailHalkas").innerText = resolved_halka;
-                selectedHalkas = resolved_halka;
+                var cleanHalka = String(resolved_halka).replace(/^\d+\s*/, '').trim();
+                if (cleanHalka && !cleanHalka.startsWith("पटवार")) cleanHalka = "पटवार " + cleanHalka;
+                document.getElementById("detailHalkas").innerText = cleanHalka || resolved_halka;
+                selectedHalkas = cleanHalka || resolved_halka;
             }
             
             // Highlight all khasras in the same khata
