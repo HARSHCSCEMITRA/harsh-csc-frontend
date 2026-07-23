@@ -79,10 +79,16 @@ export default async function handler(req, res) {
       }
     }
 
-    let khataNo = "-";
+        let khataNo = "-";
     let ownerName = "-";
+    let pdfArea = "";
 
     if (fullText) {
+      // Extract Official Land Area from PDF text
+      const areaMatch = fullText.match(/(?:क्षेत्रफल|Area)[^\d]*([\d\.]+)\s*(?:हेक्टेयर|Hectare|हे\.)?/i);
+      if (areaMatch) {
+        pdfArea = areaMatch[1];
+      }
       // Extract Khata Number
       const khataMatch = fullText.match(/(?:Khata\s*No|खाता\s*संख्या|खाता\s*नं|खाता)[^\d]*(\d+)/i);
       if (khataMatch) {
@@ -108,7 +114,8 @@ export default async function handler(req, res) {
       giscode: targetGis,
       plotno: plotno,
       khata: khataNo,
-      owner: ownerName
+      owner: ownerName,
+      area: pdfArea
     });
   } catch (err) {
     console.error("fetch-khasra-details error:", err);

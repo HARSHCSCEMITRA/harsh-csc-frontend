@@ -1074,36 +1074,98 @@
             }
             debounceTimer = setTimeout(function() {
                 var queryStr = val.trim();
+                var queryUpper = queryStr.toUpperCase();
                 var query = encodeURIComponent(queryStr);
-                
-                // Promises to query Nominatim AND Mining Lease Layer
-                var osmPromise = fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=in&q=" + query)
+
+                // 1. Google Maps / OpenStreetMap Nominatim Geocoder Promise (Search ALL locations)
+                var osmPromise1 = fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=in&q=" + query)
                     .then(function(res) { return res.json(); })
                     .catch(function() { return []; });
-                
-                var sqlQuery = queryStr.toUpperCase().replace(/'/g, "''");
-                var whereClause = "UPPER(LESSEE) LIKE '%" + sqlQuery + "%' OR UPPER(LEASE_NO) LIKE '%" + sqlQuery + "%'";
-                var leaseParams = {
-                    where: whereClause,
-                    outFields: 'LEASE_NO,LESSEE,MINERAL,STATUS,OFFICE,DISTRICT,TEHSIL,VILLAGE,AREA',
+
+                var osmPromise2 = fetch("https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=" + encodeURIComponent(queryStr + ", Rajasthan, India"))
+                    .then(function(res) { return res.json(); })
+                    .catch(function() { return []; });
+
+                // 2. Official Rajasthan Revenue Villages Layer 11 Search Promise
+                var villUrl = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/11', '/query', {
+                    where: "UPPER(CENSUS_NM_2011) LIKE '%" + queryUpper.replace(/'/g, "''") + "%' OR UPPER(TEHSIL_NAME) LIKE '%" + queryUpper.replace(/'/g, "''") + "%'",
+                    outFields: 'CENSUS_NM_2011,TEHSIL_NAME,DISTRICT_NAME_EN,CENSUS_CD_2011',
                     returnGeometry: 'true',
                     outSR: '4326',
                     resultRecordCount: '5',
                     f: 'json'
-                };
-                var leaseUrl = proxyQueryUrl(MINING_BASE, '/query', leaseParams);
+                });
+                var villPromise = fetch(villUrl)
+                    .then(function(res) { return res.json(); })
+                    .catch(function() { return { features: [] }; });
+
+                // 3. Mining Lease Search Promise
+                var leaseUrl = proxyQueryUrl(MINING_BASE, '/query', {
+                    where: "UPPER(LESSEE) LIKE '%" + queryUpper.replace(/'/g, "''") + "%' OR UPPER(LEASE_NO) LIKE '%" + queryUpper.replace(/'/g, "''") + "%'",
+                    outFields: 'LEASE_NO,LESSEE,MINERAL,STATUS,OFFICE,DISTRICT,TEHSIL,VILLAGE,AREA',
+                    returnGeometry: 'true',
+                    outSR: '4326',
+                    resultRecordCount: '3',
+                    f: 'json'
+                });
                 var leasePromise = fetch(leaseUrl)
                     .then(function(res) { return res.json(); })
                     .catch(function() { return { features: [] }; });
-                
-                Promise.all([osmPromise, leasePromise]).then(function(results) {
-                    var osmData = results[0] || [];
-                    var leaseData = results[1] || { features: [] };
-                    
+
+                Promise.all([osmPromise1, osmPromise2, villPromise, leasePromise]).then(function(results) {
+                    var osmData1 = results[0] || [];
+                    var osmData2 = results[1] || [];
+                    var villData = results[2] || { features: [] };
+                    var leaseData = results[3] || { features: [] };
+
                     listDiv.innerHTML = "";
                     var count = 0;
-                    
-                    // Render Mining Leases suggestions first
+
+                    // A. Instant Client-Side JS_VILLAGE_MAP Matches
+                    if (typeof JS_VILLAGE_MAP !== 'undefined') {
+                        for (var vid in JS_VILLAGE_MAP) {
+                            var info = JS_VILLAGE_MAP[vid];
+                            if (info.v && (info.v.includes(queryStr) || info.v.toUpperCase().includes(queryUpper) || vid === queryStr)) {
+                                var div = document.createElement("div");
+                                div.className = "suggestion-item";
+                                div.style.borderLeft = "3px solid #10b981";
+                                div.style.padding = "6px 12px";
+                                div.innerHTML = "🏡 <strong>" + info.v + "</strong> (" + vid + ")<br/><span style='font-size:11px;color:#94a3b8;'>तहसील: " + info.t + ", जिला: " + info.d + "</span>";
+                                (function(vName, tName, dName, vCode) {
+                                    div.onclick = function() {
+                                        selectVillageSuggestion(vName, tName, dName, vCode);
+                                    };
+                                })(info.v, info.t, info.d, vid);
+                                listDiv.appendChild(div);
+                                count++;
+                                if (count >= 4) break;
+                            }
+                        }
+                    }
+
+                    // B. Official Revenue Village Layer 11 Results
+                    if (villData.features && villData.features.length > 0) {
+                        villData.features.forEach(function(feat) {
+                            var attrs = feat.attributes || {};
+                            var vName = attrs.CENSUS_NM_2011 || "राजस्व ग्राम";
+                            var tName = attrs.TEHSIL_NAME || "";
+                            var dName = attrs.DISTRICT_NAME_EN || "";
+                            var vCode = attrs.CENSUS_CD_2011 || "";
+
+                            var div = document.createElement("div");
+                            div.className = "suggestion-item";
+                            div.style.borderLeft = "3px solid #f59e0b";
+                            div.style.padding = "6px 12px";
+                            div.innerHTML = "🌾 <strong>" + toHindiText(vName) + "</strong> (राजस्व ग्राम)<br/><span style='font-size:11px;color:#94a3b8;'>तहसील: " + toHindiText(tName) + ", जिला: " + toHindiText(dName) + "</span>";
+                            div.onclick = function() {
+                                selectVillageFeature(feat);
+                            };
+                            listDiv.appendChild(div);
+                            count++;
+                        });
+                    }
+
+                    // C. Mining Leases Results
                     if (leaseData.features && leaseData.features.length > 0) {
                         leaseData.features.forEach(function(feat) {
                             var attrs = feat.attributes || {};
@@ -1111,7 +1173,7 @@
                             var leaseNo = attrs.LEASE_NO || "N/A";
                             var mineral = attrs.MINERAL || "";
                             var village = attrs.VILLAGE || "";
-                            
+
                             var div = document.createElement("div");
                             div.className = "suggestion-item";
                             div.style.borderLeft = "3px solid #0ea5e9";
@@ -1124,10 +1186,13 @@
                             count++;
                         });
                     }
-                    
-                    // Render Geocoding suggestions
-                    if (osmData && osmData.length > 0) {
-                        osmData.forEach(function(item) {
+
+                    // D. Google Maps / OpenStreetMap Places Results
+                    var combinedOsm = osmData1.concat(osmData2);
+                    var seenPlaces = new Set();
+                    combinedOsm.forEach(function(item) {
+                        if (!seenPlaces.has(item.display_name)) {
+                            seenPlaces.add(item.display_name);
                             var div = document.createElement("div");
                             div.className = "suggestion-item";
                             div.innerHTML = "📍 " + item.display_name;
@@ -1136,9 +1201,9 @@
                             };
                             listDiv.appendChild(div);
                             count++;
-                        });
-                    }
-                    
+                        }
+                    });
+
                     if (count > 0) {
                         listDiv.style.display = "block";
                     } else {
@@ -1146,6 +1211,52 @@
                     }
                 });
             }, 300);
+        }
+
+        function selectVillageSuggestion(vName, tName, dName, vCode) {
+            document.getElementById("searchInput").value = vName + " (" + tName + ")";
+            document.getElementById("suggestionsList").style.display = "none";
+            document.getElementById("suggestionsList").innerHTML = "";
+
+            // Query Layer 11 geometry for village code or name
+            var url = proxyQueryUrl('https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/11', '/query', {
+                where: "CENSUS_CD_2011='" + vCode + "' OR UPPER(CENSUS_NM_2011) LIKE '%" + vName.toUpperCase() + "%'",
+                outFields: '*',
+                returnGeometry: 'true',
+                outSR: '4326',
+                resultRecordCount: '1',
+                f: 'json'
+            });
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.features && data.features.length > 0) {
+                        selectVillageFeature(data.features[0]);
+                    } else {
+                        // Fallback search via nominatim
+                        fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(vName + ", " + dName + ", Rajasthan"))
+                            .then(function(res) { return res.json(); })
+                            .then(function(nData) {
+                                if (nData && nData.length > 0) {
+                                    map.setView([parseFloat(nData[0].lat), parseFloat(nData[0].lon)], 15);
+                                }
+                            });
+                    }
+                });
+        }
+
+        function selectVillageFeature(feat) {
+            var vName = feat.attributes.CENSUS_NM_2011 || "राजस्व ग्राम";
+            document.getElementById("searchInput").value = toHindiText(vName);
+            document.getElementById("suggestionsList").style.display = "none";
+            document.getElementById("suggestionsList").innerHTML = "";
+
+            var geojsonGeom = arcgisToGeoJSONGeom(feat.geometry);
+            if (geojsonGeom) {
+                var geoFeature = { type: 'Feature', geometry: geojsonGeom, properties: feat.attributes || {} };
+                var geojsonLayer = L.geoJSON(geoFeature);
+                map.fitBounds(geojsonLayer.getBounds(), { maxZoom: 16 });
+            }
         }
 
         function selectSuggestion(lat, lon, displayName) {
@@ -5617,17 +5728,23 @@ function showDetails(properties) {
             document.getElementById("detailTehsil").innerText = selectedTehsil || "-";
             document.getElementById("detailDistrict").innerText = selectedDistrict || "-";
 
-            // Area extraction from feature properties
-            var areaVal = getPropValue(properties, ['AREA', 'Shape.STArea()', 'GIS.BHU_AABADI.AREA', 'Shape_Area', 'SHAPE.AREA', 'SHAPE_AREA', 'shape_area', 'shape.area']);
-            if (areaVal) {
-                var cleanedArea = String(areaVal).replace(/[^0-9.]/g, '');
+            // Official Revenue Land Area extraction (Jamabandi / BhuNaksha Official Record)
+            var officialAreaHectare = getPropValue(properties, ['VILL_AREA', 'PLOT_AREA', 'AREA_HECTARE', 'KHASRA_AREA', 'SETTLEMENT_AREA']);
+            var shapeAreaSqM = getPropValue(properties, ['AREA', 'Shape.STArea()', 'GIS.BHU_AABADI.AREA', 'Shape_Area', 'SHAPE.AREA', 'SHAPE_AREA']);
+
+            if (officialAreaHectare && !isNaN(parseFloat(officialAreaHectare)) && parseFloat(officialAreaHectare) > 0) {
+                var ha = parseFloat(officialAreaHectare);
+                var bigha = (ha * 3.953684).toFixed(2);
+                document.getElementById("detailArea").innerText = bigha + " बीघा (" + ha.toFixed(4) + " हेक्टेयर) [आधिकारिक]";
+            } else if (shapeAreaSqM) {
+                var cleanedArea = String(shapeAreaSqM).replace(/[^0-9.]/g, '');
                 var areaSqM = parseFloat(cleanedArea);
                 if (!isNaN(areaSqM) && areaSqM > 0) {
                     var hectare = areaSqM / 10000;
-                    var bigha = areaSqM / 2529.285;
-                    document.getElementById("detailArea").innerText = bigha.toFixed(2) + " बीघा (" + hectare.toFixed(4) + " हेक्टेयर)";
+                    var bigha = (hectare * 3.953684).toFixed(2);
+                    document.getElementById("detailArea").innerText = bigha + " बीघा (" + hectare.toFixed(4) + " हेक्टेयर)";
                 } else {
-                    document.getElementById("detailArea").innerText = areaVal;
+                    document.getElementById("detailArea").innerText = shapeAreaSqM;
                 }
             } else {
                 document.getElementById("detailArea").innerText = "-";
