@@ -12,12 +12,13 @@ export default async function handler(req, res) {
   }
 
   const giscode = req.query.giscode || req.body?.giscode;
-  const plotno = req.query.plotno || req.body?.plotno;
+  const rawPlotno = req.query.plotno || req.body?.plotno;
 
-  if (!giscode || !plotno) {
+  if (!giscode || !rawPlotno) {
     return res.status(400).json({ error: "Missing 'giscode' or 'plotno' parameter." });
   }
 
+  const plotno = String(rawPlotno).replace(/[^0-9]/g, '');
   const targetGis = giscode.length === 19 ? giscode + '001' : giscode;
 
   try {
@@ -44,7 +45,7 @@ export default async function handler(req, res) {
     });
 
     if (!pdfResponse.ok) {
-      return res.status(200).json({ success: false, khata: "-", owner: "-" });
+      return res.status(200).json({ success: false, khata: "-", owner: "-", area: "" });
     }
 
     const arrayBuffer = await pdfResponse.arrayBuffer();
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
     }
 
     if (buffer.length < 500) {
-      return res.status(200).json({ success: false, khata: "-", owner: "-" });
+      return res.status(200).json({ success: false, khata: "-", owner: "-", area: "" });
     }
 
     let fullText = "";
@@ -79,20 +80,21 @@ export default async function handler(req, res) {
       }
     }
 
-        let khataNo = "-";
+    let khataNo = "-";
     let ownerName = "-";
     let pdfArea = "";
 
     if (fullText) {
-      // Extract Official Land Area from PDF text
-      const areaMatch = fullText.match(/(?:क्षेत्रफल|Area)[^\d]*([\d\.]+)\s*(?:हेक्टेयर|Hectare|हे\.)?/i);
-      if (areaMatch) {
-        pdfArea = areaMatch[1];
-      }
       // Extract Khata Number
       const khataMatch = fullText.match(/(?:Khata\s*No|खाता\s*संख्या|खाता\s*नं|खाता)[^\d]*(\d+)/i);
       if (khataMatch) {
         khataNo = khataMatch[1];
+      }
+
+      // Extract Official Land Area
+      const areaMatch = fullText.match(/(?:क्षेत्रफल|Area)[^\d]*([\d\.]+)\s*(?:हेक्टेयर|Hectare|हे\.)?/i);
+      if (areaMatch) {
+        pdfArea = areaMatch[1];
       }
 
       // Extract Owner Names
@@ -119,6 +121,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("fetch-khasra-details error:", err);
-    return res.status(200).json({ success: false, khata: "-", owner: "-", error: err.message });
+    return res.status(200).json({ success: false, khata: "-", owner: "-", area: "", error: err.message });
   }
 }

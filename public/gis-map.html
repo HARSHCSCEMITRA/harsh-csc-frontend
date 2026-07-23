@@ -5667,7 +5667,7 @@ var JS_VILLAGE_MAP = {
             return null;
         }
 
-                function getKhasraStyleForVillage(villageCode, fieldName) {
+                        function getKhasraStyleForVillage(villageCode, fieldName) {
             return [
                 {
                     "id": 0,
@@ -5677,10 +5677,25 @@ var JS_VILLAGE_MAP = {
                             "type": "simple",
                             "symbol": {
                                 "type": "esriSFS", "style": "esriSFSSolid", "color": [0, 0, 0, 0],
-                                "outline": { "type": "esriSLS", "style": "esriSLSSolid", "color": [255, 120, 0, 255], "width": 0.8 }
+                                "outline": { "type": "esriSLS", "style": "esriSLSSolid", "color": [255, 120, 0, 255], "width": 1.2 }
                             }
                         },
-                        "showLabels": true
+                        "showLabels": true,
+                        "labelingInfo": [
+                            {
+                                "labelExpression": "[KID]",
+                                "labelPlacement": "esriServerPolygonPlacementAlwaysHorizontal",
+                                "symbol": {
+                                    "type": "esriTS",
+                                    "color": [255, 255, 255, 255],
+                                    "haloColor": [0, 0, 0, 255],
+                                    "haloSize": 2,
+                                    "font": { "family": "Arial", "size": 11, "weight": "bold" }
+                                },
+                                "minScale": 15000,
+                                "maxScale": 0
+                            }
+                        ]
                     }
                 }
             ];
@@ -6084,32 +6099,73 @@ function showDetails(properties) {
             var vil = selectedVillage;
             var teh = selectedTehsil;
             var dist = selectedDistrict;
-            
+
             if (!plot) {
                 plot = document.getElementById("manualKhasra").value.trim();
                 var d_sel = document.getElementById("manualDistrict");
                 var t_sel = document.getElementById("manualTehsil");
                 var v_sel = document.getElementById("manualVillage");
-                
-                dist = d_sel.options[d_sel.selectedIndex] ? d_sel.options[d_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
-                teh = t_sel.options[t_sel.selectedIndex] ? t_sel.options[t_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
-                vil = v_sel.options[v_sel.selectedIndex] ? v_sel.options[v_sel.selectedIndex].text.split(' ').slice(1).join(' ') : "";
-                
-                var d = d_sel.value;
-                var t = t_sel.value;
-                var ri = document.getElementById("manualRI").value;
-                var h = document.getElementById("manualHalka").value;
-                var v = v_sel.value;
-                var s = document.getElementById("manualSheet").value;
+
+                if (d_sel && d_sel.options[d_sel.selectedIndex]) dist = d_sel.options[d_sel.selectedIndex].text;
+                if (t_sel && t_sel.options[t_sel.selectedIndex]) teh = t_sel.options[t_sel.selectedIndex].text;
+                if (v_sel && v_sel.options[v_sel.selectedIndex]) vil = v_sel.options[v_sel.selectedIndex].text;
+
+                var d = d_sel ? d_sel.value : "";
+                var t = t_sel ? t_sel.value : "";
+                var ri = document.getElementById("manualRI") ? document.getElementById("manualRI").value : "";
+                var h = document.getElementById("manualHalka") ? document.getElementById("manualHalka").value : "";
+                var v = v_sel ? v_sel.value : "";
+                var s = document.getElementById("manualSheet") ? document.getElementById("manualSheet").value : "";
                 gis = d + t + (ri || "01") + (h || "01") + v + (s || "01");
             }
-            
+
             if (!plot) {
-                alert("कृपया पहले नक्शे पर किसी खसरे पर क्लिक करें या खसरा नंबर दर्ज करें!");
+                alert("कृपया पहले नक्शे पर किसी खसरे पर क्लिक करें या खसरा चुनें!");
                 return;
             }
-            setDownloadInProgress(actionType);
-            var args = [plot, gis, vil, teh, dist].join(",");
+
+            var cleanPlot = String(plot).replace(/[^0-9]/g, '');
+
+            if (actionType === 'NAKSHA') {
+                if (!gis) {
+                    alert("खसरे का GIS कोड प्राप्त नहीं हुआ!");
+                    return;
+                }
+                var targetGis = (gis.length === 19) ? (gis + "001") : gis;
+                var form = document.createElement("form");
+                form.method = "POST";
+                form.action = "https://bhunaksha.rajasthan.gov.in/Viewmap/rest/LPMReportRJ/PlotReportPDF";
+                form.target = "_blank";
+
+                var fields = {
+                    'state': '08',
+                    'giscode': targetGis,
+                    'plotno': cleanPlot,
+                    'sameownerplotreport': 'false',
+                    'derivedlayerids': '-1',
+                    'selectedlayerids': '-1',
+                    'scaletextfield': '',
+                    'logged': ''
+                };
+
+                for (var k in fields) {
+                    var input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = k;
+                    input.value = fields[k];
+                    form.appendChild(input);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+            } else if (actionType === 'NAKAL') {
+                window.open("https://apnakhata.rajasthan.gov.in/", "_blank");
+            }
+
+            // Also signal Qt desktop runner if listening
+            var args = [cleanPlot, gis, vil, teh, dist].join(",");
             document.title = "DOWNLOAD_" + actionType + ":" + args;
         }
 
