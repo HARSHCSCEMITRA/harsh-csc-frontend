@@ -5513,17 +5513,16 @@ var JS_VILLAGE_MAP = {
             return toHindiText(raw);
         }
 
-        function findRIName(properties) {
+                function findRIName(properties) {
             var raw = getPropValue(properties, ['ILR_NAME', 'ILR', 'RI_NAME', 'RI', 'CIRCLE_NAME', 'ILR_CIRCLE']);
-            var clean = toHindiText(raw);
-            return clean ? ("आर.आई. " + clean) : "";
+            return toHindiText(raw);
         }
 
-        function findHalkasName(properties) {
+                function findHalkasName(properties) {
             var raw = getPropValue(properties, ['PATWAR_NAME', 'PATWAR', 'HALKA_NAME', 'HALKA', 'PC_NAME', 'PC', 'PATWAR_CIR']);
             var clean = toHindiText(raw);
             if (!clean || clean.includes("Null") || clean.includes("null")) return "";
-            return "पटवार " + clean;
+            return clean;
         }
 
         function findVillageName(properties) {
@@ -5596,8 +5595,8 @@ function showDetails(properties) {
                 selectedDistrict = vInfo.d || findDistrictName(properties);
                 selectedTehsil = vInfo.t || findTehsilName(properties);
                 selectedVillage = vInfo.v || findVillageName(properties);
-                selectedHalkas = vInfo.h ? ("पटवार " + vInfo.h) : findHalkasName(properties);
-                selectedRI = vInfo.r ? ("आर.आई. " + vInfo.r) : findRIName(properties);
+                selectedHalkas = vInfo.h ? vInfo.h : findHalkasName(properties);
+                selectedRI = vInfo.r ? vInfo.r : findRIName(properties);
             } else {
                 selectedVillage = findVillageName(properties);
                 selectedRI = findRIName(properties);
@@ -5608,7 +5607,7 @@ function showDetails(properties) {
 
             // Cleanup any raw 'Null' in Halkas
             if (!selectedHalkas || selectedHalkas.includes("Null") || selectedHalkas.includes("null")) {
-                selectedHalkas = selectedVillage ? ("पटवार " + selectedVillage) : "-";
+                selectedHalkas = selectedVillage ? selectedVillage : "-";
             }
 
             document.getElementById("detailPlotNo").innerText = selectedPlot || "-";
@@ -5729,13 +5728,13 @@ function showDetails(properties) {
             }
             if (resolved_ri) {
                 var cleanRI = String(resolved_ri).replace(/^\d+\s*/, '').trim();
-                if (cleanRI && !cleanRI.startsWith("आर.आई.")) cleanRI = "आर.आई. " + cleanRI;
+                
                 document.getElementById("detailRI").innerText = cleanRI || resolved_ri;
                 selectedRI = cleanRI || resolved_ri;
             }
             if (resolved_halka) {
                 var cleanHalka = String(resolved_halka).replace(/^\d+\s*/, '').trim();
-                if (cleanHalka && !cleanHalka.startsWith("पटवार")) cleanHalka = "पटवार " + cleanHalka;
+                
                 document.getElementById("detailHalkas").innerText = cleanHalka || resolved_halka;
                 selectedHalkas = cleanHalka || resolved_halka;
             }
