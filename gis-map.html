@@ -1771,6 +1771,91 @@
         "KUMBALGARH": "कुंभलगढ़"
 };
 
+        // Universal Rajasthan Place Names Dictionary & Phonetic Transliteration Engine
+        var COMMON_HINDI_MAP = {
+            "CHITTORGARH": "चित्तौड़गढ़", "CHITTAURGARH": "चित्तौड़गढ़", "BHILWARA": "भीलवाड़ा", "RAJSAMAND": "राजसमन्द",
+            "UDAIPUR": "उदयपुर", "JAIPUR": "जयपुर", "JODHPUR": "जोधपुर", "KOTA": "कोटा", "AJMER": "अजमेर", "BIKANER": "बीकानेर",
+            "ALWAR": "अलवर", "SIKAR": "सीकर", "PALI": "पाली", "BARMER": "बाड़मेर", "JALORE": "जालौर", "SIROHI": "सिरोही",
+            "TONK": "टोंक", "BUNDI": "बूंदी", "BARAN": "बारां", "JHALAWAR": "झालावाड़", "CHURU": "चूरू", "HANUMANGARH": "हनुमानगढ़",
+            "GANGANAGAR": "श्रीगंगानगर", "SRI GANGANAGAR": "श्रीगंगानगर", "JAISALMER": "जैसलमेर", "BANSWARA": "बांसवाड़ा",
+            "DUNGARPUR": "डूंगरपुर", "PRATAPGARH": "प्रतापगढ़", "DHOLPUR": "धौलपुर", "KARAULI": "करौली", "SAWAI MADHOPUR": "सवाई माधोपुर",
+            "NAGAUR": "नागौर", "JHUNJHUNU": "झुंझुनूं", "DAUSA": "दौसा",
+            "BHADESAR": "भदेसर", "BEGUN": "बेगूं", "GANGRAR": "गंगरार", "KAPASAN": "कपासन", "NIMBAHERA": "निम्बाहेड़ा",
+            "RASHMI": "राश्मी", "RAWATBHATA": "रावतभाटा", "BHAINSRODGARH": "भैंसरोड़गढ़", "DUNGLA": "डूंगला", "BARISADRI": "बड़ी सादड़ी",
+            "DHIRJIKAKHEDA": "धीरजी का खेड़ा", "DHIRJI KA KHEDA": "धीरजी का खेड़ा", "DHIRJIKHEDA": "धीरजी का खेड़ा",
+            "KA KH": "खाखड़ खेड़ा", "KHA KH": "खाखड़ खेड़ा", "TI KH": "पिपलान्त्री खुर्द", "PIPALANTI KALAN": "पिपलान्त्री कलां",
+            "PIPARDA": "पीपरड़ा", "FARARA": "फरारा", "MOHI": "मोही", "RAJYAWAS": "राज्यावास", "RAJNAGAR": "राजनगर", "DHOINDA": "धोइंदा",
+            "GIRWA": "गिर्वा", "SANCHORE": "सांचौर", "PANDER": "पांडेर", "ROHAT": "रोहट", "NEEMRANA": "नीमराना"
+        };
+
+        function toHindiText(str) {
+            if (!str || typeof str !== 'string') return "";
+            var trimmed = str.trim();
+            if (!trimmed) return "";
+            
+            // Strip numeric code prefix if present e.g. "2066 राजनगर" -> "राजनगर"
+            trimmed = trimmed.replace(/^\d+\s*/, '').trim();
+
+            // If already Devanagari Hindi, return clean text
+            if (/[\u0900-\u097F]/.test(trimmed)) {
+                return trimmed;
+            }
+
+            var upper = trimmed.toUpperCase();
+
+            if (COMMON_HINDI_MAP[upper]) return COMMON_HINDI_MAP[upper];
+            if (typeof HINDI_DISTRICTS !== 'undefined' && HINDI_DISTRICTS[upper]) return HINDI_DISTRICTS[upper];
+            if (typeof HINDI_TEHSILS !== 'undefined' && HINDI_TEHSILS[upper]) return HINDI_TEHSILS[upper];
+
+            var cleanUpper = upper.replace(/[^A-Z]/g, '');
+            for (var k in COMMON_HINDI_MAP) {
+                if (k.replace(/[^A-Z]/g, '') === cleanUpper) return COMMON_HINDI_MAP[k];
+            }
+            if (typeof HINDI_DISTRICTS !== 'undefined') {
+                for (var dk in HINDI_DISTRICTS) {
+                    if (dk.replace(/[^A-Z]/g, '') === cleanUpper) return HINDI_DISTRICTS[dk];
+                }
+            }
+            if (typeof HINDI_TEHSILS !== 'undefined') {
+                for (var tk in HINDI_TEHSILS) {
+                    if (tk.replace(/[^A-Z]/g, '') === cleanUpper) return HINDI_TEHSILS[tk];
+                }
+            }
+
+            // Word Suffix replacements
+            var res = upper
+                .replace(/\bKA\s*KH\b/g, "खाखड़ खेड़ा")
+                .replace(/\bKHA\s*KH\b/g, "खाखड़ खेड़ा")
+                .replace(/\bDHIRJIKAKHEDA\b/g, "धीरजी का खेड़ा")
+                .replace(/\bBHADESAR\b/g, "भदेसर")
+                .replace(/\bKHEDA\b/g, "खेड़ा")
+                .replace(/\bKHURD\b/g, "खुर्द")
+                .replace(/\bKALAN\b/g, "कलां")
+                .replace(/\bNAGAR\b/g, "नगर")
+                .replace(/\bPUR\b/g, "पुर")
+                .replace(/\bPORA\b/g, "पोरा")
+                .replace(/\bWADA\b/g, "वाड़ा")
+                .replace(/\bGARH\b/g, "गढ़")
+                .replace(/\bWAS\b/g, "वास")
+                .replace(/\bBAG\b/g, "बाग")
+                .replace(/\bSAR\b/g, "सर");
+
+            // Character-by-character Phonetic English -> Devanagari fallback if English letters remain
+            if (/[A-Z]/.test(res)) {
+                var charPairs = [
+                    [/BH/g, 'भ'], [/CH/g, 'च'], [/SH/g, 'श'], [/TH/g, 'थ'], [/DH/g, 'ध'], [/KH/g, 'ख'], [/GH/g, 'घ'], [/PH/g, 'फ'], [/JH/g, 'झ'],
+                    [/A/g, 'ा'], [/B/g, 'ब'], [/C/g, 'क'], [/D/g, 'द'], [/E/g, 'े'], [/F/g, 'फ'], [/G/g, 'ग'], [/H/g, 'ह'], [/I/g, 'ि'], [/J/g, 'ज'],
+                    [/K/g, 'क'], [/L/g, 'ल'], [/M/g, 'म'], [/N/g, 'न'], [/O/g, 'ो'], [/P/g, 'प'], [/Q/g, 'क'], [/R/g, 'र'], [/S/g, 'स'], [/T/g, 'त'],
+                    [/U/g, 'ु'], [/V/g, 'व'], [/W/g, 'व'], [/X/g, 'क्स'], [/Y/g, 'य'], [/Z/g, 'ज़']
+                ];
+                charPairs.forEach(function(pair) {
+                    res = res.replace(pair[0], pair[1]);
+                });
+            }
+
+            return res.replace(/^\s*ा/, '').trim();
+        }
+
         function toHindiDistrict(val) {
             if (!val) return "";
             var strVal = String(val).trim().toUpperCase();
@@ -5418,139 +5503,32 @@ var JS_VILLAGE_MAP = {
     }
 };
 
-        function findDistrictName(properties) {
-            var exactKeys = ['DIST_NAME', 'dist_name', 'district_name', 'district', 'DISTNAME', 'DIST_CODE', 'DISTCODE', 'district_code', 'DISTRICT'];
-            for (var i = 0; i < exactKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
-                        var val = String(properties[key]).trim();
-                        if (val) return toHindiDistrict(val);
-                    }
-                }
-            }
-            for (var key in properties) {
-                var lkey = key.toLowerCase();
-                if (lkey.includes('dist') && properties[key]) {
-                    var val = String(properties[key]).trim();
-                    if (val) return toHindiDistrict(val);
-                }
-            }
-            return "";
+                function findDistrictName(properties) {
+            var raw = getPropValue(properties, ['DIST_NAME', 'dist_name', 'district_name', 'district', 'DISTNAME', 'DIST_CODE', 'DISTCODE', 'district_code', 'DISTRICT']);
+            return toHindiText(raw);
         }
-
-
-
-
 
         function findTehsilName(properties) {
-            var exactKeys = ['TEH_NAME', 'teh_name', 'tehsil_name', 'tehsil', 'TEHNAME', 'TEH_CODE', 'TEHCODE', 'tehsil_code', 'TEHSIL'];
-            for (var i = 0; i < exactKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
-                        var val = String(properties[key]).trim();
-                        if (val) return toHindiTehsil(val);
-                    }
-                }
-            }
-            for (var key in properties) {
-                var lkey = key.toLowerCase();
-                if (lkey.includes('teh') && properties[key]) {
-                    var val = String(properties[key]).trim();
-                    if (val) return toHindiTehsil(val);
-                }
-            }
-            return "";
+            var raw = getPropValue(properties, ['TEHSIL_NAME', 'tehsil_name', 'tehsil', 'TEHSILNAME', 'TEHSIL_CODE', 'TEHSILCODE', 'TEHSIL']);
+            return toHindiText(raw);
         }
 
+        function findRIName(properties) {
+            var raw = getPropValue(properties, ['ILR_NAME', 'ILR', 'RI_NAME', 'RI', 'CIRCLE_NAME', 'ILR_CIRCLE']);
+            var clean = toHindiText(raw);
+            return clean ? ("आर.आई. " + clean) : "";
+        }
 
-
-
+        function findHalkasName(properties) {
+            var raw = getPropValue(properties, ['PATWAR_NAME', 'PATWAR', 'HALKA_NAME', 'HALKA', 'PC_NAME', 'PC', 'PATWAR_CIR']);
+            var clean = toHindiText(raw);
+            if (!clean || clean.includes("Null") || clean.includes("null")) return "";
+            return "पटवार " + clean;
+        }
 
         function findVillageName(properties) {
-            // First try name-specific keys (not code keys)
-            var nameKeys = ['VILL_NAME', 'vill_name', 'village_name', 'VILLNAME', 'VILLAGE_NAME_HI', 'GRAM', 'GRAM_NAME', 'VIL_NAME'];
-            for (var i = 0; i < nameKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === nameKeys[i].toLowerCase()) {
-                        var val = properties[key];
-                        if (val && String(val).trim() && !/^\d+$/.test(String(val).trim())) {
-                            return val;
-                        }
-                    }
-                }
-            }
-            // Try fuzzy key matching for name fields
-            for (var key in properties) {
-                var lkey = key.toLowerCase();
-                if ((lkey.includes('vill') && lkey.includes('name')) || lkey.includes('gram')) {
-                    var val = properties[key];
-                    if (val && String(val).trim() && !/^\d+$/.test(String(val).trim())) {
-                        return val;
-                    }
-                }
-            }
-            // Fall back to code keys and try to resolve the name from manualVillage dropdown
-            var codeKeys = ['VNAME_E', 'VNAME', 'VILL_CODE', 'VILLCODE', 'VILL_CODE_NIC', 'VILL_NIC_CODE', 'VILLAGE_CODE', 'village', 'BHUCODE', 'BHU_CODE', 'GISCODE', 'giscode'];
-            var villCode = '';
-            for (var i = 0; i < codeKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === codeKeys[i].toLowerCase() && properties[key]) {
-                        villCode = String(properties[key]).trim();
-                        break;
-                    }
-                }
-                if (villCode) break;
-            }
-            if (!villCode) {
-                // Last resort: any key with 'vill'
-                for (var key in properties) {
-                    if (key.toLowerCase().includes('vill') && properties[key]) {
-                        villCode = String(properties[key]).trim();
-                        break;
-                    }
-                }
-            }
-            if (!villCode) return '';
-            
-            // Extract 5-digit village code from full GIS/BHUCODE
-            // Village code is always the 5 digits before the last 3 (sheet/khasra) digits
-            // Works for all prefix lengths (RI can be 3 or 4 digits, Halka 4 or 5 digits)
-            if (villCode && villCode.length >= 15) {
-                if (villCode.length === 15) {
-                    villCode = villCode.substring(7, 12);
-                } else {
-                    villCode = villCode.substring(villCode.length - 8, villCode.length - 3);
-                }
-            }
-            
-            // Try to resolve village code to name from the manualVillage dropdown
-            var resolvedName = _resolveVillageNameFromDropdown(villCode);
-            if (resolvedName) {
-                return resolvedName + ' (' + villCode + ')';
-            }
-            return villCode;
-        }
-
-        function _resolveVillageNameFromDropdown(code) {
-            try {
-                var sel = document.getElementById('manualVillage');
-                if (!sel) return null;
-                var codeStr = String(code).trim();
-                var codeInt = parseInt(codeStr);
-                for (var i = 0; i < sel.options.length; i++) {
-                    var opt = sel.options[i];
-                    var optVal = (opt.value || '').trim();
-                    if (optVal === codeStr || parseInt(optVal) === codeInt) {
-                        var text = (opt.innerText || opt.textContent || '').trim();
-                        var parts = text.split(/\s+/);
-                        if (parts.length > 1) {
-                            return parts.slice(1).join(' ');
-                        }
-                        return text;
-                    }
-                }
-            } catch(e) {}
-            return null;
+            var raw = getPropValue(properties, ['VNAME_HI', 'VILLAGE_NAME_HI', 'VILL_NAME_HI', 'VILLAGE_HI', 'VNAME_E', 'VILLAGE_NAME', 'VILL_NAME', 'VILLAGE', 'VNAME']);
+            return toHindiText(raw);
         }
 
         function findVillageCodeFieldAndValue(properties) {
@@ -5579,7 +5557,7 @@ var JS_VILLAGE_MAP = {
             return null;
         }
 
-        function getKhasraStyleForVillage(villageCode, fieldName) {
+                function getKhasraStyleForVillage(villageCode, fieldName) {
             return [
                 {
                     "id": 0,
@@ -5589,69 +5567,16 @@ var JS_VILLAGE_MAP = {
                             "type": "simple",
                             "symbol": {
                                 "type": "esriSFS", "style": "esriSFSSolid", "color": [0, 0, 0, 0],
-                                "outline": { "type": "esriSLS", "style": "esriSLSSolid", "color": [255, 120, 0, 255], "width": 0.8 } // Orange
+                                "outline": { "type": "esriSLS", "style": "esriSLSSolid", "color": [255, 120, 0, 255], "width": 0.8 }
                             }
                         },
-                        "labelingInfo": [
-                            {
-                                "labelPlacement": "esriServerPolygonPlacementAlwaysHorizontal",
-                                "labelExpression": "[KID]",
-                                "removeDuplicates": "all",
-                                "symbol": {
-                                    "type": "esriTS", "color": [255, 255, 255, 255],
-                                    "haloColor": [0, 0, 0, 255], "haloSize": 1.5,
-                                    "font": { "family": "Arial", "size": 10, "weight": "bold" }
-                                },
-                                "minScale": 5000, "maxScale": 0
-                            }
-                        ],
                         "showLabels": true
                     }
                 }
             ];
         }
 
-        function findRIName(properties) {
-            var exactKeys = ['ILRNAME', 'ilrname', 'RI_NAME', 'ri_name', 'ri', 'RI', 'ILR'];
-            for (var i = 0; i < exactKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
-                        var val = String(properties[key]).trim();
-                        if (val) {
-                            if (/^\d+$/.test(val)) return "आर.आई. वृत्त " + val;
-                            return "आर.आई. " + val;
-                        }
-                    }
-                }
-            }
-            return "";
-        }
-
-
-
-
-
-        function findHalkasName(properties) {
-            var exactKeys = ['PATWARNAME', 'patwarname', 'HALKA_NAME', 'halka_name', 'halka', 'HALKAS', 'PC', 'PATWAR'];
-            for (var i = 0; i < exactKeys.length; i++) {
-                for (var key in properties) {
-                    if (key.toLowerCase() === exactKeys[i].toLowerCase() && properties[key]) {
-                        var val = String(properties[key]).trim();
-                        if (val) {
-                            if (/^\d+$/.test(val)) return "पटवार हल्का " + val;
-                            return "पटवार " + val;
-                        }
-                    }
-                }
-            }
-            return "";
-        }
-
-
-
-
-
-                function showDetails(properties) {
+function showDetails(properties) {
             selectedPlot = findPlotNo(properties);
             selectedGisCode = getPropValue(properties, ['BHUCODE', 'BHU_CODE', 'GISCODE', 'giscode', 'VILL_CODE']);
 
