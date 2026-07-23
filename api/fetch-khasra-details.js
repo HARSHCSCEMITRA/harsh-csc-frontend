@@ -2,6 +2,47 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
+async function fetchPdfForGis(giscode, plotno) {
+  const targetGis = giscode.length === 19 ? giscode + '001' : giscode;
+  const params = new URLSearchParams({
+    state: '08',
+    giscode: targetGis,
+    plotno: String(plotno),
+    sameownerplotreport: 'false',
+    derivedlayerids: '-1',
+    selectedlayerids: '-1',
+    scaletextfield: '',
+    logged: ''
+  });
+
+  const bodyStr = params.toString();
+  const pdfResponse = await fetch('https://bhunaksha.rajasthan.gov.in/Viewmap/rest/LPMReportRJ/PlotReportPDF', {
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': String(Buffer.byteLength(bodyStr))
+    },
+    body: bodyStr
+  });
+
+  if (!pdfResponse.ok) return null;
+
+  const rawText = await pdfResponse.text();
+  let buffer = Buffer.from(rawText, 'utf-8');
+
+  // If response is base64 string
+  if (!rawText.startsWith('%PDF')) {
+    try {
+      const decoded = Buffer.from(rawText.trim(), 'base64');
+      if (decoded.length > 500) buffer = decoded;
+    } catch (e) {}
+  }
+
+  if (buffer.length < 2000) return null;
+  return buffer;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -11,72 +52,58 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const giscode = req.query.giscode || req.body?.giscode;
-  const rawPlotno = req.query.plotno || req.body?.plotno;
+  const rawGis = req.query.giscode || req.body?.giscode;
+  const rawPlot = req.query.plotno || req.body?.plotno;
 
-  if (!giscode || !rawPlotno) {
+  if (!rawGis || !rawPlot) {
     return res.status(400).json({ error: "Missing 'giscode' or 'plotno' parameter." });
   }
 
-  const plotno = String(rawPlotno).replace(/[^0-9]/g, '');
-  const targetGis = giscode.length === 19 ? giscode + '001' : giscode;
+  const plotno = String(rawPlot).replace(/[^0-9]/g, '');
+  let giscode = String(rawGis).trim();
 
   try {
-    const params = new URLSearchParams({
-      state: '08',
-      giscode: targetGis,
-      plotno: String(plotno),
-      sameownerplotreport: 'false',
-      derivedlayerids: '-1',
-      selectedlayerids: '-1',
-      scaletextfield: '',
-      logged: ''
-    });
+    let pdfBuffer = await fetchPdfForGis(giscode, plotno);
 
-    const bodyStr = params.toString();
-    const pdfResponse = await fetch('https://bhunaksha.rajasthan.gov.in/Viewmap/rest/LPMReportRJ/PlotReportPDF', {
-      method: 'POST',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': String(Buffer.byteLength(bodyStr))
-      },
-      body: bodyStr
-    });
-
-    if (!pdfResponse.ok) {
-      return res.status(200).json({ success: false, khata: "-", owner: "-", area: "" });
-    }
-
-    const arrayBuffer = await pdfResponse.arrayBuffer();
-    let buffer = Buffer.from(arrayBuffer);
-
-    // Decode base64 if needed
-    const rawStr = buffer.toString('utf-8');
-    if (!rawStr.startsWith('%PDF')) {
+    // If primary GIS code returned empty PDF, try resolving via MapServer Layer 11 GIS lookup
+    if (!pdfBuffer && giscode.length >= 5) {
+      const vid = giscode.slice(-5);
       try {
-        const decoded = Buffer.from(rawStr, 'base64');
-        if (decoded.length > 500) buffer = decoded;
-      } catch (e) {}
+        const layer11Url = `https://gis.rajasthan.gov.in/rajasthan/rest/services/Common/Revenue/MapServer/11/query?where=CENSUS_CD_2011%3D${encodeURIComponent(vid)}&outFields=BHUCODE%2CGISCODE&f=json`;
+        const l11Res = await fetch(layer11Url);
+        if (l11Res.ok) {
+          const l11Data = await l11Res.json();
+          if (l11Data.features && l11Data.features.length > 0) {
+            const resolvedBhu = l11Data.features[0].attributes.BHUCODE || l11Data.features[0].attributes.GISCODE;
+            if (resolvedBhu) {
+              pdfBuffer = await fetchPdfForGis(resolvedBhu, plotno);
+              if (pdfBuffer) giscode = resolvedBhu;
+            }
+          }
+        }
+      } catch (errRes) {}
     }
 
-    if (buffer.length < 500) {
+    if (!pdfBuffer) {
       return res.status(200).json({ success: false, khata: "-", owner: "-", area: "" });
     }
 
     let fullText = "";
+
+    // Extract text from PDF buffer using pdf-parse or fallback text extraction
     try {
-      const { PDFParse } = require('pdf-parse');
-      const parser = new PDFParse(new Uint8Array(buffer));
-      const parsed = await parser.getText();
+      const pdfParse = require('pdf-parse');
+      const parsed = await pdfParse(pdfBuffer);
       fullText = parsed.text || '';
     } catch (e1) {
       try {
-        const pdfParse = require('pdf-parse');
-        const parsed = await pdfParse(buffer);
+        const { PDFParse } = require('pdf-parse');
+        const parser = new PDFParse(new Uint8Array(pdfBuffer));
+        const parsed = await parser.getText();
         fullText = parsed.text || '';
       } catch (e2) {
-        console.error("PDF parse fallback error:", e2.message);
+        // Fallback: UTF-8 string match directly from PDF buffer
+        fullText = pdfBuffer.toString('utf-8', 0, pdfBuffer.length);
       }
     }
 
@@ -113,7 +140,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      giscode: targetGis,
+      giscode: giscode,
       plotno: plotno,
       khata: khataNo,
       owner: ownerName,

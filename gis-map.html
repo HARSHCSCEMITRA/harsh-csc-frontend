@@ -5792,7 +5792,7 @@ function showDetails(properties) {
                                 document.getElementById("detailKhataNo").innerText = data.khata;
                             }
                             if (data.owner && data.owner !== "-") {
-                                document.getElementById("detailOwnerName").innerText = data.owner;
+                                document.getElementById("detailOwnerName").innerHTML = formatOwnerListHTML(data.owner);
                             }
                         }
                     }).catch(function(e) { console.error("Web fetch error:", e); });
